@@ -11,6 +11,7 @@ class parser:
 
   def get_glob(self, glob):
     glob_data = ""
+    
     return glob_data
 
 class Entity:
