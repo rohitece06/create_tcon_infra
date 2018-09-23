@@ -74,23 +74,64 @@ class Entity:
     
     return entries
 
+  def __str__(self):
+      return str(self.__class__) + ": " + str(self.__dict__)    
+
 class Port_Generic:
   def __init__(self, entrystring):
     self.name, self.direc, self.dataype, self.range, self.default = \
       self.get_typevalues(entrystring)
 
   def get_typevalues(self, string):
+    # Find default value provided for a generic or a port.
+    # Default value is always provide to the right of :=
+    # We dont care if it is a number or string or whatver
     val_split = string.split(":=")
-    default = val_split[1] if ":=" in string else ""
+    default = val_split[1].strip() if ":=" in string else ""
+    # Name of the generic/port is always the first word to the left 
+    # of : symbol in the definition entry
     name_split = val_split[0].split(":")
-    name = name_split[0]
+    name = name_split[0].strip()
+    # To the right of :, it is either direction (for port definition)
+    # or the datatype for the generic
     type_split = name_split[1].split()
+
+    # there are only three directions in VHDL-93 we use
+    # in, out, inout
+    # direction, if any, and the datatype are always separated by
+    # a space (runs of spaces has already been removed)
     if type_split[0] in ["in", "out", "inout"]:
-      direc = type_split[0]
-      datatype = type_split[1].rstrip("(")
+      direc = type_split[0].strip()
+      datatype = type_split[1].split("(")[0].strip()
+      
     else:
       direc = ""
-      datatype = type_split[0].rstrip("(")
+      # If there are no direction info, then immediately right to
+      # : will be the datatype. remove ( and other character after (
+      # from datatype 
+      datatype = type_split[0].split("(")[0].strip()
+      
 
-    range = ""
+    # If there is a (...) or "range" keyword present in the string right 
+    # of : (default value has already been stripped), it must be a range 
+    # for the datatype
+    # "range" always has a pattern of:
+    # datatype<space>range<space>N<space>to<space>M
+    typestring = name_split[1]
+    
+    if " range " in typestring:
+      range = typestring.split(" range ")[1].strip()
+    elif "(" in typestring:
+      try:
+        range = re.search(r'\((.+?)\)', typestring).group(1) 
+      except AttributeError:
+        logging.warn("No valid vector range found")
+        range = ""
+    else:
+      range = ""
+
+    print("name:{}, direc:{}, datatype:{}, range:{}, default:{}\n".format(name, direc, datatype, range, default))
     return name, direc, datatype, range, default
+
+  def __str__(self):
+    return str(self.__class__) + ": " + str(self.__dict__)
