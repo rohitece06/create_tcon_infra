@@ -10,3 +10,4 @@
 *.vhdl
 *.log
 try.py
+*vscode*
