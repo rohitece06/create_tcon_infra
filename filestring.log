@@ -1,1 +1,0 @@
-  DWIDTH : integer; AWIDTH: integer range 1 to 10 := 3; BASE: integer := 4
