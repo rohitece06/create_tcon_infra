@@ -53,41 +53,44 @@ class ParserType:
         if start_collecting:
           found += " "+token_to_add
 
-
     # Remove space before ; and (
     no_space_end = re.sub(r'\s+;',';', found)
     no_space_start_end = re.sub(r'\s+\(','(', no_space_end)   
     return no_space_start_end
 
-  # def __str__(self):
-
 class Entity:
-  def __init__(self, parserobject):
-    self.ports = self.get_entries(parserobject)
-    self.generics = self.get_entries(parserobject)
+  def __init__(self, portparser, genericparser=""):
+    self.ports = self.get_entries(portparser)
+    self.generics = self.get_entries(genericparser) if genericparser else ""
   
   def get_entries(self, parserobject):
     entries = []
-    glob = parserobject.string
-    definition = None
-    for entry in glob.split(";"):
-      if parserobject.decl_type == "port":
-        definition = Port(entry)
-      elif parserobject.decl_type == "generic":
-        definition = Generic(entry)
-      else:
+    if parserobject.decl_type in ["port", "generic"]:
+      for entry in parserobject.string.split(";"):      
+        definition = Port_Generic(entry)
+        entries.append(definition)
+    else:
         logging.error("Wrong parser object type")
-
-      entries.append(definition)
-
+    
     return entries
 
-class Port:
-  def __init__(self, portstring):
+class Port_Generic:
+  def __init__(self, entrystring):
     self.name, self.direc, self.dataype, self.range, self.default = \
-      self.get_typevalues(portstring)
+      self.get_typevalues(entrystring)
 
-class Generic:
-  def __init__(self, genericstring):
-    self.name, self.direc, self.dataype, self.range, self.default = \
-      self.get_typevalues(genericstring)
+  def get_typevalues(self, string):
+    val_split = string.split(":=")
+    default = val_split[1] if ":=" in string else ""
+    name_split = val_split[0].split(":")
+    name = name_split[0]
+    type_split = name_split[1].split()
+    if type_split[0] in ["in", "out", "inout"]:
+      direc = type_split[0]
+      datatype = type_split[1].rstrip("(")
+    else:
+      direc = ""
+      datatype = type_split[0].rstrip("(")
+
+    range = ""
+    return name, direc, datatype, range, default
