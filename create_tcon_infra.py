@@ -2,6 +2,39 @@ import re
 import parser_classes as PARSER
 
 if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="""
+            This script generates TCON infrastructure from an entity. This script
+            requires the folder structure to be SEL standard RTL folder structure.
+            If tb and sim folder does not exist, they will be created. Existing
+            folder content will not be overwritten in case of name conflict.
+            Input: 1) Full path to the component. Current directory will be used
+                      if not provided
+                   2) Port mapping configuration json: provides mapping for
+                      components ports and instantiation of relevant tcon
+                      testbench component. Example:
+                      {
+                        "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
+                        "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
+                                   :
+                                   :
+                      }
+                      Valid PORT_TYPEs are (case-insensitive):
+                            CLK, RST, IRB, and SAIF (AXI, ETH, and more to come)
+                      PORT_NAMEs should match UUT's port names. Basic wildcards
+                      (*, ?) usage is supported for PORT_NAMEs
+
+            Output: 1) Basic tb file UUT port mapping, tcon.py, and common.py
+            """)
+  parser.add_argument('-c', '--component_path', type=str, help=\
+                      "Path to the component's directory. Entity name is \
+                       extracted from the path. Default is current directory", \
+                      required=False)
+  parser.add_argument('-t', '--top_level', action="store_true", default=False,\
+                      help="Is this a top-level component")
+
+
+
+  args = parser.parse_args()
     lines_without_comments =""
     with open("debounce.vhdl", "r") as f:
         for line in f.readlines():
@@ -13,14 +46,14 @@ if __name__ == "__main__":
     # print(filestring)
     uutname = "debounce"
     entity_glob = PARSER.ParserType("entity", filestring, uutname).string
-    # print(entity.__dict__)   
+    # print(entity.__dict__)
     # print(entity_glob)
     ports_parser = PARSER.ParserType("port", entity_glob)
     generics_parser = PARSER.ParserType("generic", entity_glob)
     entity_inst = PARSER.Entity(ports_parser, generics_parser)
     with open("filestring.log", "w") as f:
         for generic in entity_inst.generics:
-            f.write(str(generic)+"\n")        
+            f.write(str(generic)+"\n")
         for port in entity_inst.ports:
             f.write(str(port)+"\n")
-    
+
