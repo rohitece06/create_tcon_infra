@@ -3,34 +3,48 @@ import parser_classes as PARSER
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
-            This script generates TCON infrastructure from an entity. This script
-            requires the folder structure to be SEL standard RTL folder structure.
-            If tb and sim folder does not exist, they will be created. Existing
-            folder content will not be overwritten in case of name conflict.
-            Input: 1) Full path to the component. Current directory will be used
-                        if not provided
-                   2) Port mapping configuration json: provides mapping for
-                        components ports and instantiation of relevant tcon
-                        testbench component. Example:
-                        {
-                        "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
-                        "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
-                                    :
-                                    :
-                        }
-                        Valid PORT_TYPEs are (case-insensitive):
-                            CLK, RST, IRB, and SAIF (AXI, ETH, and more to come)
-                        PORT_NAMEs should match UUT's port names. Basic wildcards
-                        (*, ?) usage is supported for PORT_NAMEs 
+        This script generates TCON infrastructure from an entity. This script
+        requires the folder structure to be SEL standard RTL folder structure.
+        If tb and sim folder does not exist, they will be created. Existing
+        folder content will not be overwritten in case of name conflict and
+        file names suffixed with current date and time will be created.
 
-            Output: 1) Basic tb file UUT port mapping, SAIF/IRB instantiation
-                    2) Basic tcon.py, common.py, and pysim.xml
-                    
-            """)
+        Input: 1) Full path to the component. Current directory will be used
+                  if not provided
+               2) Port mapping configuration json: provides mapping for
+                  components ports and instantiation of relevant tcon
+                  testbench component. Example:
+                  {
+                  "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
+                  "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
+                              :
+                              :
+                  }
+                  Valid PORT_TYPEs are (case-insensitive):
+                      CLK, RST, IRB_MASTER, IRB_SLAVE, SAIF_MASTER, and
+                      SAIF_SLAVE (AXI, ETH, and more to come)
+
+                  PORT_NAMEs should match UUT's port names. Basic wildcards
+                  (*, ?) usage is supported for PORT_NAMEs
+
+                  Note: If this file is not provided, this script will try
+                        to infer PORT_TYPEs for component's ports by port
+                        names. For example, if port nameis clk or starts
+                        with clk_ or ends with _clk, it will be assigned a
+                        CLK type. Same goes with RST type (rst/reset, starts
+                        with rst_ or ends with _rst. Additionally, if the
+                        port name started with irb_ and saif_ it will
+                        be assigned to SAIF and IRB port type respectively.
+
+        Output: 1) Basic tb file with UUT port mapping, SAIF/IRB tcon tb
+                   component instantiation
+                2) Basic tcon.py, common.py, and pysim.xml """)
+
     parser.add_argument('-c', '--component_path', type=str, help=\
                         "Path to the component's directory. Entity name is \
                         extracted from the path. Default is current directory",
                         default=os.getcwd(), required=False)
+
     parser.add_argument('-j', '--config_json', type=str, help="Full path for\
                         json configuration file", required=False)
 
