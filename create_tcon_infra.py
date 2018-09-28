@@ -1,4 +1,4 @@
-import re
+import re, os, time
 import parser_classes as PARSER
 
 if __name__ == "__main__":
@@ -7,7 +7,7 @@ if __name__ == "__main__":
         requires the folder structure to be SEL standard RTL folder structure.
         If tb and sim folder does not exist, they will be created. Existing
         folder content will not be overwritten in case of name conflict and
-        file names suffixed with current date and time will be created.
+        file names suffixed with seconds since epoch will be created.
 
         Input: 1) Full path to the component. Current directory will be used
                   if not provided
@@ -49,11 +49,19 @@ if __name__ == "__main__":
                         json configuration file", required=False)
 
 
-
     args = parser.parse_args()
+    comp_path = os.path.join(args.component_path)
+    comp_name = os.path.basename(comp_path)
+    tb_file = get_tb_file(comp_path)
+    def get_tb_file(comppath):
+        compname = os.path.basename(comppath)
+        tb_file = os.path.join(comp_path, "tb/{}_tb/src/{}_tb.vhd".format(comp_name, comp_name))
+        if os.path.isfile(tb_file):
+            tb_file = os.path.join(comp_path, "tb/{}_tb/src/{}_tb_{}.vhd".\
+                                   format(comp_name, comp_name, time.time()))
 
     lines_without_comments =""
-    with open("debounce.vhdl", "r") as f:
+    with open(, "r") as f:
         for line in f.readlines():
             lines_without_comments += (line.strip("\n")).split("--")[0]
 
