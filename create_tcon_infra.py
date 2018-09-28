@@ -2,39 +2,42 @@ import re
 import parser_classes as PARSER
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description="""
+    parser = argparse.ArgumentParser(description="""
             This script generates TCON infrastructure from an entity. This script
             requires the folder structure to be SEL standard RTL folder structure.
             If tb and sim folder does not exist, they will be created. Existing
             folder content will not be overwritten in case of name conflict.
             Input: 1) Full path to the component. Current directory will be used
-                      if not provided
+                        if not provided
                    2) Port mapping configuration json: provides mapping for
-                      components ports and instantiation of relevant tcon
-                      testbench component. Example:
-                      {
+                        components ports and instantiation of relevant tcon
+                        testbench component. Example:
+                        {
                         "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
                         "PORT_TYPE: ["PORT_NAME", "PORT_NAME"],
-                                   :
-                                   :
-                      }
-                      Valid PORT_TYPEs are (case-insensitive):
+                                    :
+                                    :
+                        }
+                        Valid PORT_TYPEs are (case-insensitive):
                             CLK, RST, IRB, and SAIF (AXI, ETH, and more to come)
-                      PORT_NAMEs should match UUT's port names. Basic wildcards
-                      (*, ?) usage is supported for PORT_NAMEs
+                        PORT_NAMEs should match UUT's port names. Basic wildcards
+                        (*, ?) usage is supported for PORT_NAMEs 
 
-            Output: 1) Basic tb file UUT port mapping, tcon.py, and common.py
+            Output: 1) Basic tb file UUT port mapping, SAIF/IRB instantiation
+                    2) Basic tcon.py, common.py, and pysim.xml
+                    
             """)
-  parser.add_argument('-c', '--component_path', type=str, help=\
-                      "Path to the component's directory. Entity name is \
-                       extracted from the path. Default is current directory", \
-                      required=False)
-  parser.add_argument('-t', '--top_level', action="store_true", default=False,\
-                      help="Is this a top-level component")
+    parser.add_argument('-c', '--component_path', type=str, help=\
+                        "Path to the component's directory. Entity name is \
+                        extracted from the path. Default is current directory",
+                        default=os.getcwd(), required=False)
+    parser.add_argument('-j', '--config_json', type=str, help="Full path for\
+                        json configuration file", required=False)
 
 
 
-  args = parser.parse_args()
+    args = parser.parse_args()
+
     lines_without_comments =""
     with open("debounce.vhdl", "r") as f:
         for line in f.readlines():
