@@ -1,5 +1,12 @@
-import re, os, time
+import re, os, time, argparse
 import parser_classes as PARSER
+
+def get_tb_file(comppath):
+    compname = os.path.basename(comppath)
+    tb_file = os.path.join(comppath, "tb/{}_tb/src/{}_tb.vhd".format(compname, compname))
+    if os.path.isfile(tb_file):
+        tb_file = os.path.join(comppath, "tb/{}_tb/src/{}_tb_{}.vhd".\
+                                format(compname, compname, time.time()))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
@@ -40,36 +47,29 @@ if __name__ == "__main__":
                    component instantiation
                 2) Basic tcon.py, common.py, and pysim.xml """)
 
-    parser.add_argument('-c', '--component_path', type=str, help=\
+    parser.add_argument('-p', '--component-path', type=str, help=\
                         "Path to the component's directory. Entity name is \
                         extracted from the path. Default is current directory",
                         default=os.getcwd(), required=False)
 
-    parser.add_argument('-j', '--config_json', type=str, help="Full path for\
+    parser.add_argument('-j', '--config-json', type=str, help="Full path for\
                         json configuration file", required=False)
 
 
     args = parser.parse_args()
-    comp_path = os.path.join(args.component_path)
-    comp_name = os.path.basename(comp_path)
-    tb_file = get_tb_file(comp_path)
-    def get_tb_file(comppath):
-        compname = os.path.basename(comppath)
-        tb_file = os.path.join(comp_path, "tb/{}_tb/src/{}_tb.vhd".format(comp_name, comp_name))
-        if os.path.isfile(tb_file):
-            tb_file = os.path.join(comp_path, "tb/{}_tb/src/{}_tb_{}.vhd".\
-                                   format(comp_name, comp_name, time.time()))
+    uutpath = os.path.abspath(os.path.join(args.component_path))
+    uutname = os.path.basename(uutpath)
+    tb_file = get_tb_file(uutpath)
+    uut_file = os.path.join(uutpath, "src", uutname+".vhd")
 
     lines_without_comments =""
-    with open(, "r") as f:
+    with open(uut_file, "r") as f:
         for line in f.readlines():
             lines_without_comments += (line.strip("\n")).split("--")[0]
 
     filestring = re.sub(r'\s+', ' ', lines_without_comments)
 
-
     # print(filestring)
-    uutname = "debounce"
     entity_glob = PARSER.ParserType("entity", filestring, uutname).string
     # print(entity.__dict__)
     # print(entity_glob)
