@@ -13,20 +13,26 @@ entity debounce is -- hello there
 	( 
 	clk        : in  std_logic  ; 
 	max_count  : in  std_logic_vector(7 downto 0);
+	-- IRB
 	irb_addr   : in std_logic_vector(AWIDTH-1 downto 0);
 	irb_rd	   : in std_logic;
 	irb_wr	   : in std_logic;
 	irb_data   : in std_logic_vector(DWIDTH-1 downto 0);
+	-- Saif master
 	saif_rts   : out std_logic; --NR
 	saif_cts   : in std_logic;
 	saif_data_out  : out std_logic_vector(DWIDTH-1 downto 0);
+	-- Saif slave
 	saif_rtr   : out std_logic; --NR
 	saif_ctr   : in std_logic; --NR
 	saif_data_in : in std_logic_vector(DWIDTH-1 downto 0);
+	-- start done master
 	start_out  : out std_logic; --NR
 	done_in  : in std_logic; --NR
+	-- start done slave
 	start_in  : in std_logic; --NR
 	done_out  : out std_logic; --NR
+	-- misc
 	serial_in  : in  std_logic  ; 
 	serial_out : out std_logic;
 	serial_out2 : out std_logic_vector(0 to 4) := (others => '0'); 
