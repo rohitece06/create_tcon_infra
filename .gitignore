@@ -11,3 +11,4 @@
 *.log
 try.py
 *vscode*
+*__pycache__*
