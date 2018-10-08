@@ -32,7 +32,7 @@ if __name__ == "__main__":
                       SAIF_SLAVE (AXI, ETH, and more to come)
 
                   PORT_NAMEs should match UUT's port names. Basic wildcards
-                  (*, ?) usage is supported for PORT_NAMEs
+                  (* and ?) usage is supported for PORT_NAMEs
 
                   Note: If this file is not provided, this script will try
                         to infer PORT_TYPEs for component's ports by port
@@ -76,9 +76,5 @@ if __name__ == "__main__":
     ports_parser = PARSER.ParserType("port", entity_glob)
     generics_parser = PARSER.ParserType("generic", entity_glob)
     entity_inst = PARSER.Entity(ports_parser, generics_parser)
-    with open("filestring.log", "w") as f:
-        for generic in entity_inst.generics:
-            f.write(str(generic)+"\n")
-        for port in entity_inst.ports:
-            f.write(str(port)+"\n")
+
 

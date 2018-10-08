@@ -59,11 +59,16 @@ class ParserType:
     return no_space_start_end
 
 class Entity:
-  def __init__(self, portparser, genericparser=""):
+  def __init__(self, portparser, genericparser="", config=""):
     self.ports = self.get_entries(portparser)
     self.generics = self.get_entries(genericparser) if genericparser else ""
+    self.bustype = self.get_bus_type(config)
   
   def get_entries(self, parserobject):
+    """
+      Extract entry members of a port or a generic like name of the port, direction,
+      data type, range, and default value if any
+    """
     entries = []
     if parserobject.decl_type in ["port", "generic"]:
       for entry in parserobject.string.split(";"):      
@@ -71,8 +76,16 @@ class Entity:
         entries.append(definition)
     else:
         logging.error("Wrong parser object type")
-    
+
     return entries
+
+
+  def get_bus_type(self, config):
+    """
+      Assign bus types of each port, based on a default or supplied json config 
+    """
+    return 
+    
 
   def __str__(self):
       return str(self.__class__) + ": " + str(self.__dict__)    
