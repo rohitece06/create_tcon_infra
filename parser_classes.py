@@ -1,5 +1,6 @@
 import re
 import logging
+
 class ParserType:
   def __init__(self, globtype, glob, name=""):
     """
@@ -57,12 +58,30 @@ class ParserType:
     no_space_end = re.sub(r'\s+;',';', found)
     no_space_start_end = re.sub(r'\s+\(','(', no_space_end)   
     return no_space_start_end
+DEFAUTL_CONFIG = { "CLK" : {"pattern": "clk", "tb":"clocker_t0"},
+                   "RST" : {"pattern": ["rst", "reset"], "tb":None},
+                   "IRB" : {"pattern": "irb", "tb": "irb_master"},
+                   "SAIFM" : {"pattern": "saifm", "tb": "saif_master"},
+                   "SAIFS" : {"pattern": "saifs", "tb": "saif_slave"},
+                   "MISC": {"pattern": None, "tb": None}}
+class Bus:
+  def __init__(self, portname, config):
+    self.name = portname
+    self.config = get_bustype(portname, config=DEFAUTL_CONFIG)
 
 class Entity:
   def __init__(self, portparser, genericparser="", config=""):
-    self.ports = self.get_entries(portparser)
     self.generics = self.get_entries(genericparser) if genericparser else ""
-    self.bustype = self.get_bus_type(config)
+    self.port_buses = self.get_buses(portparser, config)
+
+  def get_buses(self, parserobject, config):
+    """
+      Assign bus types of each port, based on a default or supplied json config 
+    """
+    ports = self.get_entries(parserobject)
+
+    return ports
+
   
   def get_entries(self, parserobject):
     """
@@ -77,15 +96,7 @@ class Entity:
     else:
         logging.error("Wrong parser object type")
 
-    return entries
-
-
-  def get_bus_type(self, config):
-    """
-      Assign bus types of each port, based on a default or supplied json config 
-    """
-    return 
-    
+    return entries    
 
   def __str__(self):
       return str(self.__class__) + ": " + str(self.__dict__)    
