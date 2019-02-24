@@ -1,4 +1,4 @@
-import re, os, time, argparse
+import re, os, time, argparse, sys
 import parser_classes as PARSER
 
 def get_tb_file(comppath):
@@ -63,9 +63,13 @@ if __name__ == "__main__":
     uut_file = os.path.join(uutpath, "src", uutname+".vhd")
 
     lines_without_comments =""
-    with open(uut_file, "r") as f:
-        for line in f.readlines():
-            lines_without_comments += (line.strip("\n")).split("--")[0]
+    try:
+        with open(uut_file, "r") as f:
+            for line in f.readlines():
+                lines_without_comments += (line.strip("\n")).split("--")[0]
+    except:
+        parser.print_help()
+        exit()
 
     filestring = re.sub(r'\s+', ' ', lines_without_comments)
 

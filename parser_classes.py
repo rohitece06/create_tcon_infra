@@ -154,7 +154,7 @@ class Port_Generic:
     else:
       range = ""
 
-    print("name:{}, direc:{}, datatype:{}, range:{}, default:{}\n".format(name, direc, datatype, range, default))
+    print("name: {}, direc: {}, datatype: {}, range: {}, default: {}\n".format(name, direc, datatype, range, default))
     return name, direc, datatype, range, default
 
   def __str__(self):
