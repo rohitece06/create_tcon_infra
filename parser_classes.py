@@ -1,6 +1,43 @@
 import re
 import logging
 
+START_PAREN    = "("
+END_PAREN      = ")"
+# Every VHDL block type that defines a component entirely
+VHDL_BLOCK     = {"type"        : ["entity", "component", "package"],
+                  "start_token" : "is", 
+                  "end_token"   : "end"}
+
+# VHDL interface types
+VHDL_IF        = {"type"        : ["generic", "port"], 
+                  "start_token" : START_PAREN,
+                  "end_token"   : ");"}
+
+# BLocks inside VHDL "architecture": Declaration (_DECL) and Definition (_DEF)
+#   * Declaration contains signal, function, alias declaration inside the 
+#     architecture
+VHDL_ARCH_DECL = {"type"        : ["architecture declaration"], 
+                  "start_token" : "is", 
+                  "end_token"   : "begin"}
+VHDL_ARCH_DEF  = {"type"        : ["architecture definition"], 
+                  "start_token" : "begin", 
+                  "end_token"   : "end"}
+VHDL_PROC      = {"type"        : ["process", "block"], 
+                  "start_token" : "begin",
+                  "end_token"   : "end"}
+
+VHDL_CONSTRUCT_TYPES = [VHDL_BLOCK, VHDL_IF, VHDL_ARCH_DECL, VHDL_ARCH_DEF, 
+                        VHDL_PROC]
+
+# VHDL Port direction types
+VHDL_DIR_TYPE   = ["in", "out", "inout"]
+# Instant assignment operator
+INST_ASSIGN_OP  = ":="
+# Signal assignment operator
+SIG_ASSIGN_OP   = "<="
+
+
+
 class ParserType:
   def __init__(self, globtype, glob, name=""):
     """
@@ -9,13 +46,33 @@ class ParserType:
     """
     self.decl_name = name
     self.decl_type = globtype
-    self.decl_start = "is" if globtype in ["entity", "component", "package"]\
-                      else "(" if globtype in ["generic", "port"]\
-                      else ""
-    self.decl_end = "end" if globtype in ["entity", "component", "package"]\
-                    else ");"  if globtype in ["generic", "port"]\
-                    else ""
+    self.decl_start, self.decl_end = self.get_start_end_tokens(globtype)
+    # self.decl_start = BLOCK_START     if globtype in VHDL_BLOCK_TYPE else \
+    #                   START_PAREN     if globtype in VHDL_IF_TYPE    else \
+    #                   ARCH_DECL_START if globtype in VHDL_ARCH_DECL  else \
+    #                   ARCH_DEF_START  if globtype in VHDL_ARCH_DEF   else \
+    #                   None
+    # self.decl_end = BLOCK_END if globtype in VHDL_BLOCK_TYPE  else \
+    #                 IF_END    if globtype in VHDL_IF_TYPE     else \
+    #                 ARCH_DECL_END if globtype in VHDL_ARCH_DECL else
+                    # ""
     self.string = self.get_glob(glob)
+
+  def get_start_end_tokens(self, globtype):
+    """
+    Assign start/end token for each VHDL type. For example, all declaration
+    inside an architecture starts after "is" (architecture xxx of <entity> is)
+    and ends before "begin". After begin actual code starts.
+    """
+    for contype in VHDL_CONSTRUCT_TYPES:
+      if globtype in contype["type"]:
+        return contype["start_token"], contype["end_token"]
+        break
+      else:
+        continue
+    else:
+      return None, None
+      logging.error("{} VHDL construct type is not supported".format(globtype))
 
   def get_glob(self, glob):
     """
@@ -24,7 +81,7 @@ class ParserType:
     string for ports declaration, and so on
     """
     found = ""
-    if self.decl_type in ["entity", "component", "package"]:
+    if self.decl_type in VHDL_BLOCK["type"]:
       start = "{} {} {}".format(self.decl_type, self.decl_name, self.decl_start)
       search_string = '{}(.+?){}'.format(start, self.decl_end)
       try:    
@@ -33,7 +90,7 @@ class ParserType:
         logging.warn(
           "No {} type declaration block found!!!".format(self.decl_type))
 
-    elif self.decl_type in ["generic", "port"]:
+    elif self.decl_type in VHDL_IF["type"]:
       start = "{}{}".format(self.decl_type, self.decl_start)
       false_end = False
       start_collecting = False
@@ -56,14 +113,22 @@ class ParserType:
 
     # Remove space before ; and (
     no_space_end = re.sub(r'\s+;',';', found)
-    no_space_start_end = re.sub(r'\s+\(','(', no_space_end)   
+    no_space_start_end = re.sub(r'\s+\(', START_PAREN, no_space_end)   
     return no_space_start_end
-DEFAUTL_CONFIG = { "CLK" : {"pattern": "clk", "tb":"clocker_t0"},
-                   "RST" : {"pattern": ["rst", "reset"], "tb":None},
-                   "IRB" : {"pattern": "irb", "tb": "irb_master"},
-                   "SAIFM" : {"pattern": "saifm", "tb": "saif_master"},
-                   "SAIFS" : {"pattern": "saifs", "tb": "saif_slave"},
-                   "MISC": {"pattern": None, "tb": None}}
+
+# Use default BUS configurations if user did not provide one
+DEFAULT_BUS_CONFS = { "CLK"   : {"pattern": ["clk", "clock"], \
+                                 "tb":"tb_tcon_clocker"},
+                      "RST"   : {"pattern": ["rst", "reset"], "tb":None},
+                      "IRB"   : {"pattern": "irb", "tb": "tb_tcon_irb_master"},
+                      "SAIFM" : {"pattern": "saif", \
+                                 "tb": "tb_tcon_saif_master"},
+                      "SAIFS" : {"pattern": "saif", "tb": "tb_tcon_saif_slave"},
+                      "SDM"   : {"pattern": ["start", "done"], \
+                                 "tb": "tb_tcon_start_done"},
+                      "SDS"   : {"pattern": ["start", "done"], \
+                                 "tb": "tb_tcon_start_done_slave"},
+                      "MISC"  : {"pattern": None, "tb": None}}
 class Bus:
   def __init__(self, portname, config):
     self.name = portname
@@ -89,7 +154,7 @@ class Entity:
       data type, range, and default value if any
     """
     entries = []
-    if parserobject.decl_type in ["port", "generic"]:
+    if parserobject.decl_type in VHDL_IF["type"]:
       for entry in parserobject.string.split(";"):      
         definition = Port_Generic(entry)
         entries.append(definition)
@@ -110,8 +175,8 @@ class Port_Generic:
     # Find default value provided for a generic or a port.
     # Default value is always provide to the right of :=
     # We dont care if it is a number or string or whatver
-    val_split = string.split(":=")
-    default = val_split[1].strip() if ":=" in string else ""
+    val_split = string.split(INST_ASSIGN_OP)
+    default = val_split[1].strip() if INST_ASSIGN_OP in string else None
     # Name of the generic/port is always the first word to the left 
     # of : symbol in the definition entry
     name_split = val_split[0].split(":")
@@ -124,16 +189,16 @@ class Port_Generic:
     # in, out, inout
     # direction, if any, and the datatype are always separated by
     # a space (runs of spaces has already been removed)
-    if type_split[0] in ["in", "out", "inout"]:
+    if type_split[0] in VHDL_DIR_TYPE:
       direc = type_split[0].strip()
-      datatype = type_split[1].split("(")[0].strip()
+      datatype = type_split[1].split(START_PAREN)[0].strip()
       
     else:
-      direc = ""
+      direc = None
       # If there are no direction info, then immediately right to
       # : will be the datatype. remove ( and other character after (
       # from datatype 
-      datatype = type_split[0].split("(")[0].strip()
+      datatype = type_split[0].split(START_PAREN)[0].strip()
       
 
     # If there is a (...) or "range" keyword present in the string right 
@@ -145,14 +210,14 @@ class Port_Generic:
     
     if " range " in typestring:
       range = typestring.split(" range ")[1].strip()
-    elif "(" in typestring:
+    elif START_PAREN in typestring:
       try:
         range = re.search(r'\((.+?)\)', typestring).group(1) 
       except AttributeError:
         logging.warn("No valid vector range found")
-        range = ""
+        range = None
     else:
-      range = ""
+      range = None
 
     print("name: {}, direc: {}, datatype: {}, range: {}, default: {}\n".format(name, direc, datatype, range, default))
     return name, direc, datatype, range, default
