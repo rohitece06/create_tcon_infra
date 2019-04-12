@@ -72,13 +72,19 @@ if __name__ == "__main__":
         exit()
 
     filestring = re.sub(r'\s+', ' ', lines_without_comments)
+    filestring=filestring.replace(";", "; ")
+    filestring=filestring.replace(";  ", "; ")
 
     # print(filestring)
-    entity_glob = PARSER.ParserType("entity", filestring, uutname).string
-    # print(entity.__dict__)
-    # print(entity_glob)
-    ports_parser = PARSER.ParserType("port", entity_glob)
-    generics_parser = PARSER.ParserType("generic", entity_glob)
-    entity_inst = PARSER.Entity(ports_parser, generics_parser)
+    # entity_glob = PARSER.ParserType("entity", filestring, uutname).string
+    # # print(entity.__dict__)
+    # # print(entity_glob)
+    # ports_parser = PARSER.ParserType("port", entity_glob)
+    # generics_parser = PARSER.ParserType("generic", entity_glob)
+    # entity_inst = PARSER.Entity(ports_parser, generics_parser)
+    arch_glob = PARSER.ParserType(PARSER.VHDL_ARCH["type"][0],
+                                       filestring, uutname)
+    # print(arch_glob.string["arch_decl"])
+    print(arch_glob.string["arch_def"])
 
 

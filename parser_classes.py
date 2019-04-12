@@ -16,9 +16,9 @@ VHDL_IF        = {"type"        : ["generic", "port"],
 # BLocks inside VHDL "architecture": Declaration (_DECL) and Definition (_DEF)
 #   * Declaration contains signal, function, alias declaration inside the 
 #     architecture
-VHDL_ARCH_DECL = {"type"        : ["architecture declaration"], 
+VHDL_ARCH      = {"type"        : ["architecture"], 
                   "start_token" : "is", 
-                  "end_token"   : "begin"}
+                  "end_token"   : "end"}
 VHDL_ARCH_DEF  = {"type"        : ["architecture definition"], 
                   "start_token" : "begin", 
                   "end_token"   : "end"}
@@ -26,8 +26,7 @@ VHDL_PROC      = {"type"        : ["process", "block"],
                   "start_token" : "begin",
                   "end_token"   : "end"}
 
-VHDL_CONSTRUCT_TYPES = [VHDL_BLOCK, VHDL_IF, VHDL_ARCH_DECL, VHDL_ARCH_DEF, 
-                        VHDL_PROC]
+VHDL_CONSTRUCT_TYPES = [VHDL_BLOCK, VHDL_IF, VHDL_ARCH, VHDL_PROC]
 
 # VHDL Port direction types
 VHDL_DIR_TYPE   = ["in", "out", "inout"]
@@ -47,15 +46,6 @@ class ParserType:
     self.decl_name = name
     self.decl_type = globtype
     self.decl_start, self.decl_end = self.get_start_end_tokens(globtype)
-    # self.decl_start = BLOCK_START     if globtype in VHDL_BLOCK_TYPE else \
-    #                   START_PAREN     if globtype in VHDL_IF_TYPE    else \
-    #                   ARCH_DECL_START if globtype in VHDL_ARCH_DECL  else \
-    #                   ARCH_DEF_START  if globtype in VHDL_ARCH_DEF   else \
-    #                   None
-    # self.decl_end = BLOCK_END if globtype in VHDL_BLOCK_TYPE  else \
-    #                 IF_END    if globtype in VHDL_IF_TYPE     else \
-    #                 ARCH_DECL_END if globtype in VHDL_ARCH_DECL else
-                    # ""
     self.string = self.get_glob(glob)
 
   def get_start_end_tokens(self, globtype):
@@ -72,7 +62,8 @@ class ParserType:
         continue
     else:
       return None, None
-      logging.error("{} VHDL construct type is not supported".format(globtype))
+      logging.error("*{}* VHDL construct type is not supported".\
+                    format(globtype))
 
   def get_glob(self, glob):
     """
@@ -81,15 +72,21 @@ class ParserType:
     string for ports declaration, and so on
     """
     found = ""
+    # If we are looking for entire entity, component, or package declaration
     if self.decl_type in VHDL_BLOCK["type"]:
       start = "{} {} {}".format(self.decl_type, self.decl_name, self.decl_start)
       search_string = '{}(.+?){}'.format(start, self.decl_end)
       try:    
         found = re.search(search_string, glob).group(1)
       except AttributeError:      
-        logging.warn(
-          "No {} type declaration block found!!!".format(self.decl_type))
+        logging.warning(
+          "No *{}* type declaration block found!!!".format(self.decl_type))
 
+      # Remove space before ; and (
+      no_space_end = re.sub(r'\s+;',';', found)
+      no_space_start_end = re.sub(r'\s+\(', START_PAREN, no_space_end)
+
+    # If we are looking for entity interface types such as generics or ports
     elif self.decl_type in VHDL_IF["type"]:
       start = "{}{}".format(self.decl_type, self.decl_start)
       false_end = False
@@ -111,9 +108,53 @@ class ParserType:
         if start_collecting:
           found += " "+token_to_add
 
-    # Remove space before ; and (
-    no_space_end = re.sub(r'\s+;',';', found)
-    no_space_start_end = re.sub(r'\s+\(', START_PAREN, no_space_end)   
+      # Remove space before ; and (
+      no_space_end = re.sub(r'\s+;',';', found)
+      no_space_start_end = re.sub(r'\s+\(', START_PAREN, no_space_end)
+
+    # If we are looking for declaration inside the architecture
+    elif self.decl_type in VHDL_ARCH["type"]:
+      # architecture declaration starts as
+      #   architecture xxx of <entity name> is
+      start_phrase = "{}(.+?)of {} {}".format(self.decl_type, 
+                                              self.decl_name, 
+                                              self.decl_start)
+      # Finds the name of the architecture
+      try:
+        arch_type = re.search(start_phrase, glob).group(1).strip()
+      except AttributeError:
+        logging.error("Couldn't find name of the architecture")
+
+      start_phrase  = "architecture {} of {} {}".format(arch_type,   
+                                                        self.decl_name, 
+                                                        self.decl_start)
+      search_string = '{}(.+?){} {}'.format(start_phrase, 
+                                            self.decl_end, 
+                                            arch_type)
+      try:
+        arch_string = re.search(search_string, glob).group(1)
+      except AttributeError:
+        logging.error(
+          "No *{}* type declaration block found".format(self.decl_type))
+
+      # Split architecture glob into declration and definitition globs
+      ####################
+      ## Find declarations
+      ##########################################################################
+      ##         ARCHITECTURE(s) WITH FUNCTION/PROCEDURES IN 'EM ARE 
+      ##                         NOT SUPPORTED
+      ##########################################################################
+      # 'begin' of function/procedure will mess up regex search
+      # start_phrase remains the same as before
+      arch_split = arch_string.split("begin")
+      no_space_start_end = {"arch_decl": arch_split[0].strip(),
+                            "arch_def" : ' '.join(arch_split[1:])}
+      
+
+    # If we are looking for definitions (i.e., the actual logic of this 
+    # component) inside the architecture
+    # elif self.decl_type in VHDL_ARCH_DECL["type"]:
+   
     return no_space_start_end
 
 # Use default BUS configurations if user did not provide one
