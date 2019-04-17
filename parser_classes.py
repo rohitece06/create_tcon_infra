@@ -182,15 +182,23 @@ class Bus:
 
 
 class Entity:
-    def __init__(self, portparser, genericparser="", config=""):
+    def __init__(self, portparser, genericparser=None, config=None):
         self.generics = self.get_entries(
-            genericparser) if genericparser else ""
-        self.port_buses = self.get_buses(portparser, config)
+            genericparser) if genericparser else None
+        self.buses = self.get_buses(portparser, config)
 
     def get_buses(self, parserobject, config):
         """
-          Assign bus types of each port, based on a default or supplied json
-          config
+        Assign bus types of each port, based on a default or supplied json
+        config
+
+        Args:
+            self: Current object
+            parserobject: Parser.ParserType objects
+            config: Bus configuration in JSON format
+
+        Return;
+          list of Buses _Generic objects
         """
         ports = self.get_entries(parserobject)
 
@@ -200,6 +208,13 @@ class Entity:
         """
           Extract entry members of a port or a generic like name of the port,
           direction, data type, range, and default value if any
+
+          Args:
+            self: Current object
+            parserobject: Parser.ParserType object
+
+          Return:
+            list of Port_Generic objects
         """
         entries = []
         if parserobject.decl_type in VHDL_IF["type"]:
@@ -267,8 +282,8 @@ class Port_Generic:
         else:
             range = None
 
-        print("name: {}, direc: {}, datatype: {}, range: {}, default: {}\n".
-              format(name, direc, datatype, range, default))
+        logging.info("name: {}, direc: {}, datatype: {}, range: {}, default:\
+                    {}\n".format(name, direc, datatype, range, default))
         return name, direc, datatype, range, default
 
     def __str__(self):
