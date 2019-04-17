@@ -1,3 +1,4 @@
+
 import re, os, time, argparse, sys
 import parser_classes as PARSER
 
@@ -7,6 +8,7 @@ def get_tb_file(comppath):
     if os.path.isfile(tb_file):
         tb_file = os.path.join(comppath, "tb/{}_tb/src/{}_tb_{}.vhd".\
                                 format(compname, compname, time.time()))
+    return tb_file                    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
@@ -47,7 +49,7 @@ if __name__ == "__main__":
                    component instantiation
                 2) Basic tcon.py, common.py, and pysim.xml """)
 
-    parser.add_argument('-p', '--component-path', type=str, help=\
+    parser.add_argument('-p', '--component-path', type=str, help=
                         "Path to the component's directory. Entity name is \
                         extracted from the path. Default is current directory",
                         default=os.getcwd(), required=False)
@@ -76,15 +78,15 @@ if __name__ == "__main__":
     filestring=filestring.replace(";  ", "; ")
 
     # print(filestring)
-    # entity_glob = PARSER.ParserType("entity", filestring, uutname).string
+    entity_glob = PARSER.ParserType("entity", filestring, uutname).string
     # # print(entity.__dict__)
     # # print(entity_glob)
-    # ports_parser = PARSER.ParserType("port", entity_glob)
-    # generics_parser = PARSER.ParserType("generic", entity_glob)
-    # entity_inst = PARSER.Entity(ports_parser, generics_parser)
-    arch_glob = PARSER.ParserType(PARSER.VHDL_ARCH["type"][0],
-                                       filestring, uutname)
+    ports_parser = PARSER.ParserType("port", entity_glob)
+    generics_parser = PARSER.ParserType("generic", entity_glob)
+    entity_inst = PARSER.Entity(ports_parser, generics_parser)
+    # arch_glob = PARSER.ParserType(PARSER.VHDL_ARCH["type"][0],
+                                    #    filestring, uutname)
     # print(arch_glob.string["arch_decl"])
-    print(arch_glob.string["arch_def"])
+    # print(arch_glob.string["arch_def"])
 
 
