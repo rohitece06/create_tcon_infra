@@ -1,5 +1,6 @@
 import re
 import logging
+import json
 
 START_PAREN = "("
 END_PAREN = ")"
@@ -50,8 +51,8 @@ class ParserType:
     def get_start_end_tokens(self, globtype):
         """
         Assign start/end token for each VHDL type. For example, all declaration
-        inside an architecture starts after "is" (architecture xxx of <entity> is)
-        and ends before "begin". After begin actual code starts.
+        inside an architecture starts after "is" (architecture xxx of <entity>
+        is) and ends before "begin". After begin actual code starts.
         """
         for contype in VHDL_CONSTRUCT_TYPES:
             if globtype in contype["type"]:
@@ -164,10 +165,11 @@ class ParserType:
 DEFAULT_BUS_CONFS = {"CLK": {"pattern": ["clk", "clock"],
                              "tb": "tb_tcon_clocker"},
                      "RST": {"pattern": ["rst", "reset"], "tb": None},
-                     "IRB": {"pattern": "irb", "tb": "tb_tcon_irb_master"},
-                     "SAIFM": {"pattern": "saif",
+                     "IRB": {"pattern": ["irb"], "tb": "tb_tcon_irb_master"},
+                     "SAIFM": {"pattern": ["saif"],
                                "tb": "tb_tcon_saif_master"},
-                     "SAIFS": {"pattern": "saif", "tb": "tb_tcon_saif_slave"},
+                     "SAIFS": {"pattern": ["saif"],
+                               "tb": "tb_tcon_saif_slave"},
                      "SDM": {"pattern": ["start", "done"],
                              "tb": "tb_tcon_start_done"},
                      "SDS": {"pattern": ["start", "done"],
@@ -179,6 +181,36 @@ class Bus:
     def __init__(self, portname, config):
         self.name = portname
         self.config = get_bustype(portname, config=DEFAUTL_CONFIG)
+
+
+def is_bus_match(name, pattern):
+    retval = False
+    for pat in pattern:
+        retval = retval or str.startswith(name, pat+"_")  \
+                        or str.endswith(name, "_"+pat)
+    return retval
+
+
+def asign_bus_type(port_defs, user_config):
+    """
+    This function assign bustype to each port based on the port name, port
+    direction, and default or given json config file
+    Args:
+      port_defs: Port_Generic object
+      cfg: json config (NoneType or Valid json config file)
+    Return:
+      port_defs.bustype is updated with bustype based on json config
+    """
+    if not user_config:
+      user_cfg = DEFAULT_BUS_CONFS
+    else:
+      for key, val in user_config:
+
+      for key, val in DEFAULT_BUS_CONFS.items():
+          if is_bus_match(port_defs.name, val["pattern"]):
+              port_defs.bustype = key
+              port_defs.tbfile = DEFAULT_BUS_CONFS[]
+    return True
 
 
 class Entity:
@@ -200,9 +232,9 @@ class Entity:
         Return;
           list of Buses _Generic objects
         """
-        ports = self.get_entries(parserobject)
+        port_defs = self.get_entries(parserobject)
 
-        return ports
+        return port_defs
 
     def get_entries(self, parserobject):
         """
@@ -223,7 +255,6 @@ class Entity:
                 entries.append(definition)
         else:
             logging.error("Wrong parser object type")
-
         return entries
 
     def __str__(self):
@@ -234,6 +265,10 @@ class Port_Generic:
     def __init__(self, entrystring):
         self.name, self.direc, self.dataype, self.range, self.default = \
             self.get_typevalues(entrystring)
+
+        # Bus type will be assigned later
+        self.bustype = None
+        self.tbfile = None
 
     def get_typevalues(self, string):
         # Find default value provided for a generic or a port.
