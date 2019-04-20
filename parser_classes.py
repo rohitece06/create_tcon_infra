@@ -178,16 +178,16 @@ DEFAULT_BUS_CONFS = {"CLK": {"pattern": ["clk", "clock"],
 
 
 class Bus:
-    def __init__(self, portname, config):
+    def __init__(self, portname, config=None):
         self.name = portname
-        self.config = get_bustype(portname, config=DEFAUTL_CONFIG)
+        self.config = get_bustype(portname, config)
 
 
 def is_bus_match(name, pattern):
     retval = False
     for pat in pattern:
         retval = retval or str.startswith(name, pat+"_")  \
-                        or str.endswith(name, "_"+pat)
+            or str.endswith(name, "_"+pat)
     return retval
 
 
@@ -202,17 +202,15 @@ def asign_bus_type(port_defs, user_config):
       port_defs.bustype is updated with bustype based on json config
     """
     if not user_config:
-      ucfg = json.loads(DEFAULT_BUS_CONFS)
-    else:
-       temp_cfg = json.loads(user_config)
-       def_cfg = json.loads(DEFAULT_BUS_CONFS)
-        for key, val in temp_config:
-            if key in def_cfg
+        ucfg = json.loads(DEFAULT_BUS_CONFS)
+        for key, val in ucfg.items():
+            if is_bus_match(port_defs.name, val["pattern"]):
 
-      for key, val in user_cfg.items():
-          if is_bus_match(port_defs.name, val["pattern"]):
-              port_defs.bustype = key
-              port_defs.tbfile = user_cfg[]
+                port_defs.bustype = key
+                port_defs.tbfile = val["tb"]
+    else:
+        logging.error("Currently, user-defined configs are not supported")
+
     return True
 
 
