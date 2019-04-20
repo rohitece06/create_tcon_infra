@@ -202,14 +202,17 @@ def asign_bus_type(port_defs, user_config):
       port_defs.bustype is updated with bustype based on json config
     """
     if not user_config:
-      user_cfg = DEFAULT_BUS_CONFS
+      ucfg = json.loads(DEFAULT_BUS_CONFS)
     else:
-      for key, val in user_config:
+       temp_cfg = json.loads(user_config)
+       def_cfg = json.loads(DEFAULT_BUS_CONFS)
+        for key, val in temp_config:
+            if key in def_cfg
 
-      for key, val in DEFAULT_BUS_CONFS.items():
+      for key, val in user_cfg.items():
           if is_bus_match(port_defs.name, val["pattern"]):
               port_defs.bustype = key
-              port_defs.tbfile = DEFAULT_BUS_CONFS[]
+              port_defs.tbfile = user_cfg[]
     return True
 
 
