@@ -166,16 +166,11 @@ DEFAULT_BUS_CONFS = {"CLK": {"pattern": ["clk", "clock"],
                              "tb": "tb_tcon_clocker"},
                      "RST": {"pattern": ["rst", "reset"], "tb": None},
                      "IRB": {"pattern": ["irb"], "tb": "tb_tcon_irb_master"},
-                     "SAIFM": {"pattern": ["saif"],
+                     "SAIF": {"pattern": ["saif"],
                                "tb": "tb_tcon_saif_master"},
-                     "SAIFS": {"pattern": ["saif"],
-                               "tb": "tb_tcon_saif_slave"},
-                     "SDM": {"pattern": ["start", "done"],
+                     "SD": {"pattern": ["start", "done"],
                              "tb": "tb_tcon_start_done"},
-                     "SDS": {"pattern": ["start", "done"],
-                             "tb": "tb_tcon_start_done_slave"},
                      "MISC": {"pattern": None, "tb": None}}
-
 
 class Bus:
     def __init__(self, portname, config=None):
@@ -183,15 +178,16 @@ class Bus:
         self.config = get_bustype(portname, config)
 
 
-def is_bus_match(name, pattern):
+def is_bus_match(port_def, pattern):
     retval = False
     for pat in pattern:
-        retval = retval or str.startswith(name, pat+"_")  \
-            or str.endswith(name, "_"+pat)
+        retval = retval or str.startswith(port_def.name, pat+"_")  \
+            or str.endswith(port_def.name, "_"+pat)
+
     return retval
 
 
-def asign_bus_type(port_defs, user_config):
+def asign_bus_type(port_def, user_config):
     """
     This function assign bustype to each port based on the port name, port
     direction, and default or given json config file
@@ -204,15 +200,18 @@ def asign_bus_type(port_defs, user_config):
     if not user_config:
         ucfg = json.loads(DEFAULT_BUS_CONFS)
         for key, val in ucfg.items():
-            if is_bus_match(port_defs.name, val["pattern"]):
+            if is_bus_match(port_def, val["pattern"]):
 
-                port_defs.bustype = key
-                port_defs.tbfile = val["tb"]
+                port_def.bustype = key
+                port_def.tbfile = val["tb"]
     else:
         logging.error("Currently, user-defined configs are not supported")
 
     return True
 
+###############
+##     TODO :::: go over the list of port_defs to find Base bustype, find out if the bus is master interface or a slave interface and assign the member accordingly
+###############
 
 class Entity:
     def __init__(self, portparser, genericparser=None, config=None):
