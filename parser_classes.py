@@ -1,6 +1,7 @@
 import re
 import logging
 import json
+from collections import OrderedDict
 
 START_PAREN = "("
 END_PAREN = ")"
@@ -162,20 +163,48 @@ class ParserType:
 
 
 # Use default BUS configurations if user did not provide one
-DEFAULT_BUS_CONFS = {"CLK": {"pattern": ["clk", "clock"],
-                             "tb": "tb_tcon_clocker"},
-                     "RST": {"pattern": ["rst", "reset"], "tb": None},
-                     "IRB": {"pattern": ["irb"], "tb": "tb_tcon_irb_master"},
-                     "SAIF": {"pattern": ["saif"],
-                               "tb": "tb_tcon_saif_master"},
-                     "SD": {"pattern": ["start", "done"],
-                             "tb": "tb_tcon_start_done"},
-                     "MISC": {"pattern": None, "tb": None}}
+DEFAULT_BUS_CONFS = {"CLK"   : "tb_tcon_clocker",
+                     "MISC"   : None,
+                     "IRBM"  : "tb_tcon_irb_master",
+                     "IRBS"  : "tb_tcon_irb_master",
+                     "SAIFM" : "tb_tcon_saif_master",
+                     "SAIFS" : "tb_tcon_saif_master",
+                     "SDM"   : "tb_tcon_start_done",
+                     "SDS"   : "tb_tcon_start_done_slave"}
+
 
 class Bus:
     def __init__(self, portname, config=None):
         self.name = portname
         self.config = get_bustype(portname, config)
+
+BUS_CFG_FILE = "BUS_CONFIG.cfg"
+
+def read_bus_config(fname):
+    bus_cfg = OrderedDict()
+    try:
+        cfgfile = open(fname, "r")
+    except OSError:
+        logging.error("open({}) failed".format(fname))
+        return None
+
+    prev_bus = None
+    with cfgfile:
+        for line in cfgfile.readlines():
+            entry = line.split(":")
+            port = entry[0].strip()
+            temp = entry[1].strip()
+            if temp.upper() in ["NONE", "MISC"] \
+                            or not temp:
+                bus = None
+            else:
+                bus = temp.upper()
+            # 1) if this bus type is none, add it to a new "MISC" type bus
+            #
+            # if bus == prev_bus and bus:
+
+            bus_cfg[bus] = bus
+    return bus_cfg
 
 
 def is_bus_match(port_def, pattern):
