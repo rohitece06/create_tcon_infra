@@ -73,10 +73,8 @@ if __name__ == "__main__":
     ports_parser = PARSER.ParserType("port", entity_glob)
     generics_parser = PARSER.ParserType("generic", entity_glob)
     entity_inst = PARSER.Entity(ports_parser, generics_parser)
-    # print(entity_inst.buses)
+    print(str(entity_inst.buses[0]))
     # arch_glob = PARSER.ParserType(PARSER.VHDL_ARCH["type"][0],
     #                               filestring, uutname)
     # print(arch_glob.string["arch_decl"])
     # print(arch_glob.string["arch_def"])
-
-

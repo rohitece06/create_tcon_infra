@@ -168,7 +168,7 @@ class ParserType:
 
 
 # Use default BUS configurations if user did not provide one
-DEFAULT_BUS_CONFS = {"CLK"   : "tb_tcon_clocker",
+DEFAULT_TCON_TBS =  {"CLK"   : "tb_tcon_clocker",
                      "MISC"   : None,
                      "IRBM"  : "tb_tcon_irb_master",
                      "IRBS"  : "tb_tcon_irb_master",
@@ -177,13 +177,14 @@ DEFAULT_BUS_CONFS = {"CLK"   : "tb_tcon_clocker",
                      "SDM"   : "tb_tcon_start_done",
                      "SDS"   : "tb_tcon_start_done_slave"}
 
+BUS_CFG_FILE = "BUS_CONFIG.cfg"
+
 
 class Bus:
     def __init__(self, portname, config=None):
         self.name = portname
         self.config = get_bustype(portname, config)
 
-BUS_CFG_FILE = "BUS_CONFIG.cfg"
 
 def read_bus_config(fname):
     bus_cfg = OrderedDict()
@@ -232,7 +233,7 @@ def asign_bus_type(port_def, user_config):
       port_defs.bustype is updated with bustype based on json config
     """
     if not user_config:
-        ucfg = json.loads(DEFAULT_BUS_CONFS)
+        ucfg = json.loads(DEFAULT_TCON_TBS)
         for key, val in ucfg.items():
             if is_bus_match(port_def, val["pattern"]):
 
@@ -320,7 +321,7 @@ class Port_Generic:
         type_split = name_split[1].split()
 
         # there are only three directions in VHDL-93 we use
-        # in, out, inout direction, if any, and the datatype are always 
+        # in, out, inout direction, if any, and the datatype are always
         # separated by a space (runs of spaces has already been removed)
         if type_split[0] in VHDL_DIR_TYPE:
             direc = type_split[0].strip()
@@ -354,7 +355,9 @@ class Port_Generic:
 
         logging.info("name: {}, direc: {}, datatype: {}, range: {}, default:\
                     {}\n".format(name, direc, datatype, range, default))
-        print(get_linenumber(), "......", name, direc, datatype, range, default)
+
+        # print(get_linenumber(), "......", name, direc, datatype, range, default)
+
         return name, direc, datatype, range, default
 
     def __str__(self):
