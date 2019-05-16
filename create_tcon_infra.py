@@ -1,10 +1,15 @@
-
+#!/usr/bin/python3
 import re
 import os
 import time
 import argparse
 import sys
 import parser_classes as PARSER
+from inspect import currentframe
+
+def get_linenumber():
+    cf = currentframe()
+    return cf.f_back.f_lineno
 
 
 def get_tb_file(comppath):
@@ -27,35 +32,7 @@ if __name__ == "__main__":
         Args:
             1)  Full path to the component. Current directory will be used
                 if not provided
-            2)  Port mapping configuration json: provides mapping for
-                components ports and instantiation of relevant tcon
-                testbench component. Example:
-                    {
-                    "PORT_TYPE_1: ["port_name_1", "port_name_2",...],
-                    "PORT_TYPE_2: ["port_name_1", "port_name_2",...],
-                                :
-                                :
-                    }
-                Valid PORT_TYPEs are (case-insensitive):
-                    CLK, RST, IRB_MASTER, IRB_SLAVE, SAIF_MASTER,
-                    SAIF_SLAVE, SD_MASTER, and SD_SLAVE
-                    Notes:: Support AXI, ETH, SPI and others
-
-                PORT_NAMEs should match UUT's port names.
-                    Notes: Support for wildcards (* and ?) to come
-
-            Note: If this file is not provided, this script will try
-                  to infer PORT_TYPEs for component's ports by port
-                  names. For example, if port name is clk or starts
-                  with clk_ or ends with _clk, it will be assigned a
-                  CLK type. Same goes with RST type (i.e., rst/reset, starts
-                  with rst_ or ends with _rst). Additionally, if the
-                  port name started with irb_ and saif_ (_rts/_cts/_rtr/_ctr)
-                  it will be assigned to appropriate SAIF and IRB port
-                  PORT_TYPEs, respectively, based on those ports' VHDL
-                  direction type (in or out). For example, irb_wr is an input
-                  to the UUT, then the UUT is a IRB slave otherwise a IRB
-                  master
+            2)  Port mapping configuration file, refer to provided example file
 
         Return:
             1)  Basic tb file with UUT port mapping, SAIF/IRB tcon tb

@@ -2,6 +2,11 @@ import re
 import logging
 import json
 from collections import OrderedDict
+from inspect import currentframe
+
+def get_linenumber():
+    cf = currentframe()
+    return cf.f_back.f_lineno
 
 START_PAREN = "("
 END_PAREN = ")"
@@ -77,7 +82,7 @@ class ParserType:
         if self.decl_type in VHDL_BLOCK["type"]:
             start = "{} {} {}".format(
                 self.decl_type, self.decl_name, self.decl_start)
-            search_string = '{}(.+?){}'.format(start, self.decl_end)
+            search_string = '{}(.+?) {}'.format(start, self.decl_end)
             try:
                 found = re.search(search_string, glob).group(1)
             except AttributeError:
@@ -311,12 +316,12 @@ class Port_Generic:
         name = name_split[0].strip()
         # To the right of :, it is either direction (for port definition)
         # or the datatype for the generic
+
         type_split = name_split[1].split()
 
         # there are only three directions in VHDL-93 we use
-        # in, out, inout
-        # direction, if any, and the datatype are always separated by
-        # a space (runs of spaces has already been removed)
+        # in, out, inout direction, if any, and the datatype are always 
+        # separated by a space (runs of spaces has already been removed)
         if type_split[0] in VHDL_DIR_TYPE:
             direc = type_split[0].strip()
             datatype = type_split[1].split(START_PAREN)[0].strip()
@@ -333,6 +338,7 @@ class Port_Generic:
         # for the datatype
         # "range" always has a pattern of:
         # datatype<space>range<space>N<space>to<space>M
+        # Note: 'range will never be used in VHDL-93 compatible entity
         typestring = name_split[1]
 
         if " range " in typestring:
@@ -348,6 +354,7 @@ class Port_Generic:
 
         logging.info("name: {}, direc: {}, datatype: {}, range: {}, default:\
                     {}\n".format(name, direc, datatype, range, default))
+        print(get_linenumber(), "......", name, direc, datatype, range, default)
         return name, direc, datatype, range, default
 
     def __str__(self):

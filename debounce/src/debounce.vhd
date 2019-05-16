@@ -8,7 +8,7 @@ entity debounce is -- hello there
 	generic ( DWIDTH : integer;
 			  AWIDTH: integer range 1 to 10 := 3;
 			  BASE: integer := 4;
-			  GEN_STRING : string := "None"
+			  GEN_STRING : string := "None";
 			  GEN_SLV : std_logic_vector(3 downto 0)
 			) ;
 	port
