@@ -258,3 +258,12 @@ class Port_Generic:
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
 
+class TB:
+    def __init__(self, entity):
+        self.arch_decl = []
+        self.arch_def  = []
+        self.tcon_master = self.get_tcon_master()
+        self.uut = entity
+        self.tb_comp = self.get_tb_entities(entity)
+
+    def map_uut():
