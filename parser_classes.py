@@ -3,44 +3,12 @@ import logging
 import json
 from collections import OrderedDict
 from inspect import currentframe
+import templates_and_constants as TC
 
 def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
 
-START_PAREN = "("
-END_PAREN = ")"
-# Every VHDL block type that defines a component entirely
-VHDL_BLOCK = {"type": ["entity", "component", "package"],
-              "start_token": "is",
-              "end_token": "end"}
-
-# VHDL interface types
-VHDL_IF = {"type": ["generic", "port"],
-           "start_token": START_PAREN,
-           "end_token": ");"}
-
-# BLocks inside VHDL "architecture": Declaration (_DECL) and Definition (_DEF)
-#   * Declaration contains signal, function, alias declaration inside the
-#     architecture
-VHDL_ARCH = {"type": ["architecture"],
-             "start_token": "is",
-             "end_token": "end"}
-VHDL_ARCH_DEF = {"type": ["architecture definition"],
-                 "start_token": "begin",
-                 "end_token": "end"}
-VHDL_PROC = {"type": ["process", "block"],
-             "start_token": "begin",
-             "end_token": "end"}
-
-VHDL_CONSTRUCT_TYPES = [VHDL_BLOCK, VHDL_IF, VHDL_ARCH, VHDL_PROC]
-
-# VHDL Port direction types
-VHDL_DIR_TYPE = ["in", "out", "inout"]
-# Instant assignment operator
-INST_ASSIGN_OP = ":="
-# Signal assignment operator
-SIG_ASSIGN_OP = "<="
 
 
 class ParserType:
@@ -60,7 +28,7 @@ class ParserType:
         inside an architecture starts after "is" (architecture xxx of <entity>
         is) and ends before "begin". After begin actual code starts.
         """
-        for contype in VHDL_CONSTRUCT_TYPES:
+        for contype in TC.VHDL_CONSTRUCT_TYPES:
             if globtype in contype["type"]:
                 return contype["start_token"], contype["end_token"]
                 break
@@ -79,7 +47,7 @@ class ParserType:
         """
         found = ""
         # If we are looking for entire entity, component, or pkg declaration
-        if self.decl_type in VHDL_BLOCK["type"]:
+        if self.decl_type in TC.VHDL_BLOCK["type"]:
             start = "{} {} {}".format(
                 self.decl_type, self.decl_name, self.decl_start)
             search_string = '{}(.+?) {}'.format(start, self.decl_end)
@@ -92,10 +60,10 @@ class ParserType:
 
             # Remove space before ; and (
             no_space_end = re.sub(r'\s+;', ';', found)
-            no_space_start_end = re.sub(r'\s+\(', START_PAREN, no_space_end)
+            no_space_start_end = re.sub(r'\s+\(', TC.START_PAREN, no_space_end)
 
         # If we are looking for interface types such as generics or ports
-        elif self.decl_type in VHDL_IF["type"]:
+        elif self.decl_type in TC.VHDL_IF["type"]:
             start = "{}{}".format(self.decl_type, self.decl_start)
             false_end = False
             start_collecting = False
@@ -119,10 +87,10 @@ class ParserType:
 
             # Remove space before ; and (
             no_space_end = re.sub(r'\s+;', ';', found)
-            no_space_start_end = re.sub(r'\s+\(', START_PAREN, no_space_end)
+            no_space_start_end = re.sub(r'\s+\(', TC.START_PAREN, no_space_end)
 
         # If we are looking for declaration inside the architecture
-        elif self.decl_type in VHDL_ARCH["type"]:
+        elif self.decl_type in TC.VHDL_ARCH["type"]:
             # architecture declaration starts as
             #   architecture xxx of <entity name> is
             start_phrase = "{}(.+?)of {} {}".format(self.decl_type,
@@ -167,19 +135,6 @@ class ParserType:
         return no_space_start_end
 
 
-# Use default BUS configurations if user did not provide one
-DEFAULT_TCON_TBS =  {"CLK"   : "tb_tcon_clocker",
-                     "MISC"   : None,
-                     "IRBM"  : "tb_tcon_irb_master",
-                     "IRBS"  : "tb_tcon_irb_master",
-                     "SAIFM" : "tb_tcon_saif_master",
-                     "SAIFS" : "tb_tcon_saif_master",
-                     "SDM"   : "tb_tcon_start_done",
-                     "SDS"   : "tb_tcon_start_done_slave"}
-
-BUS_CFG_FILE = "BUS_CONFIG.cfg"
-
-
 def assign_buses(fname):
     bus_cfg = OrderedDict()
     try:
@@ -208,7 +163,8 @@ def assign_buses(fname):
     return bus_cfg
 
 class Entity:
-    def __init__(self, portparser, genericparser=None, config_file=BUS_CFG_FILE):
+    def __init__(self, portparser, genericparser=None,
+                 config_file=TC.BUS_CFG_FILE):
         self.generics = self.get_entries(
             genericparser) if genericparser else None
         self.ports = self.get_entries(portparser) if portparser else None
@@ -227,7 +183,7 @@ class Entity:
             list of Port_Generic objects
         """
         entries = []
-        if parserobject.decl_type in VHDL_IF["type"]:
+        if parserobject.decl_type in TC.VHDL_IF["type"]:
             for entry in parserobject.string.split(";"):
                 definition = Port_Generic(entry)
                 entries.append(definition)
@@ -248,8 +204,8 @@ class Port_Generic:
         # Find default value provided for a generic or a port.
         # Default value is always provide to the right of :=
         # We dont care if it is a number or string or whatver
-        val_split = string.split(INST_ASSIGN_OP)
-        default = val_split[1].strip() if INST_ASSIGN_OP in string else None
+        val_split = string.split(TC.INST_ASSIGN_OP)
+        default = val_split[1].strip() if TC.INST_ASSIGN_OP in string else None
         # Name of the generic/port is always the first word to the left
         # of : symbol in the definition entry
         name_split = val_split[0].split(":")
@@ -262,16 +218,16 @@ class Port_Generic:
         # there are only three directions in VHDL-93 we use
         # in, out, inout direction, if any, and the datatype are always
         # separated by a space (runs of spaces has already been removed)
-        if type_split[0] in VHDL_DIR_TYPE:
+        if type_split[0] in TC.VHDL_DIR_TYPE:
             direc = type_split[0].strip()
-            datatype = type_split[1].split(START_PAREN)[0].strip()
+            datatype = type_split[1].split(TC.START_PAREN)[0].strip()
 
         else:
             direc = None
             # If there are no direction info, then immediately right to
             # : will be the datatype. remove ( and other character after (
             # from datatype
-            datatype = type_split[0].split(START_PAREN)[0].strip()
+            datatype = type_split[0].split(TC.START_PAREN)[0].strip()
 
         # If there is a (...) or "range" keyword present in the string right
         # of : (default value has already been stripped), it must be a range
@@ -283,7 +239,7 @@ class Port_Generic:
 
         if " range " in typestring:
             range = typestring.split(" range ")[1].strip()
-        elif START_PAREN in typestring:
+        elif TC.START_PAREN in typestring:
             try:
                 range = re.search(r'\((.+?)\)', typestring).group(1)
             except AttributeError:

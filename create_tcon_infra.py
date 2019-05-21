@@ -29,6 +29,9 @@ if __name__ == "__main__":
         folder content will not be overwritten in case of name conflict and
         file names suffixed with seconds since epoch will be created.
 
+        NOTE:: All dependencies must be pull into the component with rtlenv before
+               running this script
+
         Args:
             1)  Full path to the component. Current directory will be used
                 if not provided
@@ -39,16 +42,22 @@ if __name__ == "__main__":
                 component instantiation
             2)  Basic tcon.py, common.py, and pysim.xml """)
 
-    parser.add_argument('-p', '--component-path', type=str, help="Path to the\
+    parser.add_argument('-p', '--component_path', type=str, help="Path to the\
                         component's directory. Entity name is \
                         extracted from the path. Default is current directory",
                         default=os.getcwd(), required=False)
 
-    parser.add_argument('-j', '--config-json', type=str, help="Full path for\
-                        json configuration file", required=False)
+    parser.add_argument('-c', '--config', type=str, help="Full path for\
+                        bus configuration file", required=False)
 
+    #############################################################################
+    #
+    #           TODO:: perform sanity checks
+    #
+    #############################################################################
     args = parser.parse_args()
-    uutpath = os.path.abspath(os.path.join(args.component_path))
+    uutpath = os.path.abspath(os.path.join(args.component_path)) \
+              if args.component_path else os.getcwd()
     uutname = os.path.basename(uutpath)
     tb_file = get_tb_file(uutpath)
     uut_file = os.path.join(uutpath, "src", uutname+".vhd")
@@ -77,7 +86,7 @@ if __name__ == "__main__":
         print(generic)
     for port in entity_inst.ports:
         print(port)
-    # print(PARSER.read_bus_config(PARSER.BUS_CFG_FILE))
+    print(entity_inst.port_buses)
     # arch_glob = PARSER.ParserType(PARSER.VHDL_ARCH["type"][0],
     #                               filestring, uutname)
     # print(arch_glob.string["arch_decl"])
