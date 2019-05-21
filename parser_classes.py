@@ -180,7 +180,7 @@ DEFAULT_TCON_TBS =  {"CLK"   : "tb_tcon_clocker",
 BUS_CFG_FILE = "BUS_CONFIG.cfg"
 
 
-def read_bus_config(fname):
+def assign_buses(fname):
     bus_cfg = OrderedDict()
     try:
         cfgfile = open(fname, "r")
@@ -208,10 +208,11 @@ def read_bus_config(fname):
     return bus_cfg
 
 class Entity:
-    def __init__(self, portparser, genericparser=None, config_file=None):
+    def __init__(self, portparser, genericparser=None, config_file=BUS_CFG_FILE):
         self.generics = self.get_entries(
             genericparser) if genericparser else None
-        self.bus_config = read_bus_config(config_file)
+        self.ports = self.get_entries(portparser) if portparser else None
+        self.port_buses = assign_buses(config_file)
 
     def get_entries(self, parserobject):
         """
@@ -242,10 +243,6 @@ class Port_Generic:
     def __init__(self, entrystring):
         self.name, self.direc, self.dataype, self.range, self.default = \
             self.get_typevalues(entrystring)
-
-        # Bus type will be assigned later
-        self.bustype = None
-        self.tbfile = None
 
     def get_typevalues(self, string):
         # Find default value provided for a generic or a port.
