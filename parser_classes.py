@@ -180,12 +180,6 @@ DEFAULT_TCON_TBS =  {"CLK"   : "tb_tcon_clocker",
 BUS_CFG_FILE = "BUS_CONFIG.cfg"
 
 
-class Bus:
-    def __init__(self, portname, config=None):
-        self.name = portname
-        self.config = get_bustype(portname, config)
-
-
 def read_bus_config(fname):
     bus_cfg = OrderedDict()
     try:
@@ -199,77 +193,25 @@ def read_bus_config(fname):
         for line in cfgfile.readlines():
             entry = line.split(":")
             port = entry[0].strip()
-            temp = entry[1].strip()
-            if temp.upper() in ["NONE", "MISC"] \
-                            or not temp:
-                bus = None
-            else:
-                bus = temp.upper()
-            # 1) if this bus type is none, add it to a new "MISC" type bus
-            #
-            # if bus == prev_bus and bus:
+            if port:
+                temp = entry[1].strip() if len(entry) > 1 else None
+                if (not temp or temp.upper() in ["NONE", "MISC"]):
+                    bus = prev_bus if not temp else None
 
-            bus_cfg[bus] = bus
+                else:
+                    bus = temp.upper()
+
+                if bus not in bus_cfg.keys():
+                    bus_cfg[bus] = list()
+                bus_cfg[bus].append(port)
+                prev_bus = bus
     return bus_cfg
 
-
-def is_bus_match(port_def, pattern):
-    retval = False
-    for pat in pattern:
-        retval = retval or str.startswith(port_def.name, pat+"_")  \
-            or str.endswith(port_def.name, "_"+pat)
-
-    return retval
-
-
-def asign_bus_type(port_def, user_config):
-    """
-    This function assign bustype to each port based on the port name, port
-    direction, and default or given json config file
-    Args:
-      port_defs: Port_Generic object
-      cfg: json config (NoneType or Valid json config file)
-    Return:
-      port_defs.bustype is updated with bustype based on json config
-    """
-    if not user_config:
-        ucfg = json.loads(DEFAULT_TCON_TBS)
-        for key, val in ucfg.items():
-            if is_bus_match(port_def, val["pattern"]):
-
-                port_def.bustype = key
-                port_def.tbfile = val["tb"]
-    else:
-        logging.error("Currently, user-defined configs are not supported")
-
-    return True
-
-###############
-##     TODO :::: go over the list of port_defs to find Base bustype, find out if the bus is master interface or a slave interface and assign the member accordingly
-###############
-
 class Entity:
-    def __init__(self, portparser, genericparser=None, config=None):
+    def __init__(self, portparser, genericparser=None, config_file=None):
         self.generics = self.get_entries(
             genericparser) if genericparser else None
-        self.buses = self.get_buses(portparser, config)
-
-    def get_buses(self, parserobject, config):
-        """
-        Assign bus types of each port, based on a default or supplied json
-        config
-
-        Args:
-            self: Current object
-            parserobject: Parser.ParserType objects
-            config: Bus configuration in JSON format
-
-        Return;
-          list of Buses _Generic objects
-        """
-        port_defs = self.get_entries(parserobject)
-
-        return port_defs
+        self.bus_config = read_bus_config(config_file)
 
     def get_entries(self, parserobject):
         """
@@ -362,3 +304,4 @@ class Port_Generic:
 
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
+
