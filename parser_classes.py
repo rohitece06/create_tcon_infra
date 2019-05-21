@@ -262,8 +262,6 @@ class TB:
     def __init__(self, entity):
         self.arch_decl = []
         self.arch_def  = []
-        self.tcon_master = self.get_tcon_master()
+        self.tcon_master = self.get_tcon_master() # Entity object
         self.uut = entity
-        self.tb_comp = self.get_tb_entities(entity)
-
-    def map_uut():
+        self.tb_comp = self.get_tb_entities(entity) # List of Entity objects
