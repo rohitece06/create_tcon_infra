@@ -1,0 +1,55 @@
+################################################################################
+# Copyright 2019, Schweitzer Engineering Laboratories, Inc.
+# SEL Confidential
+################################################################################
+
+################################################################################
+# Information about this component
+[package]
+name = "debounce"
+
+################################################################################
+
+# Direct dependencies of this component
+[dependencies.saif_pipeline_stage]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/saif_pipeline_stage.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+# Fixed test dependencies of this component
+[test_dependencies.rtl_make]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtltools/rtl_make.git"
+type = "git"
+spec = {tagspec = '>=1.0.0,<2.0.0'}
+
+
+[test_dependencies.tb_tcon]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.tb_tcon_clocker]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_clocker.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.tb_tcon_saif]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_saif.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.tb_tcon_start_done]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_start_done.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.tb_tcon_start_done_slave]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_start_done_slave.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.tb_tcon_irb_master]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_irb_master.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
