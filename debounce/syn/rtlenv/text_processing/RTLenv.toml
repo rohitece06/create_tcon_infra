@@ -1,0 +1,16 @@
+################################################################################
+# Copyright (c) 2018 Schweitzer Engineering Laboratories, Inc.
+# SEL Confidential
+################################################################################
+[package]
+name = "text_processing"
+
+[dependencies.print_fnc]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/print_fnc.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.rtl_make]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtltools/rtl_make.git"
+type = "git"
+spec = {tagspec = '>=1.0.0,<2.0.0'}

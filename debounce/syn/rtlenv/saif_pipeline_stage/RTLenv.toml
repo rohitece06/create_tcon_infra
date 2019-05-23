@@ -1,0 +1,26 @@
+################################################################################
+# Copyright (c) 2018 Schweitzer Engineering Laboratories, Inc.
+# SEL Confidential
+################################################################################
+[package]
+name = "saif_pipeline_stage"
+
+[test_dependencies.rtl_make]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtltools/rtl_make.git"
+type = "git"
+spec = {tagspec = '>=1.0.0,<2.0.0'}
+
+[test_dependencies.saif_master]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/saif_master.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.saif_slave]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/saif_slave.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.print_fnc]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/print_fnc.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}

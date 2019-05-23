@@ -1,0 +1,51 @@
+-1,12
+~12309
+0X0-0A
+0xzZuU
+0xhlLH
+0xwXWx
+0b0011_1110
+12376
+12-fc
+1100,1100
+0B0011_1111
+0X11Ab_C0De
+0x11_1B
+$1232
+- 12096
+-123439
+
+
+
+
+169
+34980
+1_27,654
+100
+120
+
+0a$0
+0,11
+0xABCD
+0B1110,1011
+0111*1111
+0b1100~1100
+0111_111~
+0b
+0
+ag
+ag
+ag
+0
+0110_1101
+12 34
+12 34
+12 34
+0x5 5
+#Reading a Null character for extract_num(l : inout line; vec : out unsigned; success : out boolean)
+ #
+ #
+ #
+ #
+ #
+ #

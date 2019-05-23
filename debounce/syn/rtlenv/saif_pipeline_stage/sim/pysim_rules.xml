@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<verify_plan>
+ <all_spec>
+        <must_have group="1">g'*SAIF Slave: Completed successfully!*'</must_have>
+        <must_have group="1">g'*SAIF Master: Completed successfully!*'</must_have>
+        <cant_have group="1">r'failure\s*:'</cant_have>
+        <cant_have group="1">r'error\s*:'</cant_have>
+    </all_spec>
+</verify_plan>

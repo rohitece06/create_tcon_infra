@@ -1,0 +1,128 @@
+CMD  Data        Comment
+
+0   3           Pause
+
+# Test 1
+#E    -         Testing a reset, mid-transfer
+1   0xDDDDDDDD
+0   10          Pause to hold data in register during reset
+1   0xEEEEEEEE  
+1   0xFFFFFFFF  
+
+#E   -          Standard transfer
+1   0x11111111
+1   0x22222222
+1   0x33333333
+1   0x44444444
+1   0x55555555
+1   0x66666666
+1   0x77777777
+1   0x88888888
+
+0   30           Pause
+
+# Test 2
+#E    -         Downstream pause
+1   0x11111111
+1   0x22222222
+1   0x33333333
+0   1           Pause
+1   0x44444444
+1   0x55555555
+1   0x66666666
+1   0x77777777
+1   0x88888888
+
+
+# Test 3
+#E   -          Upstream pause
+1   0x11111111
+1   0x22222222
+1   0x33333333
+1   0x44444444
+1   0x55555555
+1   0x66666666
+1   0x77777777
+1   0x88888888
+
+
+# Test 4
+#E    -         Downstream pause
+1   0x11111111
+1   0x22222222
+1   0x33333333
+0   10          Pause
+1   0x44444444
+1   0x55555555
+1   0x66666666
+1   0x77777777
+1   0x88888888
+
+
+# Test 5
+#E   -          Upstream pause
+1   0x11111111
+1   0x22222222
+1   0x33333333
+1   0x44444444
+1   0x55555555
+1   0x66666666
+1   0x77777777
+0   10          Idle at the same time as Upstream idles, see if data is lost
+1   0x88888888
+
+
+# Test 6
+#E    -         Downstream pause
+1   0x11111111
+0   1           Pause
+1   0x22222222
+0   1           Pause
+1   0x33333333
+0   1           Pause
+1   0x44444444
+0   5           Pause
+1   0x55555555
+0   5           Pause
+1   0x66666666
+0   5           Pause
+1   0x77777777
+0   5           Pause
+1   0x88888888
+
+
+# Test 7
+#E   -          Downstream staggered pauses
+1   0x11111111
+1   0x22222222
+0   2           Pause
+1   0x33333333
+0   3           Pause
+1   0x44444444
+1   0x55555555
+0   3           Pause
+1   0x66666666
+0   4           Pause
+1   0x77777777
+0   4           Pause
+1   0x88888888
+0   5           Idle
+
+
+# Test 8
+#E   -          Upstream pause
+1   0x11111111
+0   1           Pause
+1   0x22222222
+0   1           Pause
+1   0x33333333
+1   0x44444444
+0   1           Pause
+1   0x55555555
+0   3           Pause
+1   0x66666666
+0   3           Pause
+1   0x77777777
+0   1           Pause
+1   0x88888888
+0   5           Idle

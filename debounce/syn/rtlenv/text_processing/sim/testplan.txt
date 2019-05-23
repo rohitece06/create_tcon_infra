@@ -1,0 +1,52 @@
+Copyright (c) 2016 Schweitzer Engineering Laboratories, Inc.
+SEL Confidential
+
+text_processing Testplan
+
+This test achieves 100% code, branch, and expression coverage.All the test cases
+are automatically verified.
+
+Test cases
+A.Send two identical strings of same length,different length strings identical
+  upto the last character of the shorter one,checking whether it returns true using
+  the 'strcmp' function.
+B.Send character with any of these arguments ‘ ‘, LF, HT, CR, VT, NUL, checking
+  'is_whitespace' function whether it returns true for such arguments.
+C.Verify if 'skip_whitespace' skips a character if the next character of the
+  argument is a whitespace.
+D.Send strings separated by whitespace, checking 'extract_string' function.
+E.Verify 'extract_comment' function by sending text and checking whether it
+  extracts the remaining text as a string or data.
+F.Send different values : positive/negative numbers, signed/unsigned, Binary,
+  Hexadecimal, Values with don't cares, all Std_logic values (i.e. 'Z', 'H', 'U',
+  'X', etc.) checking extract_num function.
+G.Send binary numbers by having whitespaces,don't cares,signed/unsigned checking
+  how 'extract_bin' function works.
+H.Send hexadecimal numbers by having whitespaces,don't cares,signed/unsigned
+  checking how 'extract_hex' function works.
+I.Read a file,checking 'get_line','open_text' and check_eof' conditions.
+J.Verify line with strings. The line has to match identically with the string
+
+There are six input stimulus files :
+1: input_num.txt has wide range of numbers covering all possible cases for testing
+   extract_num,extract_hex and extract_bin procedures. There are few special
+   characters as well. If using Slickedit,to view all of those characters,please
+   enable them by clicking View -> special characters.
+
+2: input_stim.txt has stimulus for testing extract_str,extract_comment procedures.
+
+3: input_fileio_check.txt for checking the open_text,check_eof,get_line.
+
+4: empty_file.txt for reading an empty file.
+
+5: whitespace_chars.txt to check ‘ ‘, LF(0XA),HT(0X9),CR(0XD),VT(OXB),NUL(00).
+   There are few special characters also. Using Slickedit, you can enable them
+   by selecting View -> special characters.
+6: find_str_stim.txt, this file contains string combinations that are used
+   to verify the find_and_remove_string method.
+
+Running the tests:
+  To run all tests execute:
+      ..\sim> vsimsa -tcl \components\tools\tcl\RTL_make.tcl
+
+Coverage statistics will be saved in the coverage.html file.

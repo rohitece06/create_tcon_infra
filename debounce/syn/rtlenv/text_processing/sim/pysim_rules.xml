@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<verify_plan>
+  <all_spec>
+    <must_have>skip_whitespace: (Line 0) SELBothell SELBothell</must_have>
+    <must_have>skip_whitespace: (Line 1) SELBothell</must_have>
+    <must_have>skip_whitespace: (Line 2) "SELBothell"</must_have>
+    <must_have>skip_whitespace: (Line 3) SELBothell</must_have>
+    <must_have>skip_whitespace: (Line 4) "SEL</must_have>
+    <must_have>skip_whitespace: (Line 5) "SELBothell"</must_have>
+    <must_have>skip_whitespace: (Line 6) SEL Bothell</must_have>
+    <must_have>skip_whitespace: (Line 4) abc</must_have>
+    <must_have>extract_string: (Line 0) SELBothell</must_have>
+    <must_have>extract_string: (Line 1) SELBothell</must_have>
+    <must_have>extract_string: (Line 2) SELBothell</must_have>
+    <must_have>extract_string: (Line 3) SELBothell</must_have>
+    <must_have>extract_string: (Line 4) SELBo</must_have>
+    <must_have>ERROR : check_eof: File was not empty at end of simulation!!! (Line 6)</must_have>
+    <must_have>extract_string: (Line 6) Bothellell</must_have>
+    <must_have>extract_comment: (Line 1) SELBothell</must_have>
+    <must_have>extract_comment: (Line 2) SELBo</must_have>
+    <must_have>file_io_check: (Line 3) data</must_have>
+    <must_have>file_io_check: (Line 4) 0123</must_have>
+    <must_have>file_io_check: (Line 5) simulation</must_have>
+    <must_have>file_io_check: (Line 6) </must_have>
+    <must_have>file_io_check: (Line 8) Data</must_have>
+    <must_have>ERROR : empty_file1: Empty file encountered!!!</must_have>
+    <must_have>ERROR : empty_file2: Empty file encountered!!!</must_have>
+    
+    <cant_have>ERROR : strcmp</cant_have>
+    <cant_have>ERROR : is_whitespace</cant_have>
+    <cant_have>ERROR : extract_comment</cant_have>
+    <cant_have>ERROR : extract_num</cant_have>
+    <cant_have>ERROR : extract_hex</cant_have>
+    <cant_have>ERROR : extract_bin</cant_have>
+    <cant_have>ERROR : file_io_check</cant_have>
+  </all_spec>
+</verify_plan>

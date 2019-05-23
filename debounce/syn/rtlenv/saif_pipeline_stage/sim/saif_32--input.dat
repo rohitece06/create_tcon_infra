@@ -1,0 +1,122 @@
+CMD  Data        Comment
+
+F   0x10        Reset 16 clock cycles
+
+E    -          TESTING FOR:
+E    -          1a. Reset, mid-xfr
+2   0xDDDDDDDD  1a. Reset, mid-xfr
+2   0xEEEEEEEE  
+2   0xFFFFFFFF
+F   0x1         Reset 1 clk cycle as dnstrm pauses
+
+E    -          1b. Std xfr (no pauses)
+2   0x11111111  1b. Std xfr (no pauses)
+2   0x22222222
+2   0x33333333
+2   0x44444444
+2   0x55555555
+2   0x66666666
+2   0x77777777
+2   0x88888888
+
+0   0x20        Idle
+
+
+E   -           2. Downstream pause (1 cycle)
+2   0x11111111  2. Downstream pause (1 cycle)
+2   0x22222222
+2   0x33333333
+2   0x44444444
+2   0x55555555
+2   0x66666666
+2   0x77777777
+2   0x88888888
+
+0   0x20        Idle
+
+
+E    -          3. Upstream pause (1 cycle)
+2   0x11111111  3. Upstream pause (1 cycle)
+2   0x22222222
+2   0x33333333
+2   0x44444444
+0   1           Pause
+2   0x55555555
+2   0x66666666
+2   0x77777777
+2   0x88888888
+
+0   0x20        Idle
+
+
+E   -           4. Downstream pause (multi-cycle)
+2   0x11111111  4. Downstream pause (multi-cycle)
+2   0x22222222
+2   0x33333333
+2   0x44444444
+2   0x55555555
+2   0x66666666
+2   0x77777777
+2   0x88888888
+
+0   0x20        Idle
+
+
+E    -          5. Upstream pause (multi-cycle)
+2   0x11111111  5. Upstream pause (multi-cycle)
+2   0x22222222
+2   0x33333333
+2   0x44444444
+0   10          Pause
+2   0x55555555
+2   0x66666666
+2   0x77777777
+2   0x88888888
+
+0   0x20        Idle
+
+
+E   -           6. Downstream pause (multi-pause)
+2   0x11111111  6. Downstream pause (multi-pause)
+2   0x22222222
+2   0x33333333
+2   0x44444444
+2   0x55555555
+2   0x66666666
+2   0x77777777
+2   0x88888888
+
+0   0x20        Idle
+
+
+E    -          7. Downstream staggered pauses
+2   0x11111111  Downstream staggered pauses
+2   0x22222222
+2   0x33333333
+2   0x44444444
+2   0x55555555
+2   0x66666666
+2   0x77777777
+2   0x88888888
+
+0   0x20        Idle
+
+
+E    -          8. Upstream pause (multi-pause)
+2   0x11111111  8. Upstream pause (multi-pause)
+0   1           Pause
+2   0x22222222
+0   1           Pause
+2   0x33333333
+0   1           Pause
+2   0x44444444
+0   1           Pause
+2   0x55555555
+0   1           Pause
+2   0x66666666
+0   1           Pause
+2   0x77777777
+0   1           Pause
+2   0x88888888
+
+0   0x5        Idle
