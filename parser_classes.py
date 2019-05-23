@@ -1,6 +1,6 @@
 import re
 import logging
-import json
+import os
 from collections import OrderedDict
 from inspect import currentframe
 import templates_and_constants as TC
@@ -8,8 +8,6 @@ import templates_and_constants as TC
 def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
-
-
 
 class ParserType:
     def __init__(self, globtype, glob, name=""):
@@ -162,6 +160,7 @@ def assign_buses(fname):
                 prev_bus = bus
     return bus_cfg
 
+
 class Entity:
     def __init__(self, portparser, genericparser=None,
                  config_file=TC.BUS_CFG_FILE):
@@ -270,17 +269,34 @@ class Port_Generic:
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
 
-class TB:
-    def __init__(self, entity):
 
+class TB:
+    def __init__(self, uutpath, entity):
+        self.tb_comp_path = os.path.abspath(os.path.join(uutpath,
+                                            TC.TB_SRC_LOCATION))
         self.arch_decl = []
         self.arch_def  = []
         # Entity object for tcon master entity from tb_tcon component diretory in syn\rtlenv
-        self.tcon_master = self.get_tcon_master()
+        self.tcon_master = self.get_entity_from_file("tb_tcon")
         self.uut = entity
         # List of Entity objects for tb components
         # used by this testbench
         self.tb_comp = self.get_tb_entities(entity) # List of Entity objects
+
+    def get_entity_from_file(self, compname):
+        """Extract entity declaration of TCON master from tb_tcon.vhd
+
+        Args:
+            compname(str) : name of the tb component whose entity needs to be
+                            extracted
+
+        Returns:
+            Entity object for the tb component
+
+        """
+        comppath = "{}/src/{}.vhd".format(compname, compname)
+        filepath = os.path.join(self.tb_comp_path, comppath)
+
 
     def get_entity_object(tb_name):
         """
