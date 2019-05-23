@@ -171,16 +171,15 @@ class Entity:
         self.port_buses = assign_buses(config_file)
 
     def get_entries(self, parserobject):
-        """
-          Extract entry members of a port or a generic like name of the port,
-          direction, data type, range, and default value if any
+        """Extract entry members of a port or a generic like name of the port,
+           direction, data type, range, and default value if any
 
-          Args:
-            self: Current object
-            parserobject: Parser.ParserType object
+        Args:
+           self: Current object
+           parserobject: Parser.ParserType object
 
-          Return:
-            list of Port_Generic objects
+        Return:
+          list of Port_Generic objects
         """
         entries = []
         if parserobject.decl_type in TC.VHDL_IF["type"]:
@@ -198,14 +197,29 @@ class Entity:
 class Port_Generic:
     def __init__(self, entrystring):
         self.name, self.direc, self.dataype, self.range, self.default = \
-            self.get_typevalues(entrystring)
+                                             self.get_typevalues(entrystring)
 
-    def get_typevalues(self, string):
-        # Find default value provided for a generic or a port.
-        # Default value is always provide to the right of :=
-        # We dont care if it is a number or string or whatver
-        val_split = string.split(TC.INST_ASSIGN_OP)
-        default = val_split[1].strip() if TC.INST_ASSIGN_OP in string else None
+    def get_typevalues(self, entrystring):
+        """Finds default value provided for a generic or a port.
+
+        Default value is always provide to the right of :=
+        We dont care if it is a number or entrystring or a range
+
+        Args:
+            entrystring(str) : The line from source code which has an entry for
+                               a generic or a port
+
+        Return:
+            name(str) : Name of the port or generic
+            direc(str) : Direction for the port entry. None for generic entry
+            datatype(str) : VHDL Datatype of the port/generic entry
+            range(str) : VHDL range of the port/generic entry
+            default(str) : Default value, if any, for the port/generic entry
+
+        """
+        val_split = entrystring.split(TC.INST_ASSIGN_OP)
+        default = val_split[1].strip() if TC.INST_ASSIGN_OP in entrystring \
+                  else None
         # Name of the generic/port is always the first word to the left
         # of : symbol in the definition entry
         name_split = val_split[0].split(":")
@@ -229,7 +243,7 @@ class Port_Generic:
             # from datatype
             datatype = type_split[0].split(TC.START_PAREN)[0].strip()
 
-        # If there is a (...) or "range" keyword present in the string right
+        # If there is a (...) or "range" keyword present in the entrystring right
         # of : (default value has already been stripped), it must be a range
         # for the datatype
         # "range" always has a pattern of:
@@ -251,8 +265,6 @@ class Port_Generic:
         logging.info("name: {}, direc: {}, datatype: {}, range: {}, default:\
                     {}\n".format(name, direc, datatype, range, default))
 
-        # print(get_linenumber(), "......", name, direc, datatype, range, default)
-
         return name, direc, datatype, range, default
 
     def __str__(self):
@@ -260,8 +272,16 @@ class Port_Generic:
 
 class TB:
     def __init__(self, entity):
+
         self.arch_decl = []
         self.arch_def  = []
-        self.tcon_master = self.get_tcon_master() # Entity object
+        # Entity object for tcon master entity from tb_tcon component diretory in syn\rtlenv
+        self.tcon_master = self.get_tcon_master()
         self.uut = entity
+        # List of Entity objects for tb components
+        # used by this testbench
         self.tb_comp = self.get_tb_entities(entity) # List of Entity objects
+
+    def get_entity_object(tb_name):
+        """
+        """
