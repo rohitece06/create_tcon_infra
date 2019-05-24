@@ -10,19 +10,19 @@ log = logging.getLogger() # 'root' Logger
 
 console = logging.StreamHandler()
 
-format_str = '%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s: '
+format_str = '%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
 console.setFormatter(logging.Formatter(format_str))
 
 log.addHandler(console) # prints to console.
 
-log.setLevel(logging.ERROR) # anything ERROR or above
+log.setLevel(logging.WARN) # anything ERROR or above
 
 
 def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
 
-def get_filestring(filename, parser):
+def get_filestring(filename, parser=None):
 
     lines_without_comments = ""
     try:
@@ -30,14 +30,17 @@ def get_filestring(filename, parser):
             for line in f.readlines():
                 lines_without_comments += (line.strip("\n")).split("--")[0]
     except:
-        parser.print_help()
-        exit()
+        if parser:
+            parser.print_help()
+            exit()
+        else:
+            log.error(f"Can't open file {filename}. Exiting...")
+            exit()
 
     filestring = re.sub(r'\s+', ' ', lines_without_comments)
     filestring = filestring.replace(";", "; ")
     filestring = filestring.replace(";  ", "; ")
     return filestring
-
 
 def assign_buses(fname):
     bus_cfg = OrderedDict()
@@ -293,32 +296,47 @@ class Port_Generic:
 
 
 class TB:
-    def __init__(self, uutpath, entity):
+    def __init__(self, uutpath, uutname):
         self.tb_comp_path = os.path.abspath(os.path.join(uutpath,
                                             TC.TB_SRC_LOCATION))
         self.arch_decl = []
         self.arch_def  = []
         # Entity object for tcon master entity from tb_tcon component diretory in syn\rtlenv
-        self.tcon_master = self.get_entity_from_file("tb_tcon")
-        self.uut = entity
+        self.tcon_master = self.get_entity_from_file(self.tb_comp_path, "tb_tcon")
+        self.uut = self.get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
-        self.tb_comp = self.get_tb_entities(entity) # List of Entity objects
+        # self.tb_comp = self.get_tb_entities(self.uut) # List of Entity objects
 
-    def get_entity_from_file(self, compname):
+    def get_entity_from_file(self, path, name):
         """Extract entity declaration of TCON master from tb_tcon.vhd
 
         Args:
-            compname(str) : name of the tb component whose entity needs to be
+            path (str) : os.path type string for entity's source code
+            name(str) : name of the tb component whose entity needs to be
                             extracted
 
         Returns:
             Entity object for the tb component
 
         """
-        comppath = f"{compname}/src/{compname}.vhd"
-        filepath = os.path.join(self.tb_comp_path, comppath)
+        if not name:
+            entity = os.path.basename(path)
+            comppath = f"src/{entity}.vhd"
+        elif name != "tb_tcon":
+            comppath = f"{name}/src/{name}.vhd"
+            entity = name
+        else:
+            comppath = f"{name}/src/tcon_template.vhd"
+            entity = name
 
+        filepath = os.path.join(path, comppath)
+        filestring = get_filestring(filepath)
+        entity_glob = ParserType("entity", filestring, entity).string
+        ports_parser = ParserType("port", entity_glob)
+        generics_parser = ParserType("generic", entity_glob)
+        entity_inst = Entity(ports_parser, generics_parser)
+        return entity_inst
 
     def get_entity_object(tb_name):
         """

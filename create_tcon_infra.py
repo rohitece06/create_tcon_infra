@@ -59,22 +59,12 @@ if __name__ == "__main__":
     uutpath = os.path.abspath(os.path.join(args.component_path)) \
               if args.component_path else os.getcwd()
     uutname = os.path.basename(uutpath)
-    uut_file = os.path.join(uutpath, "src", f"{uutname}.vhd")
-
-    filestring = PC.get_filestring(uut_file, parser)
-
-    # print(filestring)
-    entity_glob = PC.ParserType("entity", filestring, uutname).string
-    # # print(entity.__dict__)
-    # # print(entity_glob)
-    ports_parser = PC.ParserType("port", entity_glob)
-    generics_parser = PC.ParserType("generic", entity_glob)
-    entity_inst = PC.Entity(ports_parser, generics_parser)
-    for generic in entity_inst.generics:
+    tb_obj = PC.TB(uutpath, uutname)
+    for generic in tb_obj.uut.generics:
         print(generic)
-    for port in entity_inst.ports:
+    for port in tb_obj.uut.ports:
         print(port)
-    print(entity_inst.port_buses)
+    print(tb_obj.uut.port_buses)
     # arch_glob = PC.ParserType(PC.VHDL_ARCH["type"][0],
     #                               filestring, uutname)
     # print(arch_glob.string["arch_decl"])

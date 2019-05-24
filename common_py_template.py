@@ -146,7 +146,7 @@ def print_banner (test_dir, testplan_no):
         >>> print_banner("001_reset", "1.1")
 
     """
-    print("**************************************************************")
+    print("*"*80)
     log.info(f"***  {test_dir} :  Test {testplan_no}")
 
 
