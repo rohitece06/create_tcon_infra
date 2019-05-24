@@ -51,6 +51,7 @@ def assign_buses(fname):
         return None
 
     prev_bus = None
+    port_list = []
     with cfgfile:
         for line in cfgfile.readlines():
             entry = line.split(":")
@@ -62,11 +63,23 @@ def assign_buses(fname):
 
                 else:
                     bus = temp.upper()
+                    port_list = []
 
                 if bus not in bus_cfg.keys():
-                    bus_cfg[bus] = list()
-                bus_cfg[bus].append(port)
+                    bus_cfg[bus] = ()
+                port_list.append(port)
+                bus_cfg[bus] = (None, port_list)
                 prev_bus = bus
+
+    for bus, val in bus_cfg.items():
+        for tb_dep, tb_file in TC.DEFAULT_TCON_TBS.items():
+            if bus and bus.upper().startswith(tb_dep):
+                tb_entity = tb_file
+                break
+            else:
+                tb_entity = None
+        bus_cfg[bus] = (tb_entity, val[1])
+
     return bus_cfg
 
 def get_entity_from_file(path, name):
@@ -96,7 +109,7 @@ def get_entity_from_file(path, name):
     entity_glob = ParserType("entity", filestring, entity).string
     ports_parser = ParserType("port", entity_glob)
     generics_parser = ParserType("generic", entity_glob)
-    entity_inst = Entity(ports_parser, generics_parser)
+    entity_inst = Entity(entity, ports_parser, generics_parser)
     return entity_inst
 
 class ParserType:
@@ -217,8 +230,9 @@ class ParserType:
 
 
 class Entity:
-    def __init__(self, portparser, genericparser=None,
+    def __init__(self, name, portparser, genericparser=None,
                  config_file=TC.BUS_CFG_FILE):
+        self.name = name
         self.generics = self.get_entries(genericparser) if genericparser else None
         self.ports = self.get_entries(portparser) if portparser else None
         # Ordered dictionary of ports that are part of a bus. Each bus is supposed
@@ -338,7 +352,7 @@ class TB:
         self.uut = get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
-        self.tb_comp = self.get_tb_entities() # List of Entity objects
+        self.tb_dep = self.get_tb_entities() # List of Entity objects
 
     def get_tb_entities(self):
         """Extract Entity type objects for each dependency for the uut
@@ -351,6 +365,14 @@ class TB:
 
         """
         deplist = []
+        already_parsed = []
+        for tb_dep in self.uut.port_buses.keys():
+            if tb_dep:
+                def_tb_file = self.uut.port_buses[tb_dep][0]
+                deplist.append(get_entity_from_file(self.tb_comp_path,
+                                                    def_tb_file))
+        return deplist
+
 
 
 

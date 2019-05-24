@@ -24,8 +24,8 @@ log.setLevel(logging.ERROR) # anything ERROR or above
 
 # Initialize TCON 2.0
 from zeromq_manager import ZeromqManager
-print(f"TCON instance '{sys.argv[-2]}' connecting to \
-        FA at tcp://127.0.0.1:{sys.argv[-1]}")
+print(f"TCON instance '{sys.argv[-2]}' connecting to"
+      f"FA at tcp://127.0.0.1:{sys.argv[-1]}")
 tcon = pytcon.Tcon(ZeromqManager("tcp://127.0.0.1:"+sys.argv[-1]))
 tcon.resolution = tcon.NANOSECONDS
 
@@ -92,8 +92,8 @@ def verify_gpio(name, exp, mask):
         output = 1
 
     if output != exp:
-        log.error(f"{tcon.now()}ns : \
-                    {name} signal value is {output}, expects {exp}")
+        log.error(f"{tcon.now()}ns :"
+                  f"{name} signal value is {output}, expects {exp}")
 
 
 def verify_signal(name, sig, exp):
@@ -126,8 +126,8 @@ def verify_signal(name, sig, exp):
         result = False
 
     if not result:
-        log.error(f"{tcon.now()}ns : \
-                    {name} output value is {output}, expects {exp}")
+        log.error(f"{tcon.now()}ns : "
+                  f"{name} output value is {output}, expects {exp}")
 
     return result
 
@@ -166,8 +166,8 @@ def print_complete ():
     if tcon.now() == 0:
         log.error(f"\n Test Not Executed!\n")
     else:
-        log.info(f"\n************ Time {tcon.now()}ns: \
-                   Testbench Completed ******************")
+        log.info(f"\n************ Time {tcon.now()}ns: "
+                 f"Testbench Completed ******************")
 
 
 def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
@@ -199,9 +199,8 @@ def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
 
     if name != None:
         if read_val != expected:
-            log.error("({} ns) read value of {} = 0x{:X}, \
-                       expected = 0x{:X}".format(tcon.now(), name, read_val,
-                       expected))
+            log.error(f"({tcon.now()} ns) read value of {name} = {read_val:#0x},"
+                      f"expected = {expected:#0x}")
     return read_val
 
 
@@ -256,7 +255,7 @@ def wait_on_reg(name, req, addr, expected, timeout=10000):
 
     if cnt == timeout:
         status = "TIMEOUT"
-        log.error("{:d} : Timed-out waiting for {:s}={:d}".format(tcon.now(), name, expected))
+        log.error(f"{tcon.now()}ns : Timed-out waiting for {name}={expected}")
     return status
 
 
@@ -295,11 +294,11 @@ def wait_on_signal(name, sig, expected, timeout=100):
     if cnt == timeout:
         status = "TIMEOUT"
         if expected == CLEAR:
-            log.error(f"wait_on_signal() timed-out: {name} \
-                        never went LOW since {start_time}")
+            log.error(f"wait_on_signal() timed-out: {name} "
+                      f"never went LOW since {start_time}")
         else:
-            log.error(f"wait_on_signal() timed-out: {name} \
-                        never went HIGH since {start_time}")
+            log.error(f"wait_on_signal() timed-out: {name} "
+                      f"never went HIGH since {start_time}")
 
     return status
 

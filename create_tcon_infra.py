@@ -6,6 +6,7 @@ import argparse
 import sys
 import parser_classes as PC
 from inspect import currentframe
+import logging
 
 def get_linenumber():
     cf = currentframe()
@@ -64,7 +65,17 @@ if __name__ == "__main__":
         print(generic)
     for port in tb_obj.uut.ports:
         print(port)
-    print(tb_obj.uut.port_buses)
+    # print(tb_obj.uut.port_buses)
+    # for dep in tb_obj.tb_dep:
+    #     PC.log.setLevel(logging.INFO)
+    #     print("\n\n")
+    #     PC.log.info(f"{dep.name} {}\n\n")
+    #     PC.log.setLevel(logging.ERROR)
+    #     for generic in dep.generics:
+    #         print(generic)
+    #     for port in dep.ports:
+    #         print(port)
+
     # arch_glob = PC.ParserType(PC.VHDL_ARCH["type"][0],
     #                               filestring, uutname)
     # print(arch_glob.string["arch_decl"])

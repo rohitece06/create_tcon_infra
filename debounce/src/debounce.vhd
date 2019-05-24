@@ -17,10 +17,10 @@ entity debounce is -- hello there
 	rst         : in  std_logic  ;
 	max_count   : in  std_logic_vector(7 downto 0);
 
-	irb_addr    : in std_logic_vector(AWIDTH-1 downto 0);
+	irb_addr    : in std_logic_vector(AWIDTH - 1 downto 0);
 	irb_rd	    : in std_logic;
 	irb_wr	    : in std_logic;
-	irb_din     : in std_logic_vector(DWIDTH-1 downto 0);
+	irb_din     : in std_logic_vector(DWIDTH - 1 downto 0);
 	irb_dout    : out std_logic_vector(DWIDTH-1 downto 0);
 
 	out_rts    : out std_logic; --NR
