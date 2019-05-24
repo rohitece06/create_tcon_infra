@@ -69,6 +69,35 @@ def assign_buses(fname):
                 prev_bus = bus
     return bus_cfg
 
+def get_entity_from_file(path, name):
+    """Extract entity declaration of TCON master from tb_tcon.vhd
+
+    Args:
+        path (str) : os.path type string for entity's source code
+        name(str) : name of the tb component whose entity needs to be
+                        extracted
+
+    Returns:
+        Entity object for the tb component
+
+    """
+    if not name:
+        entity = os.path.basename(path)
+        comppath = f"src/{entity}.vhd"
+    elif name != "tb_tcon":
+        comppath = f"{name}/src/{name}.vhd"
+        entity = name
+    else:
+        comppath = f"{name}/src/tcon_template.vhd"
+        entity = name
+
+    filepath = os.path.join(path, comppath)
+    filestring = get_filestring(filepath)
+    entity_glob = ParserType("entity", filestring, entity).string
+    ports_parser = ParserType("port", entity_glob)
+    generics_parser = ParserType("generic", entity_glob)
+    entity_inst = Entity(ports_parser, generics_parser)
+    return entity_inst
 
 class ParserType:
     def __init__(self, globtype, glob, name=""):
@@ -302,42 +331,14 @@ class TB:
         self.arch_decl = []
         self.arch_def  = []
         # Entity object for tcon master entity from tb_tcon component diretory in syn\rtlenv
-        self.tcon_master = self.get_entity_from_file(self.tb_comp_path, "tb_tcon")
-        self.uut = self.get_entity_from_file(uutpath, None)
+        self.tcon_master = get_entity_from_file(self.tb_comp_path, "tb_tcon")
+        self.uut = get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
         # self.tb_comp = self.get_tb_entities(self.uut) # List of Entity objects
 
-    def get_entity_from_file(self, path, name):
-        """Extract entity declaration of TCON master from tb_tcon.vhd
-
-        Args:
-            path (str) : os.path type string for entity's source code
-            name(str) : name of the tb component whose entity needs to be
-                            extracted
-
-        Returns:
-            Entity object for the tb component
-
-        """
-        if not name:
-            entity = os.path.basename(path)
-            comppath = f"src/{entity}.vhd"
-        elif name != "tb_tcon":
-            comppath = f"{name}/src/{name}.vhd"
-            entity = name
-        else:
-            comppath = f"{name}/src/tcon_template.vhd"
-            entity = name
-
-        filepath = os.path.join(path, comppath)
-        filestring = get_filestring(filepath)
-        entity_glob = ParserType("entity", filestring, entity).string
-        ports_parser = ParserType("port", entity_glob)
-        generics_parser = ParserType("generic", entity_glob)
-        entity_inst = Entity(ports_parser, generics_parser)
-        return entity_inst
-
     def get_entity_object(tb_name):
         """
         """
+
+
