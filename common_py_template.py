@@ -3,6 +3,19 @@ import logging, sys
 import pytcon
 import pytcon_objects
 
+# Setup logging
+log = logging.getLogger() # 'root' Logger
+
+console = logging.StreamHandler()
+
+format_str = '%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s: '
+console.setFormatter(logging.Formatter(format_str))
+
+log.addHandler(console) # prints to console.
+
+
+log.setLevel(logging.ERROR) # anything ERROR or above
+
 ##################################################################################
 ##
 ##    Functions/constants common to all tests
@@ -11,7 +24,8 @@ import pytcon_objects
 
 # Initialize TCON 2.0
 from zeromq_manager import ZeromqManager
-print("TCON instance '{}' connecting to FA at tcp://127.0.0.1:{}".format(sys.argv[-2], sys.argv[-1]))
+print(f"TCON instance '{sys.argv[-2]}' connecting to \
+        FA at tcp://127.0.0.1:{sys.argv[-1]}")
 tcon = pytcon.Tcon(ZeromqManager("tcp://127.0.0.1:"+sys.argv[-1]))
 tcon.resolution = tcon.NANOSECONDS
 
@@ -78,8 +92,8 @@ def verify_gpio(name, exp, mask):
         output = 1
 
     if output != exp:
-        print("ERROR : {}ns : ".format(tcon.now()) + name +
-              " signal value is {}, expects {}".format(output,exp))
+        log.error(f"{tcon.now()}ns : \
+                    {name} signal value is {output}, expects {exp}")
 
 
 def verify_signal(name, sig, exp):
@@ -112,8 +126,8 @@ def verify_signal(name, sig, exp):
         result = False
 
     if not result:
-        print("ERROR : {}ns : ".format(tcon.now()) + name +
-              " output value is {}, expects {}".format(output, exp))
+        log.error(f"{tcon.now()}ns : \
+                    {name} output value is {output}, expects {exp}")
 
     return result
 
@@ -133,7 +147,7 @@ def print_banner (test_dir, testplan_no):
 
     """
     print("**************************************************************")
-    print("***  "+ test_dir +":  Test "+ testplan_no)
+    log.info(f"***  {test_dir} :  Test {testplan_no}")
 
 
 def print_complete ():
@@ -150,10 +164,10 @@ def print_complete ():
 
     """
     if tcon.now() == 0:
-        print("\nERROR: Test Not Executed!\n")
+        log.error(f"\n Test Not Executed!\n")
     else:
-        print("\n************ Time {}ns: Testbench Completed ******************"
-              .format(tcon.now()))
+        log.info(f"\n************ Time {tcon.now()}ns: \
+                   Testbench Completed ******************")
 
 
 def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
@@ -185,7 +199,9 @@ def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
 
     if name != None:
         if read_val != expected:
-            print("ERROR: ({} ns) read value of {} = 0x{:X}, expected = 0x{:X}".format(tcon.now(), name, read_val, expected))
+            log.error("({} ns) read value of {} = 0x{:X}, \
+                       expected = 0x{:X}".format(tcon.now(), name, read_val,
+                       expected))
     return read_val
 
 
@@ -240,7 +256,7 @@ def wait_on_reg(name, req, addr, expected, timeout=10000):
 
     if cnt == timeout:
         status = "TIMEOUT"
-        print("ERROR : {:d} : Timed-out waiting for {:s}={:d}".format(tcon.now(), name, expected))
+        log.error("{:d} : Timed-out waiting for {:s}={:d}".format(tcon.now(), name, expected))
     return status
 
 
@@ -279,9 +295,11 @@ def wait_on_signal(name, sig, expected, timeout=100):
     if cnt == timeout:
         status = "TIMEOUT"
         if expected == CLEAR:
-            print ("ERROR: wait_on_signal() timed-out: "+ name +" never went LOW since " + start_time)
+            log.error(f"wait_on_signal() timed-out: {name} \
+                        never went LOW since {start_time}")
         else:
-            print ("ERROR: wait_on_signal() timed-out: "+ name +" never went HIGH since " + start_time)
+            log.error(f"wait_on_signal() timed-out: {name} \
+                        never went HIGH since {start_time}")
 
     return status
 
@@ -322,7 +340,7 @@ def conv_val_str(val):
         return int(val)
     # Unsupported.
     else:
-        raise ValueError("Unsupported generic value: {}.".format(val))
+        raise ValueError(f"Unsupported generic value: {val}.")
 
 
 def get_generics(sim_dir):
@@ -363,7 +381,7 @@ def get_generics(sim_dir):
                 generics[key] = conv_val_str(val)
         return generics
     else:
-        logging.error("sim_params.txt path does not exist")
+        log.error("sim_params.txt path does not exist")
         return None
 
 ##################################################################################

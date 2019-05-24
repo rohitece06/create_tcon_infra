@@ -4,7 +4,7 @@ import os
 import time
 import argparse
 import sys
-import parser_classes as PARSER
+import parser_classes as PC
 from inspect import currentframe
 
 def get_linenumber():
@@ -59,35 +59,23 @@ if __name__ == "__main__":
     uutpath = os.path.abspath(os.path.join(args.component_path)) \
               if args.component_path else os.getcwd()
     uutname = os.path.basename(uutpath)
-    tb_file = get_tb_file(uutpath)
-    uut_file = os.path.join(uutpath, "src", uutname+".vhd")
+    uut_file = os.path.join(uutpath, "src", f"{uutname}.vhd")
 
-    lines_without_comments = ""
-    try:
-        with open(uut_file, "r") as f:
-            for line in f.readlines():
-                lines_without_comments += (line.strip("\n")).split("--")[0]
-    except:
-        parser.print_help()
-        exit()
-
-    filestring = re.sub(r'\s+', ' ', lines_without_comments)
-    filestring = filestring.replace(";", "; ")
-    filestring = filestring.replace(";  ", "; ")
+    filestring = PC.get_filestring(uut_file, parser)
 
     # print(filestring)
-    entity_glob = PARSER.ParserType("entity", filestring, uutname).string
+    entity_glob = PC.ParserType("entity", filestring, uutname).string
     # # print(entity.__dict__)
     # # print(entity_glob)
-    ports_parser = PARSER.ParserType("port", entity_glob)
-    generics_parser = PARSER.ParserType("generic", entity_glob)
-    entity_inst = PARSER.Entity(ports_parser, generics_parser)
+    ports_parser = PC.ParserType("port", entity_glob)
+    generics_parser = PC.ParserType("generic", entity_glob)
+    entity_inst = PC.Entity(ports_parser, generics_parser)
     for generic in entity_inst.generics:
         print(generic)
     for port in entity_inst.ports:
         print(port)
     print(entity_inst.port_buses)
-    # arch_glob = PARSER.ParserType(PARSER.VHDL_ARCH["type"][0],
+    # arch_glob = PC.ParserType(PC.VHDL_ARCH["type"][0],
     #                               filestring, uutname)
     # print(arch_glob.string["arch_decl"])
     # print(arch_glob.string["arch_def"])
