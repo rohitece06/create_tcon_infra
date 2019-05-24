@@ -221,6 +221,9 @@ class Entity:
                  config_file=TC.BUS_CFG_FILE):
         self.generics = self.get_entries(genericparser) if genericparser else None
         self.ports = self.get_entries(portparser) if portparser else None
+        # Ordered dictionary of ports that are part of a bus. Each bus is supposed
+        # to be tested by a TCON compatible testbench component.
+        # Dictionary format is :{busname : [list of ports]}
         self.port_buses = assign_buses(config_file)
 
     def get_entries(self, parserobject):
@@ -335,10 +338,20 @@ class TB:
         self.uut = get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
-        # self.tb_comp = self.get_tb_entities(self.uut) # List of Entity objects
+        self.tb_comp = self.get_tb_entities() # List of Entity objects
 
-    def get_entity_object(tb_name):
+    def get_tb_entities(self):
+        """Extract Entity type objects for each dependency for the uut
+
+        Args:
+            None
+
+        Returns:
+            List of Entity objects
+
         """
-        """
+        deplist = []
+
+
 
 
