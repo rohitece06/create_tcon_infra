@@ -136,3 +136,8 @@ SIGNAL_ENTRY = "  signal {}{}: {};"
 #   <name> : value;
 GENERIC_ENTRY = "    {}{}: {};"
 GENERIC_LAST_ENTRY = "    {}{}: {}"
+
+# Similar names that typically represent the same idea
+NAMES_DWIDTH = ["DWIDTH", "DATA_DWIDTH", "D_WIDTH"]
+NAMES_AWIDTH = ["AWIDTH", "ADDR_WIDTH", "A_WIDTH"]
+NAMES_BASE   = ["BASE", "BASE_ADDR"]

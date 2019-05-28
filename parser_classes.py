@@ -68,7 +68,8 @@ def assign_buses(fname):
                 if bus not in bus_cfg.keys():
                     bus_cfg[bus] = ()
                 port_list.append(port)
-                bus_cfg[bus] = (None, port_list)
+
+                bus_cfg[bus] = (None, None, port_list)
                 prev_bus = bus
 
     for bus, val in bus_cfg.items():
@@ -78,6 +79,7 @@ def assign_buses(fname):
                 break
             else:
                 tb_entity = None
+
         bus_cfg[bus] = (tb_entity, val[1])
 
     return bus_cfg
@@ -260,14 +262,28 @@ class Entity:
             log.error("Wrong parser object type")
         return entries
 
+    def print_generics(self):
+        if self.generics:
+            for generic in self.generics:
+                generic.print()
+        else:
+            log.warn(f"No generics exists for entity {self.name}\n")
+
+    def print_ports(self):
+        if self.ports:
+            for port in self.ports:
+                port.print()
+        else:
+            log.warn(f"No ports exists for entity {self.name}\n")
+
     def __str__(self):
         return f"{str(self.__class__)} : {str(self.__dict__)}"
 
 
 class Port_Generic:
     def __init__(self, entrystring):
-        self.name, self.direc, self.dataype, self.range, self.default = \
-                                             self.get_typevalues(entrystring)
+        self.name, self.direc, self.datatype, self.range, self.default = \
+                                              self.get_typevalues(entrystring)
 
     def get_typevalues(self, entrystring):
         """Finds default value provided for a generic or a port.
@@ -337,6 +353,11 @@ class Port_Generic:
 
         return name, direc, datatype, range, default
 
+    def print(self):
+        print(f"'Name': {self.name},    'Direction': {self.direc},    "
+              f"'Datatype': {self.datatype},    "
+              f"'Range': {self.range},    'Default': {self.default}")
+
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
 
@@ -345,14 +366,14 @@ class TB:
     def __init__(self, uutpath, uutname):
         self.tb_comp_path = os.path.abspath(os.path.join(uutpath,
                                             TC.TB_SRC_LOCATION))
-        self.arch_decl = []
-        self.arch_def  = []
         # Entity object for tcon master entity from tb_tcon component diretory in syn\rtlenv
         self.tcon_master = get_entity_from_file(self.tb_comp_path, "tb_tcon")
         self.uut = get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
         self.tb_dep = self.get_tb_entities() # List of Entity objects
+        self.arch_decl = []
+        self.arch_def  = []
 
     def get_tb_entities(self):
         """Extract Entity type objects for each dependency for the uut
@@ -373,7 +394,9 @@ class TB:
                                                     def_tb_file))
         return deplist
 
-
-
+    # def connect_tcon_master():
+    #     """Create signal definitions and map tcon master entity to signals
+    #     """
+    #     for entry in self.tcon_master.
 
 
