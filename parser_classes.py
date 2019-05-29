@@ -394,9 +394,40 @@ class TB:
                                                     def_tb_file))
         return deplist
 
-    # def connect_tcon_master():
-    #     """Create signal definitions and map tcon master entity to signals
-    #     """
-    #     for entry in self.tcon_master.
+    def connect_tcon_master(self):
+        """Create signal definitions and map tcon master entity to signals
+        """
+        INST_NAME = "tcon_master"
+        CMD = '"py -u " & TEST_PREFIX & "/tcon.py"'
+        generic_map = list()
+        port_map = list()
+        generic_map.append(TC.GENERIC_MAP_ENTRY.format("INST_NAME", INST_NAME))
+        generic_map.append(TC.GENERIC_MAP_LAST_ENTRY.format("COMMAND_LINE", CMD))
+        for port in self.tcon_master.ports:
+            if port.range:
+                signal = TC.SIGNAL_ENTRY()
+            else:
+                if "_gpio" in port.name:
+                    range = "15 downto 0"
+                else:
+                    range = "31 downto 0"
+                signal = TC.SIGNAL_ENTRY.format(port.name, port.datatype,
+                                                port.range)
+            self.arch_decl.append(signal)
+            if port != self.tcon_master.ports[-1]:
+                port_map.append(TC.PORT_MAP_ENTRY.format(port.name, port.name,
+                                                         port.direc))
+            else:
+                port_map.append(TC.PORT_MAP_LAST_ENTRY.format(port.name,
+                                                              port.name,
+                                                              port.direc))
+
+        self.arch_def.append(TC.TB_COMP_MAP_WITH_GENERICS.format(
+                                INST_NAME, INST_NAME, self.tcon_master.name,
+                                "".join(generic_map), "".join(port_map)))
+
+
+
+
 
 
