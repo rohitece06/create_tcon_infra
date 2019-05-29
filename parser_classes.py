@@ -1,6 +1,7 @@
 import re
 import logging
 import os
+import copy
 from collections import OrderedDict
 from inspect import currentframe
 import templates_and_constants as TC
@@ -235,8 +236,12 @@ class Entity:
     def __init__(self, name, portparser, genericparser=None,
                  config_file=TC.BUS_CFG_FILE):
         self.name = name
-        self.generics = self.get_entries(genericparser) if genericparser else None
-        self.ports = self.get_entries(portparser) if portparser else None
+        self.generics = self.format_names(self.get_entries(genericparser)) \
+                        if genericparser else None
+        self.ports = self.format_names(self.get_entries(portparser)) \
+                     if portparser else None
+        # self.generics = self.get_entries(genericparser) if genericparser else None
+        # self.ports = self.get_entries(portparser) if portparser else None
         # Ordered dictionary of ports that are part of a bus. Each bus is supposed
         # to be tested by a TCON compatible testbench component.
         # Dictionary format is :{busname : [list of ports]}
@@ -260,6 +265,16 @@ class Entity:
                 entries.append(definition)
         else:
             log.error("Wrong parser object type")
+
+        return entries
+
+    def format_names(self, entries):
+        """Make the generic/port names equal in length by suffixing spaces
+        """
+        max_len = max([len(entry.name) for entry in entries])
+        log.info(f"{max_len}  {self.name}")
+        for entry in entries:
+            entry.name = entry.name + (max_len-len(entry.name) + 1)*" "
         return entries
 
     def print_generics(self):
@@ -372,8 +387,10 @@ class TB:
         # List of Entity objects for tb components
         # used by this testbench
         self.tb_dep = self.get_tb_entities() # List of Entity objects
-        self.arch_decl = []
-        self.arch_def  = []
+        self.arch_decl = list()
+        self.arch_def  = list()
+        # List that contains already defined signals and constants
+        self.already_defined = list()
 
     def get_tb_entities(self):
         """Extract Entity type objects for each dependency for the uut
@@ -401,18 +418,21 @@ class TB:
         CMD = '"py -u " & TEST_PREFIX & "/tcon.py"'
         generic_map = list()
         port_map = list()
-        generic_map.append(TC.GENERIC_MAP_ENTRY.format("INST_NAME", INST_NAME))
+        generic_map.append(TC.GENERIC_MAP_ENTRY.format("INST_NAME   ", INST_NAME))
         generic_map.append(TC.GENERIC_MAP_LAST_ENTRY.format("COMMAND_LINE", CMD))
+
         for port in self.tcon_master.ports:
             if port.range:
-                signal = TC.SIGNAL_ENTRY()
+                range = f"({port.range})"
             else:
                 if "_gpio" in port.name:
-                    range = "15 downto 0"
+                    range = "(15 downto 0)"
+                elif "_vector" in port.datatype:
+                    range = "(31 downto 0)"
                 else:
-                    range = "31 downto 0"
-                signal = TC.SIGNAL_ENTRY.format(port.name, port.datatype,
-                                                port.range)
+                    range = ""
+
+            signal = TC.SIGNAL_ENTRY.format(port.name, port.datatype, range)
             self.arch_decl.append(signal)
             if port != self.tcon_master.ports[-1]:
                 port_map.append(TC.PORT_MAP_ENTRY.format(port.name, port.name,
@@ -426,6 +446,7 @@ class TB:
                                 INST_NAME, INST_NAME, self.tcon_master.name,
                                 "".join(generic_map), "".join(port_map)))
 
+    def connect_tb_deps(self):
 
 
 

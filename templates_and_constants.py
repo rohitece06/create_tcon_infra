@@ -103,11 +103,11 @@ TB_COMP_MAP_WITH_GENERICS = """
   -- {} instantiation
   {} : entity work.{}
   generic map  (
-    {}
+{}
   )
   port map
   (
-    {}
+{}
   );
 """
 TB_COMP_MAP_WO_GENERICS = """
@@ -118,21 +118,21 @@ TB_COMP_MAP_WO_GENERICS = """
 """
 # Generic map entries are formed as
 #       <name> => <value>,
-GENERIC_MAP_ENTRY = "{} => {}, \n"
+GENERIC_MAP_ENTRY = "    {} => {}, \n"
 # Last entry do not have comma
-GENERIC_MAP_LAST_ENTRY = "{} => {} \n"
+GENERIC_MAP_LAST_ENTRY = "    {} => {}"
 
 # Port map entries are formed as
 #       <name> => <value>, -- <direction>
 # The comma should be removed for last entry
-PORT_MAP_ENTRY  = "{} => {}, -- {}\n"
+PORT_MAP_ENTRY  = "    {} => {}, -- {}\n"
 # Last entry do not have comma before comment
-PORT_MAP_LAST_ENTRY  = "{} => {} -- {}\n"
+PORT_MAP_LAST_ENTRY  = "    {} => {}  -- {}"
 
 # Signal declaration entries are formed as
 #   signal name <variable number of spaces>: <type>;
-SIGNAL_ENTRY = "  signal {}: {};"
-SIGNAL_ENTRY_WITH_DEFAULT = "  signal {}: {} {};"
+SIGNAL_ENTRY = "  signal {}: {}{};"
+SIGNAL_ENTRY_WITH_DEFAULT = "  signal {}: {}{} := {};"
 # Generic declaration in an entity is formed as
 #   <name> : value;
 GENERIC_ENTRY = "    {} {}: {};"
