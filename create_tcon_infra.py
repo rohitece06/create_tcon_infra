@@ -64,13 +64,11 @@ if __name__ == "__main__":
     # tb_obj.uut.print_generics()
     # tb_obj.uut.print_ports()
     # print("\n\n")
-    # print(tb_obj.uut.port_buses)
+    print(tb_obj.uut.port_buses)
     # print("\n\n")
     # tb_obj.tcon_master.print_generics()
     # tb_obj.tcon_master.print_ports()
-    tb_obj.connect_tcon_master()
-    print("\n".join(tb_obj.arch_decl))
-    print("".join(tb_obj.arch_def))
+
     # for dep in tb_obj.tb_dep:
     #     PC.log.setLevel(logging.INFO)
     #     print("\n\n")
@@ -81,7 +79,6 @@ if __name__ == "__main__":
     #     for port in dep.ports:
     #         print(port)
 
-    # arch_glob = PC.ParserType(PC.VHDL_ARCH["type"][0],
-    #                               filestring, uutname)
-    # print(arch_glob.string["arch_decl"])
-    # print(arch_glob.string["arch_def"])
+    tb_obj.connect_tcon_master()
+    print("\n".join(tb_obj.arch_decl))
+    print("".join(tb_obj.arch_def))

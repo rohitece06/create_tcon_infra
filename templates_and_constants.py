@@ -100,7 +100,7 @@ from .common import *
 """
 
 TB_COMP_MAP_WITH_GENERICS = """
-  -- {} instantiation
+  -- {} instance
   {} : entity work.{}
   generic map  (
 {}

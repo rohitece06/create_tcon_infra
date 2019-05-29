@@ -70,7 +70,7 @@ def assign_buses(fname):
                     bus_cfg[bus] = ()
                 port_list.append(port)
 
-                bus_cfg[bus] = (None, None, port_list)
+                bus_cfg[bus] = (None, port_list)
                 prev_bus = bus
 
     for bus, val in bus_cfg.items():
@@ -421,6 +421,8 @@ class TB:
         generic_map.append(TC.GENERIC_MAP_ENTRY.format("INST_NAME   ", INST_NAME))
         generic_map.append(TC.GENERIC_MAP_LAST_ENTRY.format("COMMAND_LINE", CMD))
 
+        decl_hdr = "\n  -- TCON master signals"
+        self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
         for port in self.tcon_master.ports:
             if port.range:
                 range = f"({port.range})"
@@ -434,6 +436,8 @@ class TB:
 
             signal = TC.SIGNAL_ENTRY.format(port.name, port.datatype, range)
             self.arch_decl.append(signal)
+            self.already_defined.append(port.name.strip())
+
             if port != self.tcon_master.ports[-1]:
                 port_map.append(TC.PORT_MAP_ENTRY.format(port.name, port.name,
                                                          port.direc))
@@ -446,7 +450,7 @@ class TB:
                                 INST_NAME, INST_NAME, self.tcon_master.name,
                                 "".join(generic_map), "".join(port_map)))
 
-    def connect_tb_deps(self):
+    # def connect_tb_deps(self):
 
 
 
