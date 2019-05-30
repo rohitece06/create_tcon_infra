@@ -1,5 +1,3 @@
-from datetime import datetime
-
 
 START_PAREN = "("
 END_PAREN = ")"
@@ -66,13 +64,14 @@ TB_HEADER ="""
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+
 """
 
 TB_ENTITY = """
 entity {}_tb is
     generic
     (
-
+{}
     );
 end {}_tb;
 
@@ -113,14 +112,17 @@ TB_COMP_MAP_WITH_GENERICS = """
 TB_COMP_MAP_WO_GENERICS = """
   {} : entity work.{}
   port map  (
-    {}
+{}
   );
 """
 # Generic map entries are formed as
 #       <name> => <value>,
-GENERIC_MAP_ENTRY = "    {} => {}, \n"
+GENERIC_MAP_ENTRY = "{}{} => {}, \n"
 # Last entry do not have comma
-GENERIC_MAP_LAST_ENTRY = "    {} => {}"
+GENERIC_MAP_LAST_ENTRY = "{}{} => {}"
+
+TB_ENTITY_FILL = " "*2
+TB_DEP_FILL = " "*2
 
 # Port map entries are formed as
 #       <name> => <value>, -- <direction>
@@ -131,14 +133,14 @@ PORT_MAP_LAST_ENTRY  = "    {} => {}  -- {}"
 
 # Signal declaration entries are formed as
 #   signal name <variable number of spaces>: <type>;
-SIGNAL_ENTRY = "  signal {}: {}{};"
-SIGNAL_ENTRY_WITH_DEFAULT = "  signal {}: {}{} := {};"
+SIGNAL_ENTRY = "{}signal {} : {};\n"
 # Generic declaration in an entity is formed as
 #   <name> : value;
-GENERIC_ENTRY = "    {} {}: {};"
-GENERIC_LAST_ENTRY = "    {} {}: {}"
+PORT_GENERIC_ENTRY = "{}{} : {};\n"
+PORT_GENERIC_LAST_ENTRY = "{}{} : {}"
 
 # Similar names that typically represent the same idea
 NAMES_DWIDTH = ["DWIDTH", "DATA_DWIDTH", "D_WIDTH"]
 NAMES_AWIDTH = ["AWIDTH", "ADDR_WIDTH", "A_WIDTH"]
 NAMES_BASE   = ["BASE", "BASE_ADDR"]
+# VECTOR_TYPES =

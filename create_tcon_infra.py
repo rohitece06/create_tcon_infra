@@ -61,10 +61,10 @@ if __name__ == "__main__":
               if args.component_path else os.getcwd()
     uutname = os.path.basename(uutpath)
     tb_obj = PC.TB(uutpath, uutname)
-    # tb_obj.uut.print_generics()
-    # tb_obj.uut.print_ports()
+    tb_obj.uut.print_generics()
+    tb_obj.uut.print_ports()
     # print("\n\n")
-    print(tb_obj.uut.port_buses)
+    # print(tb_obj.uut.port_buses)
     # print("\n\n")
     # tb_obj.tcon_master.print_generics()
     # tb_obj.tcon_master.print_ports()
@@ -79,6 +79,6 @@ if __name__ == "__main__":
     #     for port in dep.ports:
     #         print(port)
 
-    tb_obj.connect_tcon_master()
-    print("\n".join(tb_obj.arch_decl))
-    print("".join(tb_obj.arch_def))
+    # tb_obj.connect_tcon_master()
+    # print("\n".join(tb_obj.arch_decl))
+    # print("".join(tb_obj.arch_def))

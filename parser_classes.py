@@ -4,6 +4,7 @@ import os
 import copy
 from collections import OrderedDict
 from inspect import currentframe
+from datetime import datetime
 import templates_and_constants as TC
 
 # Setup logging
@@ -319,12 +320,17 @@ class Port_Generic:
 
         """
         val_split = entrystring.split(TC.INST_ASSIGN_OP)
-        default = val_split[1].strip() if TC.INST_ASSIGN_OP in entrystring \
-                  else None
+
         # Name of the generic/port is always the first word to the left
         # of : symbol in the definition entry
         name_split = val_split[0].split(":")
         name = name_split[0].strip()
+
+        if TC.INST_ASSIGN_OP in entrystring:
+            if "std_logic_vector" in name.lower():
+                default = val_split[1].strip()
+        else:
+            default = ""
         # To the right of :, it is either direction (for port definition)
         # or the datatype for the generic
 
@@ -386,13 +392,14 @@ class TB:
         self.uut = get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
-        self.tb_dep = self.get_tb_entities() # List of Entity objects
+        self.tb_dep = self.get_tb_deps() # List of Entity objects
+        self.base_tb = self.create_base_tb()
         self.arch_decl = list()
         self.arch_def  = list()
         # List that contains already defined signals and constants
         self.already_defined = list()
 
-    def get_tb_entities(self):
+    def get_tb_deps(self):
         """Extract Entity type objects for each dependency for the uut
 
         Args:
@@ -411,6 +418,19 @@ class TB:
                                                     def_tb_file))
         return deplist
 
+    def create_tb_file(self):
+        """Create basic TB file which has file header, tb entity and generics.
+        """
+        tb_data = TC.TB_HEADER.format(datetime.year, self.uut.name,
+                                      self.uut.name)
+        generic_entry = ""
+        if self.uut.generics:
+            for generic in self.uut.generics:
+                generic_entry += TC.GENERIC_ENTRY.format(TC.TB_ENTITY_FILL,
+                                                           generic, generic)
+        tb_def_generic = ""
+        # generic_map +=
+
     def connect_tcon_master(self):
         """Create signal definitions and map tcon master entity to signals
         """
@@ -418,8 +438,12 @@ class TB:
         CMD = '"py -u " & TEST_PREFIX & "/tcon.py"'
         generic_map = list()
         port_map = list()
-        generic_map.append(TC.GENERIC_MAP_ENTRY.format("INST_NAME   ", INST_NAME))
-        generic_map.append(TC.GENERIC_MAP_LAST_ENTRY.format("COMMAND_LINE", CMD))
+        generic_map.append(TC.GENERIC_MAP_ENTRY.format(TC.TB_DEP_FILL,
+                                                       "INST_NAME   ",
+                                                       INST_NAME))
+        generic_map.append(TC.GENERIC_MAP_LAST_ENTRY.format(TC.TB_DEP_FILL,
+                                                            "COMMAND_LINE",
+                                                            CMD))
 
         decl_hdr = "\n  -- TCON master signals"
         self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
@@ -450,7 +474,10 @@ class TB:
                                 INST_NAME, INST_NAME, self.tcon_master.name,
                                 "".join(generic_map), "".join(port_map)))
 
-    # def connect_tb_deps(self):
+    def connect_uut(self):
+        """Connect UUT's generics and ports to TB's generic and dedicated
+           signals
+        """
 
 
 
