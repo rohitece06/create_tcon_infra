@@ -75,6 +75,9 @@ entity {}_tb is
     );
 end {}_tb;
 
+"""
+
+TB_BODY = """
 architecture sim of {}_tb is
   -- Number of clocks
   constant NUM_CLOCKS : integer := 1;
@@ -127,9 +130,9 @@ TB_DEP_FILL = " "*2
 # Port map entries are formed as
 #       <name> => <value>, -- <direction>
 # The comma should be removed for last entry
-PORT_MAP_ENTRY  = "    {} => {}, -- {}\n"
+PORT_MAP_ENTRY  = "{} => {}, -- {}\n"
 # Last entry do not have comma before comment
-PORT_MAP_LAST_ENTRY  = "    {} => {}  -- {}"
+PORT_MAP_LAST_ENTRY  = "{} => {}  -- {}"
 
 # Signal declaration entries are formed as
 #   signal name <variable number of spaces>: <type>;

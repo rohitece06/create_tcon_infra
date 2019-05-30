@@ -223,12 +223,12 @@ class ParserType:
             # 'begin' of function/procedure will mess up regex search
             # start_phrase remains the same as before
             arch_split = arch_string.split("begin")
-            no_space_start_end = {"arch_decl": arch_split[0].strip(),
-                                  "arch_def": ' '.join(arch_split[1:])}
+            no_space_start_end = {"tb_arch_decl": arch_split[0].strip(),
+                                  "tb_arch_def": ' '.join(arch_split[1:])}
 
         # If we are looking for definitions (i.e., the actual logic of this
         # component) inside the architecture
-        # elif self.decl_type in VHDL_ARCH_DECL["type"]:
+        # elif self.decl_type in VHDL_tb_arch_decl["type"]:
 
         return no_space_start_end
 
@@ -326,11 +326,8 @@ class Port_Generic:
         name_split = val_split[0].split(":")
         name = name_split[0].strip()
 
-        if TC.INST_ASSIGN_OP in entrystring:
-            if "std_logic_vector" in name.lower():
-                default = val_split[1].strip()
-        else:
-            default = ""
+        default = val_split[1].strip() if TC.INST_ASSIGN_OP in entrystring else ""
+
         # To the right of :, it is either direction (for port definition)
         # or the datatype for the generic
 
@@ -362,12 +359,14 @@ class Port_Generic:
             range = typestring.split(" range ")[1].strip()
         elif TC.START_PAREN in typestring:
             try:
-                range = re.search(r'\((.+?)\)', typestring).group(1)
+                temp = re.search(r'\((.+?)\)', typestring).group(1)
+                # Add paranthesis back to the range value
+                range = f"({temp})"
             except AttributeError:
                 logging.warn("No valid vector range found")
-                range = None
+                range = ""
         else:
-            range = None
+            range = ""
 
         logging.info(f"name: {name}, direc: {direc}, datatype: {datatype}, \
                        range: {range}, default:{default}\n")
@@ -393,9 +392,9 @@ class TB:
         # List of Entity objects for tb components
         # used by this testbench
         self.tb_dep = self.get_tb_deps() # List of Entity objects
-        self.base_tb = self.create_base_tb()
-        self.arch_decl = list()
-        self.arch_def  = list()
+        self.tb_entity = self.create_tb_entity()
+        self.tb_arch_decl = list()
+        self.tb_arch_def  = list()
         # List that contains already defined signals and constants
         self.already_defined = list()
 
@@ -418,18 +417,20 @@ class TB:
                                                     def_tb_file))
         return deplist
 
-    def create_tb_file(self):
+    def create_tb_entity(self):
         """Create basic TB file which has file header, tb entity and generics.
         """
-        tb_data = TC.TB_HEADER.format(datetime.year, self.uut.name,
-                                      self.uut.name)
         generic_entry = ""
         if self.uut.generics:
             for generic in self.uut.generics:
                 generic_entry += TC.GENERIC_ENTRY.format(TC.TB_ENTITY_FILL,
-                                                           generic, generic)
-        tb_def_generic = ""
+                                                         generic, generic)
+        default_generic = ""
         # generic_map +=
+
+def form_signal_entry(port_gen_object):
+    """Creates entries for generics, ports, signals, and constants
+    """
 
     def connect_tcon_master(self):
         """Create signal definitions and map tcon master entity to signals
@@ -446,7 +447,7 @@ class TB:
                                                             CMD))
 
         decl_hdr = "\n  -- TCON master signals"
-        self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
+        self.tb_arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
         for port in self.tcon_master.ports:
             if port.range:
                 range = f"({port.range})"
@@ -459,7 +460,7 @@ class TB:
                     range = ""
 
             signal = TC.SIGNAL_ENTRY.format(port.name, port.datatype, range)
-            self.arch_decl.append(signal)
+            self.tb_arch_decl.append(signal)
             self.already_defined.append(port.name.strip())
 
             if port != self.tcon_master.ports[-1]:
@@ -470,7 +471,7 @@ class TB:
                                                               port.name,
                                                               port.direc))
 
-        self.arch_def.append(TC.TB_COMP_MAP_WITH_GENERICS.format(
+        self.tb_arch_def.append(TC.TB_COMP_MAP_WITH_GENERICS.format(
                                 INST_NAME, INST_NAME, self.tcon_master.name,
                                 "".join(generic_map), "".join(port_map)))
 
