@@ -81,5 +81,6 @@ if __name__ == "__main__":
     #         print(port)
 
     tb_obj.connect_tcon_master()
+    tb_obj.connect_uut()
     print("".join(tb_obj.arch_decl))
     print("".join(tb_obj.arch_def))

@@ -440,6 +440,7 @@ class TB:
         # used by this testbench
         self.tb_dep = self.get_tb_deps() # List of Entity objects
         self.tb_entity = self.create_tb_entity()
+        self.tb_dep_maps = self.get_tb_dep_maps()
         self.arch_decl = list()
         self.arch_def  = list()
         # List that contains already defined signals and constants in the TB
@@ -495,14 +496,14 @@ class TB:
         CMD = '"py -u " & TEST_PREFIX & "/tcon.py"'
         generic_map = list()
         port_map = list()
-        generic_map.append(TC.GENERIC_MAP_ENTRY.format(TC.TB_DEP_FILL,
-                                                       "INST_NAME   ",
-                                                       INST_NAME))
-        generic_map.append(TC.GENERIC_MAP_LAST_ENTRY.format(TC.TB_DEP_FILL,
-                                                            "COMMAND_LINE",
-                                                            CMD))
+        generic_map.append(TC.GENERIC_MAP.format(TC.TB_DEP_FILL,
+                                                 "INST_NAME   ",
+                                                 INST_NAME))
+        generic_map.append(TC.GENERIC_MAP_LAST.format(TC.TB_DEP_FILL,
+                                                      "COMMAND_LINE",
+                                                       CMD))
 
-        decl_hdr = "\n  -- TCON master signals"
+        decl_hdr = "  -- TCON master signals"
         self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
         for port in self.tcon_master.ports:
             if port.range:
@@ -520,16 +521,15 @@ class TB:
             self.already_defined.append(port.name.strip())
 
             if port != self.tcon_master.ports[-1]:
-                port_map.append(TC.PORT_MAP_ENTRY.format(TC.TB_DEP_FILL+port.name,
-                                                         port.name,
-                                                         port.direc))
+                port_map.append(TC.PORT_MAP.format(TC.TB_DEP_FILL, port.name,
+                                                   port.name,
+                                                   port.direc))
             else:
-                port_map.append(TC.PORT_MAP_LAST_ENTRY.format(TC.TB_DEP_FILL+\
-                                                              port.name,
-                                                              port.name,
-                                                              port.direc))
-
-        self.arch_def.append(TC.TB_COMP_MAP_WITH_GENERICS.format(
+                port_map.append(TC.PORT_MAP_LAST.format(TC.TB_DEP_FILL, port.name,
+                                                        port.name,
+                                                        port.direc))
+        self.arch_decl.append("\n")
+        self.arch_def.append(TC.TB_DEP_MAP_WITH_GENERICS.format(
                                 INST_NAME, INST_NAME, self.tcon_master.name,
                                 "".join(generic_map), "".join(port_map)))
 
@@ -537,9 +537,46 @@ class TB:
         """Connect UUT's generics and ports to TB's generic and dedicated
            signals
         """
-        # if self.uut.generics[0].name.strip():
-        #     for generic in self.uut.generics
+        decl_hdr = "  -- UUT signals"
+        self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
 
+        generic_map= ""
+        for generic in self.uut.generics:
+            if generic != self.uut.generics[-1]:
+                generic_map += TC.GENERIC_MAP.format(TC.TB_DEP_FILL,
+                                                       generic.name, generic.name)
+            else:
+                generic_map += TC.GENERIC_MAP_LAST.format(TC.TB_DEP_FILL,
+                                                            generic.name,
+                                                            generic.name)
+        port_map = ""
+        for port in self.uut.ports:
+            if port != self.uut.ports[-1]:
+                port_map += TC.PORT_MAP.format(TC.TB_DEP_FILL, port.name,
+                                                 port.name, port.direc)
+            else:
+                port_map += TC.PORT_MAP_LAST.format(TC.TB_DEP_FILL, port.name,
+                                                      port.name, port.direc)
 
+            if port.name.strip() not in self.already_defined:
+                signal_decl = port.form_signal_entry(fill=TC.TB_ARCH_FILL)
+                self.arch_decl.append(signal_decl)
+                self.already_defined.append(port.name.strip())
+
+        if generic_map:
+            uut_map = TC.TB_DEP_MAP_WITH_GENERICS.format(self.uut.name,
+                                                            "UUT", self.uut.name,
+                                                            generic_map,
+                                                            port_map)
+        else:
+            uut_map = TC.TB_DEP_MAP_WO_GENERICS.format(self.uut.name,
+                                                          "UUT", self.uut.name,
+                                                          port_map)
+
+        self.arch_def.append(uut_map)
+
+    def get_tb_dep_maps(self):
+        """
+        """
 
 
