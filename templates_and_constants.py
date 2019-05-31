@@ -78,6 +78,7 @@ end {}_tb;
 
 TB_BODY = """
 architecture sim of {}_tb is
+begin
   -- Number of clocks
   constant NUM_CLOCKS : integer := 1;
 
@@ -123,8 +124,10 @@ GENERIC_MAP_ENTRY = "{}{} => {}, \n"
 # Last entry do not have comma
 GENERIC_MAP_LAST_ENTRY = "{}{} => {}"
 
+TB_ARCH_FILL = " "*2
 TB_ENTITY_FILL = " "*4
-TB_DEP_FILL = " "*6
+TB_DEP_FILL = " "*4
+
 
 # Port map entries are formed as
 #       <name> => <value>, -- <direction>

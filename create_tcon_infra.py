@@ -80,6 +80,6 @@ if __name__ == "__main__":
     #     for port in dep.ports:
     #         print(port)
 
-    # tb_obj.connect_tcon_master()
-    # print("\n".join(tb_obj.arch_decl))
-    # print("".join(tb_obj.arch_def))
+    tb_obj.connect_tcon_master()
+    print("".join(tb_obj.arch_decl))
+    print("".join(tb_obj.arch_def))

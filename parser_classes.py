@@ -223,12 +223,12 @@ class ParserType:
             # 'begin' of function/procedure will mess up regex search
             # start_phrase remains the same as before
             arch_split = arch_string.split("begin")
-            no_space_start_end = {"tb_arch_decl": arch_split[0].strip(),
-                                  "tb_arch_def": ' '.join(arch_split[1:])}
+            no_space_start_end = {"arch_decl": arch_split[0].strip(),
+                                  "arch_def": ' '.join(arch_split[1:])}
 
         # If we are looking for definitions (i.e., the actual logic of this
         # component) inside the architecture
-        # elif self.decl_type in VHDL_tb_arch_decl["type"]:
+        # elif self.decl_type in VHDL_arch_decl["type"]:
 
         return no_space_start_end
 
@@ -263,7 +263,8 @@ class Entity:
         if parserobject.decl_type in TC.VHDL_IF["type"]:
             for entry in parserobject.string.split(";"):
                 definition = Port_Generic(entry)
-                entries.append(definition)
+                if definition.name.strip():
+                    entries.append(definition)
         else:
             log.error("Wrong parser object type")
 
@@ -272,10 +273,11 @@ class Entity:
     def format_names(self, entries):
         """Make the generic/port names equal in length by suffixing spaces
         """
-        max_len = max([len(entry.name) for entry in entries])
-        log.info(f"{max_len}  {self.name}")
-        for entry in entries:
-            entry.name = entry.name + (max_len-len(entry.name) + 1)*" "
+        if entries:
+            max_len = max([len(entry.name) for entry in entries])
+            log.info(f"{max_len}  {self.name}")
+            for entry in entries:
+                entry.name = entry.name + (max_len-len(entry.name) + 1)*" "
         return entries
 
     def print_generics(self):
@@ -320,59 +322,61 @@ class Port_Generic:
 
         """
         val_split = entrystring.split(TC.INST_ASSIGN_OP)
+        if val_split[0]:
+            # Name of the generic/port is always the first word to the left
+            # of : symbol in the definition entry
+            name_split = val_split[0].split(":")
+            name = name_split[0].strip()
 
-        # Name of the generic/port is always the first word to the left
-        # of : symbol in the definition entry
-        name_split = val_split[0].split(":")
-        name = name_split[0].strip()
+            default = val_split[1].strip() if TC.INST_ASSIGN_OP in entrystring else ""
 
-        default = val_split[1].strip() if TC.INST_ASSIGN_OP in entrystring else ""
+            # To the right of :, it is either direction (for port definition)
+            # or the datatype for the generic
+            type_split = name_split[1].split()
 
-        # To the right of :, it is either direction (for port definition)
-        # or the datatype for the generic
+            # there are only three directions in VHDL-93 we use
+            # in, out, inout direction, if any, and the datatype are always
+            # separated by a space (runs of spaces has already been removed)
+            if type_split[0] in TC.VHDL_DIR_TYPE:
+                direc = type_split[0].strip()
+                datatype = type_split[1].split(TC.START_PAREN)[0].strip()
 
-        type_split = name_split[1].split()
+            else:
+                direc = ""
+                # If there are no direction info, then immediately right to
+                # : will be the datatype. remove ( and other character after (
+                # from datatype
+                datatype = type_split[0].split(TC.START_PAREN)[0].strip()
 
-        # there are only three directions in VHDL-93 we use
-        # in, out, inout direction, if any, and the datatype are always
-        # separated by a space (runs of spaces has already been removed)
-        if type_split[0] in TC.VHDL_DIR_TYPE:
-            direc = type_split[0].strip()
-            datatype = type_split[1].split(TC.START_PAREN)[0].strip()
+            # If there is a (...) or "range" keyword present in the entrystring right
+            # of : (default value has already been stripped), it must be a range
+            # for the datatype
+            # "range" always has a pattern of:
+            # datatype<space>range<space>N<space>to<space>M
+            # Note: 'range will never be used in VHDL-93 compatible entity
+            typestring = name_split[1]
 
-        else:
-            direc = ""
-            # If there are no direction info, then immediately right to
-            # : will be the datatype. remove ( and other character after (
-            # from datatype
-            datatype = type_split[0].split(TC.START_PAREN)[0].strip()
-
-        # If there is a (...) or "range" keyword present in the entrystring right
-        # of : (default value has already been stripped), it must be a range
-        # for the datatype
-        # "range" always has a pattern of:
-        # datatype<space>range<space>N<space>to<space>M
-        # Note: 'range will never be used in VHDL-93 compatible entity
-        typestring = name_split[1]
-
-        if " range " in typestring:
-            range = typestring.split(" range ")[1].strip()
-            datatype = f"{datatype} "
-        elif TC.START_PAREN in typestring:
-            try:
-                temp = re.search(r'\((.+?)\)', typestring).group(1)
-                # Add paranthesis back to the range value
-                range = f"({temp})"
-            except AttributeError:
-                logging.warn("No valid vector range found")
+            if " range " in typestring:
+                range = "range " + typestring.split(" range ")[1].strip()
+                datatype = f"{datatype} "
+            elif TC.START_PAREN in typestring:
+                try:
+                    temp = re.search(r'\((.+?)\)', typestring).group(1)
+                    # Add paranthesis back to the range value
+                    range = f"({temp})"
+                except AttributeError:
+                    logging.warn("No valid vector range found")
+                    range = ""
+            else:
                 range = ""
+
+            logging.info(f"name: {name}, direc: {direc}, datatype: {datatype}, \
+                        range: {range}, default:{default}\n")
+
+            return name, direc, datatype, range, default
         else:
-            range = ""
+            return "", "", "", "", ""
 
-        logging.info(f"name: {name}, direc: {direc}, datatype: {datatype}, \
-                       range: {range}, default:{default}\n")
-
-        return name, direc, datatype, range, default
 
     def print(self):
         print(f"'Name': {self.name},    'Direction': {self.direc},    "
@@ -409,10 +413,11 @@ class Port_Generic:
             return TC.PORT_GENERIC_ENTRY.format(fill, self.name+add_space,
                                                 fulldatatype)
 
-    def form_generic_entry(self, fill="", add_space="", last=False):
+    def form_generic_entry(self, fill="", add_space="", last=False,
+                           add_defaults=True):
         """Creates entries for a generic declaration
         """
-        if self.default:
+        if self.default and add_defaults:
             fulldatatype = f"{self.datatype}{self.range} := {self.default}"
         else:
             fulldatatype = f"{self.datatype}{self.range}"
@@ -435,9 +440,10 @@ class TB:
         # used by this testbench
         self.tb_dep = self.get_tb_deps() # List of Entity objects
         self.tb_entity = self.create_tb_entity()
-        self.tb_arch_decl = list()
-        self.tb_arch_def  = list()
-        # List that contains already defined signals and constants
+        self.arch_decl = list()
+        self.arch_def  = list()
+        # List that contains already defined signals and constants in the TB
+        # architecture
         self.already_defined = list()
 
     def get_tb_deps(self):
@@ -473,8 +479,9 @@ class TB:
                 add_space = " "*len_diff
 
             for generic in self.uut.generics:
-                generic_entry += generic.form_generic_entry(TC.TB_ENTITY_FILL,
-                                                            add_space)
+                generic_entry += generic.form_generic_entry(
+                                                        fill=TC.TB_ENTITY_FILL,
+                                                        add_space=add_space, add_defaults=False)
 
         generic_entry += TC.PORT_GENERIC_LAST_ENTRY.format(TC.TB_ENTITY_FILL,
                                                            default_generic,
@@ -496,7 +503,7 @@ class TB:
                                                             CMD))
 
         decl_hdr = "\n  -- TCON master signals"
-        self.tb_arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
+        self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
         for port in self.tcon_master.ports:
             if port.range:
                 range = f"({port.range})"
@@ -508,19 +515,21 @@ class TB:
                 else:
                     range = ""
 
-            signal = TC.SIGNAL_ENTRY.format(port.name, port.datatype, range)
-            self.tb_arch_decl.append(signal)
+            signal = port.form_signal_entry(fill=TC.TB_ARCH_FILL)
+            self.arch_decl.append(signal)
             self.already_defined.append(port.name.strip())
 
             if port != self.tcon_master.ports[-1]:
-                port_map.append(TC.PORT_MAP_ENTRY.format(port.name, port.name,
+                port_map.append(TC.PORT_MAP_ENTRY.format(TC.TB_DEP_FILL+port.name,
+                                                         port.name,
                                                          port.direc))
             else:
-                port_map.append(TC.PORT_MAP_LAST_ENTRY.format(port.name,
+                port_map.append(TC.PORT_MAP_LAST_ENTRY.format(TC.TB_DEP_FILL+\
+                                                              port.name,
                                                               port.name,
                                                               port.direc))
 
-        self.tb_arch_def.append(TC.TB_COMP_MAP_WITH_GENERICS.format(
+        self.arch_def.append(TC.TB_COMP_MAP_WITH_GENERICS.format(
                                 INST_NAME, INST_NAME, self.tcon_master.name,
                                 "".join(generic_map), "".join(port_map)))
 
@@ -528,7 +537,8 @@ class TB:
         """Connect UUT's generics and ports to TB's generic and dedicated
            signals
         """
-
+        # if self.uut.generics[0].name.strip():
+        #     for generic in self.uut.generics
 
 
 
