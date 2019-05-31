@@ -69,10 +69,9 @@ use ieee.numeric_std.all;
 
 TB_ENTITY = """
 entity {}_tb is
-    generic
-    (
+  generic (
 {}
-    );
+  );
 end {}_tb;
 
 """
@@ -124,8 +123,8 @@ GENERIC_MAP_ENTRY = "{}{} => {}, \n"
 # Last entry do not have comma
 GENERIC_MAP_LAST_ENTRY = "{}{} => {}"
 
-TB_ENTITY_FILL = " "*2
-TB_DEP_FILL = " "*2
+TB_ENTITY_FILL = " "*4
+TB_DEP_FILL = " "*6
 
 # Port map entries are formed as
 #       <name> => <value>, -- <direction>

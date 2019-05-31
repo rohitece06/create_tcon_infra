@@ -341,7 +341,7 @@ class Port_Generic:
             datatype = type_split[1].split(TC.START_PAREN)[0].strip()
 
         else:
-            direc = None
+            direc = ""
             # If there are no direction info, then immediately right to
             # : will be the datatype. remove ( and other character after (
             # from datatype
@@ -357,6 +357,7 @@ class Port_Generic:
 
         if " range " in typestring:
             range = typestring.split(" range ")[1].strip()
+            datatype = f"{datatype} "
         elif TC.START_PAREN in typestring:
             try:
                 temp = re.search(r'\((.+?)\)', typestring).group(1)
@@ -381,6 +382,47 @@ class Port_Generic:
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
 
+    def form_signal_entry(self, fill="", add_space=""):
+        """Creates entries for a signal declaration
+        """
+        # if "_vector" not in self.datatype:
+        #     datatype = f"{self.datatype} "
+        # else:
+        #     datatype = self.datatype
+
+        fulldatatype = f"{self.datatype}{self.range}"
+
+        return TC.SIGNAL_ENTRY.format(fill, self.name+add_space, fulldatatype)
+
+    def form_port_entry(self, fill="", add_space="", last=False):
+        """Creates entries for a port declaration
+        """
+        if self.default:
+            fulldatatype = f"{self.direc} {self.datatype}{self.range} := {self.default}"
+        else:
+            fulldatatype = f"{self.direc} {self.datatype}{self.range}"
+
+        if last:
+            return TC.PORT_GENERIC_LAST_ENTRY.format(fill, self.name+add_space,
+                                                     fulldatatype)
+        else:
+            return TC.PORT_GENERIC_ENTRY.format(fill, self.name+add_space,
+                                                fulldatatype)
+
+    def form_generic_entry(self, fill="", add_space="", last=False):
+        """Creates entries for a generic declaration
+        """
+        if self.default:
+            fulldatatype = f"{self.datatype}{self.range} := {self.default}"
+        else:
+            fulldatatype = f"{self.datatype}{self.range}"
+
+        if last:
+            return TC.PORT_GENERIC_LAST_ENTRY.format(fill, self.name+add_space,
+                                                     fulldatatype)
+        else:
+            return TC.PORT_GENERIC_ENTRY.format(fill, self.name+add_space,
+                                                fulldatatype)
 
 class TB:
     def __init__(self, uutpath, uutname):
@@ -420,17 +462,24 @@ class TB:
     def create_tb_entity(self):
         """Create basic TB file which has file header, tb entity and generics.
         """
+        default_generic = "TEST_PREFIX"
         generic_entry = ""
         if self.uut.generics:
-            for generic in self.uut.generics:
-                generic_entry += TC.GENERIC_ENTRY.format(TC.TB_ENTITY_FILL,
-                                                         generic, generic)
-        default_generic = ""
-        # generic_map +=
+            len_diff = len(default_generic) - len(self.uut.generics[0].name)
+            if len_diff <= 0:
+                default_generic += " "*(0-len_diff)
+                add_space = ""
+            else:
+                add_space = " "*len_diff
 
-def form_signal_entry(port_gen_object):
-    """Creates entries for generics, ports, signals, and constants
-    """
+            for generic in self.uut.generics:
+                generic_entry += generic.form_generic_entry(TC.TB_ENTITY_FILL,
+                                                            add_space)
+
+        generic_entry += TC.PORT_GENERIC_LAST_ENTRY.format(TC.TB_ENTITY_FILL,
+                                                           default_generic,
+                                                           "string")
+        return TC.TB_ENTITY.format(self.uut.name, generic_entry, self.uut.name)
 
     def connect_tcon_master(self):
         """Create signal definitions and map tcon master entity to signals
