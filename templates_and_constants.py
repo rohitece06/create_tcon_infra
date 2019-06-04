@@ -159,9 +159,9 @@ IRB_MAP = {"wr":"wr", "rd":"rd", "ack":"ack", "busy":"busy", "addr":"addr"}
 SD_MAP  = {"start":"start", "done":"done"}
 
 TB_BUS_IDS =  {"CLK"   : NAMES_CLOCK,
-               "IRBM"  : NAMES_READ + NAMES_WRITE,
-               "IRBS"  : NAMES_READ + NAMES_WRITE,
-               "SAIFM" : SAIFM_MAP.keys(),
-               "SAIFS" : SAIFS_MAP.keys(),
-               "SDM"   : SD_MAP.keys(),
-               "SDS"   : SD_MAP.keys()}
+               "IRBM"  : list(IRB_MAP.keys()),
+               "IRBS"  : list(IRB_MAP.keys()),
+               "SAIFM" : list(SAIFM_MAP.keys()),
+               "SAIFS" : list(SAIFS_MAP.keys()),
+               "SDM"   : list(SD_MAP.keys()),
+               "SDS"   : list(SD_MAP.keys())}
