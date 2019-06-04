@@ -55,26 +55,37 @@ def assign_buses(fname):
     prev_bus = None
     port_list = []
     with cfgfile:
-        for line in cfgfile.readlines():
-            entry = line.split(":")
+        lines = filter(None, (line.rstrip() for line in cfgfile))
+        for line in lines:
+            entry = line.strip().split(":")
             port = entry[0].strip()
+            pos_bus = entry[1].strip().upper() if len(entry) > 1 else None
             if port:
-                temp = entry[1].strip() if len(entry) > 1 else None
-                if (not temp or temp.upper() in ["NONE", "MISC"]):
-                    bus = prev_bus if not temp else None
 
+                if not pos_bus:
+                    bus = prev_bus
+                elif pos_bus in ["NONE", "MISC"]:
+                    bus = None
+                    if bus in bus_cfg.keys():
+                        port_list = bus_cfg[bus][1]
+                    else:
+                        port_list = list()
                 else:
-                    bus = temp.upper()
-                    port_list = []
+                    bus = pos_bus
+                    port_list = list()
 
                 if bus not in bus_cfg.keys():
-                    bus_cfg[bus] = ()
-                port_list.append(port)
+                    bus_cfg[bus] = [None, None, None, None]
 
-                bus_cfg[bus] = (None, port_list)
+                port_list.append(port)
+                # if bus:
+                bus_cfg[bus][1] = port_list
                 prev_bus = bus
 
-    for bus, val in bus_cfg.items():
+    # Assign tb file name required for simulating each bus interface whenever
+    # applicable. Assign a TCON request ID
+    tcon_req_id = 0
+    for bus, entry in bus_cfg.items():
         for tb_dep, tb_file in TC.DEFAULT_TCON_TBS.items():
             if bus and bus.upper().startswith(tb_dep):
                 tb_entity = tb_file
@@ -82,9 +93,50 @@ def assign_buses(fname):
             else:
                 tb_entity = None
 
-        bus_cfg[bus] = (tb_entity, val[1])
+        ports = entry[1]
+        if ports and bus:
+            comp_id = get_instance_name(bus, ports)
+        else:
+            comp_id = ""
+
+        bus_cfg[bus][0] = tb_entity
+        bus_cfg[bus][2] = comp_id
+        bus_cfg[bus][3] = tcon_req_id
+        if bus:
+            tcon_req_id += 1
 
     return bus_cfg
+
+def get_instance_name(bus, ports):
+    """Identify a possible instance prefix name for the TCON tb component. For
+    example, if a SAIF slave port has out_rtr port, a tb_tcon_saif component will
+    be instantiated with a name "out_saif_master".
+
+    Arguments:
+        bus {str} -- A bus name (e.g., CLK, SAIFM, SAIFS, etc)
+        ports {list} -- A list of strings that contains ports in the "bus"
+
+    Returns:
+        {str} -- Suffix string
+    """
+    for bus_id, pos_ids in TC.TB_BUS_IDS.items():
+        if bus.startswith(bus_id):
+            for pos_id in pos_ids:
+                for port in ports:
+                    if pos_id.lower() in port:
+                        temp = port.strip().split(pos_id.lower())[0]
+                        prefix = temp if temp else port.strip()
+                        if bus == "SAIFM":
+                            return f"{prefix}_saif_master"
+                        elif bus == "SAIFS":
+                            return f"{prefix}_saif_slave"
+                        else:
+                            logical_name =\
+                                    TC.DEFAULT_TCON_TBS[bus].lstrip("tb_tcon_")
+                            return f"{prefix}_{logical_name}"
+
+                    else:
+                        return ""
 
 def get_entity_from_file(path, name):
     """Extract entity declaration of TCON master from tb_tcon.vhd
@@ -438,16 +490,23 @@ class TB:
         self.uut = get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
-        self.tb_dep = self.get_tb_deps() # List of Entity objects
-        self.tb_entity = self.create_tb_entity()
-        self.tb_dep_maps = self.get_tb_dep_maps()
+        self.tb_dep = self.__get_tb_deps() # List of Entity objects
+        self.tb_entity = self.__create_tb_entity()
+        self.tb_dep_maps = self.__connect_tb_deps()
         self.arch_decl = list()
         self.arch_def  = list()
         # List that contains already defined signals and constants in the TB
         # architecture
         self.already_defined = list()
 
-    def get_tb_deps(self):
+    def generate_mapping(self):
+        """This function generates mapping for each tb dependency
+        """
+        self.__connect_tcon_master()
+        self.__connect_uut()
+        self.__connect_tb_deps()
+
+    def __get_tb_deps(self):
         """Extract Entity type objects for each dependency for the uut
 
         Args:
@@ -458,16 +517,23 @@ class TB:
 
         """
         deplist = []
-        already_parsed = []
         for tb_dep in self.uut.port_buses.keys():
             if tb_dep:
                 def_tb_file = self.uut.port_buses[tb_dep][0]
                 deplist.append(get_entity_from_file(self.tb_comp_path,
                                                     def_tb_file))
+
         return deplist
 
-    def create_tb_entity(self):
-        """Create basic TB file which has file header, tb entity and generics.
+    def __create_tb_entity(self):
+        """Create basic TB entity .
+
+        Args:
+            None
+
+        Returns:
+            A string that descirbes the entity declaration for the TB
+
         """
         default_generic = "TEST_PREFIX"
         generic_entry = ""
@@ -489,8 +555,18 @@ class TB:
                                                            "string")
         return TC.TB_ENTITY.format(self.uut.name, generic_entry, self.uut.name)
 
-    def connect_tcon_master(self):
+    def __connect_tcon_master(self):
         """Create signal definitions and map tcon master entity to signals
+
+        Args:
+            None
+
+        Returns:
+            1) Updates arch_decl member with full signal declartion required for
+               tcon master instantiation
+            2) Updates arch_def member with tcon master port mapping
+            3) Updates already_listed member with signals that are not already
+               declared
         """
         INST_NAME = "tcon_master"
         CMD = '"py -u " & TEST_PREFIX & "/tcon.py"'
@@ -533,9 +609,19 @@ class TB:
                                 INST_NAME, INST_NAME, self.tcon_master.name,
                                 "".join(generic_map), "".join(port_map)))
 
-    def connect_uut(self):
+    def __connect_uut(self):
         """Connect UUT's generics and ports to TB's generic and dedicated
            signals
+
+        Args:
+            None
+
+        Returns:
+            1) Updates arch_decl member with full signal declartion required for
+               UUT instantiation
+            2) Updates arch_def member with uut port mapping
+            3) Updates already_listed member with signals that are not already
+               declared
         """
         decl_hdr = "  -- UUT signals"
         self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
@@ -575,8 +661,15 @@ class TB:
 
         self.arch_def.append(uut_map)
 
-    def get_tb_dep_maps(self):
-        """
+    def __connect_tb_deps(self):
+        """Create mapping for each tb dependency
+
+        Arguments:
+            None
+
+        Returns:
+            Update arch_decl, arch_def, and already_defined class members
+
         """
 
 

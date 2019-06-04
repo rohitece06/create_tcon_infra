@@ -36,7 +36,7 @@ SIG_ASSIGN_OP = "<="
 
 # Use default BUS configurations if user did not provide one
 DEFAULT_TCON_TBS =  {"CLK"   : "tb_tcon_clocker",
-                     "MISC"   : None,
+                     "MISC"  : None,
                      "IRBM"  : "tb_tcon_irb_slave",
                      "IRBS"  : "tb_tcon_irb_master",
                      "SAIFM" : "tb_tcon_saif",
@@ -78,9 +78,8 @@ end {}_tb;
 
 TB_BODY = """
 architecture sim of {}_tb is
-begin
   -- Number of clocks
-  constant NUM_CLOCKS : integer := 1;
+  constant NUM_CLOCKS : integer := {};
 
 {}
 
@@ -148,4 +147,21 @@ PORT_GENERIC_LAST_ENTRY = "{}{} : {}"
 NAMES_DWIDTH = ["DWIDTH", "DATA_DWIDTH", "D_WIDTH"]
 NAMES_AWIDTH = ["AWIDTH", "ADDR_WIDTH", "A_WIDTH"]
 NAMES_BASE   = ["BASE", "BASE_ADDR"]
+NAMES_WRITE  = ["WR", "WRITE"]
+NAMES_READ  = ["RD", "READ"]
+NAMES_RESET = ["RESET", "RST"]
+NAMES_CLOCK = ["CLK", "CLOCK"]
 # VECTOR_TYPES =
+
+SAIFM_MAP = {"rts": "ctr", "cts": "rtr"}
+SAIFS_MAP = {"rtr":"cts", "ctr":"rts"}
+IRB_MAP = {"wr":"wr", "rd":"rd", "ack":"ack", "busy":"busy", "addr":"addr"}
+SD_MAP  = {"start":"start", "done":"done"}
+
+TB_BUS_IDS =  {"CLK"   : NAMES_CLOCK,
+               "IRBM"  : NAMES_READ + NAMES_WRITE,
+               "IRBS"  : NAMES_READ + NAMES_WRITE,
+               "SAIFM" : SAIFM_MAP.keys(),
+               "SAIFS" : SAIFS_MAP.keys(),
+               "SDM"   : SD_MAP.keys(),
+               "SDS"   : SD_MAP.keys()}
