@@ -132,8 +132,8 @@ def get_instance_name(bus, ports):
                             return f"{prefix}_saif_slave"
                         else:
                             logical_name =\
-                                    TC.DEFAULT_TCON_TBS[bus_id].lstrip("tb_tcon_")
-                            return f"{prefix}_{logical_name}"
+                                    TC.DEFAULT_TCON_TBS[bus_id].lstrip("tb_tcon")
+                            return f"{prefix}{logical_name}"
 
                     else:
                         return ""
