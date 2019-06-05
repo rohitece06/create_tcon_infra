@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 START_PAREN = "("
 END_PAREN = ")"
@@ -158,10 +159,11 @@ SAIFS_MAP = {"rtr":"cts", "ctr":"rts"}
 IRB_MAP = {"wr":"wr", "rd":"rd", "ack":"ack", "busy":"busy", "addr":"addr"}
 SD_MAP  = {"start":"start", "done":"done"}
 
-TB_BUS_IDS =  {"CLK"   : NAMES_CLOCK,
+TB_BUS_IDS =  OrderedDict(
+              {"CLK"   : NAMES_CLOCK,
                "IRBM"  : list(IRB_MAP.keys()),
                "IRBS"  : list(IRB_MAP.keys()),
                "SAIFM" : list(SAIFM_MAP.keys()),
                "SAIFS" : list(SAIFS_MAP.keys()),
                "SDM"   : list(SD_MAP.keys()),
-               "SDS"   : list(SD_MAP.keys())}
+               "SDS"   : list(SD_MAP.keys())})

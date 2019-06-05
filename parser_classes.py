@@ -124,29 +124,20 @@ def get_instance_name(bus, ports):
         if bus.startswith(bus_id):
             for pos_id in pos_ids:
                 for port in ports:
-                    if f"{pos_id.lower()}" in port:
+                    if f"_{pos_id.lower()}" in port or "clk" in port:
                         temp = port.strip().split(pos_id.lower())[0]
                         prefix = temp if temp else f"{port.strip()}_"
                         if bus_id == "SAIFM":
                             inst_name = f"{prefix}saif_master"
-                            break
+                            return inst_name
                         elif bus_id == "SAIFS":
                             inst_name = f"{prefix}saif_slave"
-                            break
+                            return inst_name
                         else:
                             logical_name =\
                                 TC.DEFAULT_TCON_TBS[bus_id].split("tb_tcon_")[1]
                             inst_name = f"{prefix}{logical_name}"
-                            break
-
-                    else:
-                        break
-                if inst_name:
-                    break
-
-            if inst_name:
-                break
-    return inst_name
+                            return inst_name
 
 def get_entity_from_file(path, name):
     """Extract entity declaration of TCON master from tb_tcon.vhd
