@@ -79,18 +79,15 @@ end {}_tb;
 
 TB_BODY = """
 architecture sim of {}_tb is
-  -- Number of clocks
-  constant NUM_CLOCKS : integer := {};
-
+  -- Constants
 {}
 
+  -- Signals
+{}
 begin
-
 {}
-
 end sim;
 """
-
 
 INIT_HEADER = """
 # Copyright (c) {}, Schweitzer Engineering Laboratories, Inc.
@@ -161,9 +158,9 @@ SD_MAP  = {"start":"start", "done":"done"}
 
 TB_BUS_IDS =  OrderedDict(
               {"CLK"   : NAMES_CLOCK,
-               "IRBM"  : list(IRB_MAP.keys()),
-               "IRBS"  : list(IRB_MAP.keys()),
-               "SAIFM" : list(SAIFM_MAP.keys()),
-               "SAIFS" : list(SAIFS_MAP.keys()),
-               "SDM"   : list(SD_MAP.keys()),
-               "SDS"   : list(SD_MAP.keys())})
+               "IRBM"  : IRB_MAP.keys(),
+               "IRBS"  : IRB_MAP.keys(),
+               "SAIFM" : SAIFM_MAP.keys(),
+               "SAIFS" : SAIFS_MAP.keys(),
+               "SDM"   : SD_MAP.keys(),
+               "SDS"   : SD_MAP.keys()})

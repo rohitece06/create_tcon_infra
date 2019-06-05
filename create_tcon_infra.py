@@ -63,10 +63,10 @@ if __name__ == "__main__":
     tb_obj = PC.TB(uutpath, uutname)
     # tb_obj.uut.print_generics()
     # tb_obj.uut.print_ports()
-    print("\n\n")
-    for bus, entry in tb_obj.uut.port_buses.items():
-        print(bus, "\t", entry)
-    print("\n\n")
+    # print("\n")
+    # for bus, entry in tb_obj.uut.port_buses.items():
+    #     print(bus, "\t", entry)
+    # print("\n")
     # tb_obj.tcon_master.print_generics()
     # tb_obj.tcon_master.print_ports()
 
@@ -81,5 +81,5 @@ if __name__ == "__main__":
     #         print(port)
 
     tb_obj.generate_mapping()
-    # print("".join(tb_obj.arch_decl))
-    # print("".join(tb_obj.arch_def))
+    print("".join(tb_obj.arch_decl))
+    print("".join(tb_obj.arch_def))

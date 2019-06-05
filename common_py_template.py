@@ -147,7 +147,7 @@ def print_banner (test_dir, testplan_no):
 
     """
     print("*"*80)
-    log.info(f"***  {test_dir} :  Test {testplan_no}")
+    log.info(f"***  {test_dir.upper()} :  Test {testplan_no}")
 
 
 def print_complete ():
