@@ -142,13 +142,13 @@ PORT_GENERIC_ENTRY = "{}{} : {};\n"
 PORT_GENERIC_LAST_ENTRY = "{}{} : {}"
 
 # Similar names that typically represent the same idea
-NAMES_DWIDTH = ["DWIDTH", "DATA_DWIDTH", "D_WIDTH"]
-NAMES_AWIDTH = ["AWIDTH", "ADDR_WIDTH", "A_WIDTH"]
-NAMES_BASE   = ["BASE", "BASE_ADDR"]
-NAMES_WRITE  = ["WR", "WRITE"]
-NAMES_READ  = ["RD", "READ"]
-NAMES_RESET = ["RESET", "RST"]
-NAMES_CLOCK = ["CLK", "CLOCK"]
+MATCH_DWIDTH = ["DWIDTH", "DATA_DWIDTH", "D_WIDTH"]
+MATCH_AWIDTH = ["AWIDTH", "ADDR_WIDTH", "A_WIDTH"]
+MATCH_BASE   = ["BASE", "BASE_ADDR"]
+MATCH_WRITE  = ["WR", "WRITE"]
+MATCH_READ  = ["RD", "READ"]
+MATCH_RESET = ["RESET", "RST"]
+MATCH_CLOCK = ["CLK", "CLOCK"]
 # VECTOR_TYPES =
 
 SAIFM_MAP = {"rts": "ctr", "cts": "rtr"}
@@ -156,10 +156,12 @@ SAIFS_MAP = {"rtr": "cts", "ctr": "rts"}
 IRB_MAP = {"wr": "wr", "rd": "rd", "ack": "ack", "busy": "busy", "addr": "addr"}
 SD_MAP  = {"start": "start", "done": "done"}
 
-TB_BUS_IDS = OrderedDict({"CLK": NAMES_CLOCK,
-                          "IRBM": IRB_MAP.keys(),
-                          "IRBS": IRB_MAP.keys(),
-                          "SAIFM": SAIFM_MAP.keys(),
-                          "SAIFS": SAIFS_MAP.keys(),
-                          "SDM": SD_MAP.keys(),
-                          "SDS": SD_MAP.keys()})
+TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLOCK,
+                           "IRBM": IRB_MAP.keys(),
+                           "IRBS": IRB_MAP.keys(),
+                           "SAIFM": SAIFM_MAP.keys(),
+                           "SAIFS": SAIFS_MAP.keys(),
+                           "SDM": SD_MAP.keys(),
+                           "SDS": SD_MAP.keys()})
+
+SIG_ASSIGN_ENTRY = "{}{} <= {};\n"

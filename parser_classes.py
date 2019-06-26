@@ -115,7 +115,7 @@ def get_instance_name(bus: str, ports: List) -> str:
         {str} -- Suffix string
     """
     inst_name = ""
-    for bus_id, pos_ids in TC.TB_BUS_IDS.items():
+    for bus_id, pos_ids in TC.TB_MAP_KEYS.items():
         if bus.startswith(bus_id):
             for pos_id in pos_ids:
                 for port in ports:
@@ -252,71 +252,6 @@ class ParserType:
         return no_space_start_end
 
 
-class Entity:
-    def __init__(self, name: str, portparser: ParserType,
-                 genericparser: ParserType=None,
-                 config_file: str=TC.BUS_CFG_FILE) -> None:
-        self.name = name
-        self.generics = self.format_names(self.__get_entries(genericparser)) \
-            if genericparser else None
-        self.ports = self.format_names(self.__get_entries(portparser)) \
-            if portparser else None
-
-        # Ordered dictionary of ports that are part of a bus. Each bus is
-        # supposed to be tested by a TCON compatible testbench component.
-        # Dictionary format is :{busname : [list of ports]}
-        self.port_buses = assign_buses(config_file)
-
-    def __get_entries(self, parserobject: ParserType) -> List:
-        """Extract entry members of a port or a generic like name of the port,
-           direction, data type, range, and default value if any
-
-        Args:
-           self: Current object
-           parserobject: ParserType class object
-
-        Return:
-          list of Port_Generic objects
-        """
-        entries = []
-        if parserobject.decl_type in TC.VHDL_IF["type"]:
-            for entry in parserobject.string.split(";"):
-                definition = Port_Generic(entry)
-                if definition.name.strip():
-                    entries.append(definition)
-        else:
-            log.error("Wrong parser object type")
-
-        return entries
-
-    def format_names(self, entries: List) -> List:
-        """Make the generic/port names equal in length by suffixing spaces
-        """
-        if entries:
-            max_len = max([len(entry.name) for entry in entries])
-            log.info(f"{max_len}  {self.name}")
-            for entry in entries:
-                entry.name = entry.name + (max_len - len(entry.name) + 1) * " "
-        return entries
-
-    def print_generics(self) -> NoReturn:
-        if self.generics:
-            for generic in self.generics:
-                generic.print()
-        else:
-            log.warn(f"No generics exists for entity {self.name}\n")
-
-    def print_ports(self) -> NoReturn:
-        if self.ports:
-            for port in self.ports:
-                port.print()
-        else:
-            log.warn(f"No ports exists for entity {self.name}\n")
-
-    def __str__(self) -> str:
-        return f"{str(self.__class__)} : {str(self.__dict__)}"
-
-
 class Port_Generic:
     def __init__(self, entrystring: str) -> None:
         self.name, self.direc, self.datatype, self.range, self.default = \
@@ -390,8 +325,8 @@ class Port_Generic:
             else:
                 range = ""
 
-            logging.info(f"name: {name}, direc: {direc}, datatype: {datatype}, \
-                        range: {range}, default:{default}\n")
+            logging.info(f"name: {name}, direc: {direc}, datatype: {datatype}, "
+                         f"range: {range}, default:{default}\n")
 
             return name, direc, datatype, range, default
         else:
@@ -448,6 +383,95 @@ class Port_Generic:
             return TC.PORT_GENERIC_ENTRY.format(fill_before,
                                                 f"{self.name}{fill_after}",
                                                 fulldatatype)
+
+
+class Entity:
+    def __init__(self, name: str, portparser: ParserType,
+                 genericparser: ParserType=None,
+                 config_file: str=TC.BUS_CFG_FILE) -> None:
+        self.name = name
+        self.generics = self.format_names(self.__get_entries(genericparser)) \
+            if genericparser else None
+        self.ports = self.format_names(self.__get_entries(portparser)) \
+            if portparser else None
+
+        # Ordered dictionary of ports that are part of a bus. Each bus is
+        # supposed to be tested by a TCON compatible testbench component.
+        # Dictionary format is :{busname : [list of ports]}
+        self.port_buses = assign_buses(config_file)
+
+    def __get_entries(self, parserobject: ParserType) -> List[Port_Generic]:
+        """Extract entry members of a port or a generic like name of the port,
+           direction, data type, range, and default value if any
+
+        Args:
+            parserobject: ParserType class object
+
+        Return:
+            list of Port_Generic objects
+        """
+        entries = []
+        if parserobject.decl_type in TC.VHDL_IF["type"]:
+            for entry in parserobject.string.split(";"):
+                definition = Port_Generic(entry)
+                if definition.name.strip():
+                    entries.append(definition)
+        else:
+            log.error("Wrong parser object type")
+
+        return entries
+
+    def format_names(self, entries: List[Port_Generic]) -> List[Port_Generic]:
+        """Make the generic/port names equal in length by suffixing spaces
+        """
+        if entries:
+            max_len = max([len(entry.name) for entry in entries])
+            log.info(f"{max_len}  {self.name}")
+            for entry in entries:
+                entry.name = entry.name + (max_len - len(entry.name) + 1) * " "
+        return entries
+
+    def print_generics(self) -> NoReturn:
+        if self.generics:
+            for generic in self.generics:
+                generic.print()
+        else:
+            log.warn(f"No generics exists for entity {self.name}\n")
+
+    def print_ports(self) -> NoReturn:
+        if self.ports:
+            for port in self.ports:
+                port.print()
+        else:
+            log.warn(f"No ports exists for entity {self.name}\n")
+
+    def find_matching_port(self, match_pattern: List[str]) -> List[
+            Tuple[str, str]]:
+        """Find list of port names matching (case-insensitive) with
+           pre-existing template.
+
+        Arguments:
+            match -- List of possible matching terms
+
+        Returns:
+            List of port names which has one or more matching terms in
+            the port name
+
+        Example:
+            MATCH_PATTERN = ["CLK", "CLOCK"]
+            PORT_NAMES = ["clk_sys", "sys_clock2", reset, in, out]
+            >>>find_matching_port(MATCH_PATTERN, PORT_NAMES)
+            ["clk_sys", "sys_clock2"]
+        """
+        names = list()
+        for pattern in match_pattern:
+            for port in self.ports:
+                if pattern.lower() in port.name.lower():
+                    names.append((port.name.strip(), port.direc))
+        return names
+
+    def __str__(self) -> str:
+        return f"{str(self.__class__)} : {str(self.__dict__)}"
 
 
 class TB:
@@ -630,6 +654,11 @@ class TB:
                              INST_NAME, INST_NAME, self.tcon_master.name,
                              "".join(generic_map), "".join(port_map)))
 
+        # Connect tcon_clk to clks out of the clocker
+        assignment = TC.SIG_ASSIGN_ENTRY.format(TC.TB_ARCH_FILL,
+                                                "tcon_clk", "clks(0)")
+        self.arch_def.append(assignment)
+
     def __connect_uut(self) -> NoReturn:
         """Connect UUT's generics and ports to TB's generic and dedicated
            signals
@@ -681,8 +710,16 @@ class TB:
             uut_map = TC.TB_DEP_MAP_WO_GENERICS.format(self.uut.name,
                                                        "UUT", self.uut.name,
                                                        port_map)
-
         self.arch_def.append(uut_map)
+        clk_ports = self.uut.find_matching_port(TC.MATCH_CLOCK)
+        for port, direc in clk_ports:
+            # All clocks input to the UUT are connected to same output of the
+            # tb_tcon_clocker. Designer will have to cross check
+            if direc == "in":
+                assignment = TC.SIG_ASSIGN_ENTRY.format(TC.TB_ARCH_FILL,
+                                                        port, "clks(0)")
+            self.arch_def.append(assignment)
+            log.warn("Please update clock mapping as required")
 
     def __connect_clocker(self) -> NoReturn:
         """Connect clocker entity if any
@@ -805,3 +842,5 @@ def get_entity_from_file(path: str, name: str) -> Entity:
     generics_parser = ParserType("generic", entity_glob)
     entity_inst = Entity(entity, ports_parser, generics_parser)
     return entity_inst
+
+
