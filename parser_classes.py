@@ -6,6 +6,7 @@ from collections import OrderedDict
 from inspect import currentframe
 from datetime import datetime
 import templates_and_constants as TC
+from typing import Dict, Tuple, List, Any, OrderedDict, NoReturn, Optional
 
 # Setup logging
 log = logging.getLogger()  # 'root' Logger
@@ -16,7 +17,7 @@ log.addHandler(console)  # prints to console.
 log.setLevel(logging.WARN)  # anything ERROR or above
 
 
-def get_filestring(filename, parser=None):
+def get_filestring(filename: str, parser: Any=None) -> str:
 
     lines_without_comments = ""
     try:
@@ -37,7 +38,7 @@ def get_filestring(filename, parser=None):
     return filestring
 
 
-def assign_buses(fname):
+def assign_buses(fname: str) -> OrderedDict:
     bus_cfg = OrderedDict()
     try:
         cfgfile = open(fname, "r")
@@ -101,14 +102,14 @@ def assign_buses(fname):
     return bus_cfg
 
 
-def get_instance_name(bus, ports):
+def get_instance_name(bus: str, ports: List) -> str:
     """Identify a possible instance prefix name for the TCON tb component. For
-    example, if a SAIF slave port has out_rtr port, a tb_tcon_saif component will
-    be instantiated with a name "out_saif_master".
+    example, if a SAIF slave port has out_rtr port, a tb_tcon_saif component
+    will be instantiated with a name "out_saif_master".
 
     Arguments:
-        bus {str} -- A bus name (e.g., CLK, SAIFM, SAIFS, etc)
-        ports {list} -- A list of strings that contains ports in the "bus"
+        bus -- A bus name (e.g., CLK, SAIFM, SAIFS, etc)
+        ports -- A list of strings that contains ports in the "bus"
 
     Returns:
         {str} -- Suffix string
@@ -134,39 +135,8 @@ def get_instance_name(bus, ports):
                             return inst_name
 
 
-def get_entity_from_file(path, name):
-    """Extract entity declaration of TCON master from tb_tcon.vhd
-
-    Args:
-        path (str) : os.path type string for entity's source code
-        name(str) : name of the tb component whose entity needs to be
-                        extracted
-
-    Returns:
-        Entity object for the tb component
-
-    """
-    if not name:
-        entity = os.path.basename(path)
-        comppath = f"src/{entity}.vhd"
-    elif name != "tb_tcon":
-        comppath = f"{name}/src/{name}.vhd"
-        entity = name
-    else:
-        comppath = f"{name}/src/tcon_template.vhd"
-        entity = name
-
-    filepath = os.path.join(path, comppath)
-    filestring = get_filestring(filepath)
-    entity_glob = ParserType("entity", filestring, entity).string
-    ports_parser = ParserType("port", entity_glob)
-    generics_parser = ParserType("generic", entity_glob)
-    entity_inst = Entity(entity, ports_parser, generics_parser)
-    return entity_inst
-
-
 class ParserType:
-    def __init__(self, globtype, glob, name=""):
+    def __init__(self, globtype: str, glob, name: str="") -> None:
         """
         Initialize parser class by for certain type by extracting data from
         provide glob
@@ -176,7 +146,7 @@ class ParserType:
         self.decl_start, self.decl_end = self.__get_start_end_tokens(globtype)
         self.string = self.__get_glob(glob)
 
-    def __get_start_end_tokens(self, globtype):
+    def __get_start_end_tokens(self, globtype: str) -> Tuple:
         """
         Assign start/end token for each VHDL type. For example, all declaration
         inside an architecture starts after "is" (architecture xxx of <entity>
@@ -192,7 +162,7 @@ class ParserType:
             return None, None
             log.error(f"*{globtype}* VHDL construct type is not supported")
 
-    def __get_glob(self, glob):
+    def __get_glob(self, glob: str) -> Any:
         """
         Get string data for the glob type. For type "entity", it will contain
         the string for entity declaration. For type "port",  it will contain
@@ -207,7 +177,7 @@ class ParserType:
                 found = re.search(search_string, glob).group(1)
             except AttributeError:
                 log.warning(
-                        f"No *{self.decl_type}* type declaration block found!!!")
+                    f"No *{self.decl_type}* type declaration block found!!")
 
             # Remove space before ; and (
             no_space_end = re.sub(r'\s+;', ';', found)
@@ -244,16 +214,16 @@ class ParserType:
         elif self.decl_type in TC.VHDL_ARCH["type"]:
             # architecture declaration starts as
             #   architecture xxx of <entity name> is
-            start_phrase = \
-                    f"{self.decl_type}(.+?)of {self.decl_name} {self.decl_start}"
+            start_phrase = (f"{self.decl_type}(.+?)of {self.decl_name} "
+                            f"{self.decl_start}")
             # Finds the name of the architecture
             try:
                 arch_type = re.search(start_phrase, glob).group(1).strip()
             except AttributeError:
                 log.error("Couldn't find name of the architecture")
 
-            start_phrase = \
-                f"architecture {arch_type} of {self.decl_name} {self.decl_start}"
+            start_phrase = (f"architecture {arch_type} of {self.decl_name} "
+                            f"{self.decl_start}")
 
             search_string = f'{start_phrase}(.+?){self.decl_end} {arch_type}'
             try:
@@ -283,26 +253,27 @@ class ParserType:
 
 
 class Entity:
-    def __init__(self, name, portparser, genericparser=None,
-                 config_file=TC.BUS_CFG_FILE):
+    def __init__(self, name: str, portparser: ParserType,
+                 genericparser: ParserType=None,
+                 config_file: str=TC.BUS_CFG_FILE) -> None:
         self.name = name
         self.generics = self.format_names(self.__get_entries(genericparser)) \
-                        if genericparser else None
+            if genericparser else None
         self.ports = self.format_names(self.__get_entries(portparser)) \
-                     if portparser else None
+            if portparser else None
 
-        # Ordered dictionary of ports that are part of a bus. Each bus is supposed
-        # to be tested by a TCON compatible testbench component.
+        # Ordered dictionary of ports that are part of a bus. Each bus is
+        # supposed to be tested by a TCON compatible testbench component.
         # Dictionary format is :{busname : [list of ports]}
         self.port_buses = assign_buses(config_file)
 
-    def __get_entries(self, parserobject):
+    def __get_entries(self, parserobject: ParserType) -> List:
         """Extract entry members of a port or a generic like name of the port,
            direction, data type, range, and default value if any
 
         Args:
            self: Current object
-           parserobject: Parser.ParserType object
+           parserobject: ParserType class object
 
         Return:
           list of Port_Generic objects
@@ -318,48 +289,48 @@ class Entity:
 
         return entries
 
-    def format_names(self, entries):
+    def format_names(self, entries: List) -> List:
         """Make the generic/port names equal in length by suffixing spaces
         """
         if entries:
             max_len = max([len(entry.name) for entry in entries])
             log.info(f"{max_len}  {self.name}")
             for entry in entries:
-                entry.name = entry.name + (max_len-len(entry.name) + 1)*" "
+                entry.name = entry.name + (max_len - len(entry.name) + 1) * " "
         return entries
 
-    def print_generics(self):
+    def print_generics(self) -> NoReturn:
         if self.generics:
             for generic in self.generics:
                 generic.print()
         else:
             log.warn(f"No generics exists for entity {self.name}\n")
 
-    def print_ports(self):
+    def print_ports(self) -> NoReturn:
         if self.ports:
             for port in self.ports:
                 port.print()
         else:
             log.warn(f"No ports exists for entity {self.name}\n")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
 
 
 class Port_Generic:
-    def __init__(self, entrystring):
+    def __init__(self, entrystring: str) -> None:
         self.name, self.direc, self.datatype, self.range, self.default = \
             self.__get_typevalues(entrystring)
 
-    def __get_typevalues(self, entrystring):
+    def __get_typevalues(self, entrystring: str) -> Tuple:
         """Finds default value provided for a generic or a port.
 
         Default value is always provide to the right of :=
         We dont care if it is a number or entrystring or a range
 
         Args:
-            entrystring(str) : The line from source code which has an entry for
-                               a generic or a port
+            entrystring : The line from source code which has an entry for
+                          a generic or a port
 
         Return:
             name(str) : Name of the port or generic
@@ -376,7 +347,8 @@ class Port_Generic:
             name_split = val_split[0].split(":")
             name = name_split[0].strip()
 
-            default = val_split[1].strip() if TC.INST_ASSIGN_OP in entrystring else ""
+            default = val_split[1].strip() \
+                if TC.INST_ASSIGN_OP in entrystring else ""
 
             # To the right of :, it is either direction (for port definition)
             # or the datatype for the generic
@@ -396,9 +368,9 @@ class Port_Generic:
                 # from datatype
                 datatype = type_split[0].split(TC.START_PAREN)[0].strip()
 
-            # If there is a (...) or "range" keyword present in the entrystring right
-            # of : (default value has already been stripped), it must be a range
-            # for the datatype
+            # If there is a (...) or "range" keyword present in the entrystring
+            # right of : (default value has already been stripped), it must be
+            # a range for the datatype
             # "range" always has a pattern of:
             # datatype<space>range<space>N<space>to<space>M
             # Note: 'range will never be used in VHDL-93 compatible entity
@@ -425,22 +397,23 @@ class Port_Generic:
         else:
             return "", "", "", "", ""
 
-    def print(self):
+    def print(self) -> NoReturn:
         print(f"'Name': {self.name},    'Direction': {self.direc},    "
               f"'Datatype': {self.datatype},    "
               f"'Range': {self.range},    'Default': {self.default}")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.__class__) + ": " + str(self.__dict__)
 
-    def form_signal_entry(self, fill_before="", fill_after=""):
+    def form_signal_entry(self, fill_before: str="", fill_after: str="") -> str:
         """Creates entries for a signal declaration
         """
         fulldatatype = f"{self.datatype}{self.range}"
         return f"{fill_before}{self.name}{fill_after}: {fulldatatype};\n"
         # return TC.SIGNAL_ENTRY.format(fill, self.name+add_space, fulldatatype)
 
-    def form_port_entry(self, fill="", add_space="", last=False):
+    def form_port_entry(self, fill: str="", add_space: str="",
+                        last: bool=False) -> str:
         """Creates entries for a port declaration
         """
         if self.default:
@@ -458,8 +431,8 @@ class Port_Generic:
                                                 f"{self.name}{add_space}",
                                                 fulldatatype)
 
-    def form_generic_entry(self, fill_before="", fill_after="", last=False,
-                           add_defaults=True):
+    def form_generic_entry(self, fill_before: str="", fill_after: str="",
+                           last: bool=False, add_defaults: bool=True) -> str:
         """Creates entries for a generic declaration
         """
         if self.default and add_defaults:
@@ -483,7 +456,7 @@ class TB:
     IND_INST_NAME = 2
     IND_TCON_REQ  = 3
 
-    def __init__(self, uutpath, uutname):
+    def __init__(self, uutpath: str, uutname: str) -> None:
         self.tb_comp_path = os.path.abspath(os.path.join(uutpath,
                                             TC.TB_SRC_LOCATION))
         # Entity object for tcon master entity from tb_tcon component diretory
@@ -503,7 +476,7 @@ class TB:
         # architecture
         self.already_defined = list()
 
-    def __tb_arch_constant_entry(self):
+    def __tb_arch_constant_entry(self) -> str:
         """Create constant declaration entries based on constants
         """
         entry = ""
@@ -515,7 +488,7 @@ class TB:
 
         return entry
 
-    def __get_tb_deps(self):
+    def __get_tb_deps(self) -> List:
         """Extract Entity type objects for each dependency for the uut
 
         Args:
@@ -534,7 +507,7 @@ class TB:
 
         return deplist
 
-    def __check_bus_in_uut_buses(self, bus_type):
+    def __check_bus_in_uut_buses(self, bus_type: str) -> str:
         """Check whether a bus type exists in bus list of the UUT
 
         Args:
@@ -551,11 +524,11 @@ class TB:
                 if bus.startswith(bus_type.upper()):
                     return entry
 
-    def __get_entity_from_tb_dep(self, entity_name):
+    def __get_entity_from_tb_dep(self, entity_name: str) -> Entity:
         """Get the entity object from tb_dependency list
 
         Arguments:
-            entity {str} -- Name of the entity object to be retrieved
+            entity_name -- Name of the entity object to be retrieved
 
         Returns:
             Entity object - Entity object corresponding to the "entity"
@@ -570,7 +543,7 @@ class TB:
             else:
                 log.warn(f"Could not find entity {entity_name}!!!")
 
-    def __create_tb_entity(self):
+    def __create_tb_entity(self) -> str:
         """Create basic TB entity .
 
         Args:
@@ -601,7 +574,7 @@ class TB:
                                                            "string")
         return TC.TB_ENTITY.format(self.uut.name, generic_entry, self.uut.name)
 
-    def __connect_tcon_master(self):
+    def __connect_tcon_master(self) -> NoReturn:
         """Create signal definitions and map tcon master entity to signals
 
         Args:
@@ -657,7 +630,7 @@ class TB:
                              INST_NAME, INST_NAME, self.tcon_master.name,
                              "".join(generic_map), "".join(port_map)))
 
-    def __connect_uut(self):
+    def __connect_uut(self) -> NoReturn:
         """Connect UUT's generics and ports to TB's generic and dedicated
            signals
 
@@ -711,7 +684,7 @@ class TB:
 
         self.arch_def.append(uut_map)
 
-    def __connect_clocker(self):
+    def __connect_clocker(self) -> NoReturn:
         """Connect clocker entity if any
         """
         bus = self.__check_bus_in_uut_buses("CLK")
@@ -745,17 +718,18 @@ class TB:
                     self.already_defined.append(port.name)
                     break
 
-    def __create_typical_map(self, obj_list, fill_before=TC.TB_ENTITY_FILL,
-                             prefix=""):
+    def __create_typical_map(self, obj_list: List[Port_Generic],
+                             fill_before: str=TC.TB_ENTITY_FILL,
+                             prefix: str="") -> str:
         """Creates a typical port/generic port map when there are no special mapping
         requirements
 
         Arguments:
-            obj_list {List(Port_Generic)} -- A list of port generic objects
+            obj_list -- A list of port generic objects
 
         Keyword Arguments:
-            fill_before {str} -- Additional space to fill before the mapping
-            prefix {str} -- String to prefix to port names except tcon ports
+            fill_before -- Additional space to fill before the mapping
+            prefix -- String to prefix to port names except tcon ports
 
         Returns:
             A string that contains objects port mapping
@@ -782,7 +756,7 @@ class TB:
                                                          obj.name)
         return string
 
-    def __connect_tb_deps(self):
+    def __connect_tb_deps(self) -> NoReturn:
         """Create mapping for each tb dependency
 
         Arguments:
@@ -793,10 +767,41 @@ class TB:
 
         """
 
-    def generate_mapping(self):
+    def generate_mapping(self) -> NoReturn:
         """This function generates mapping for each tb dependency
         """
         self.__connect_tcon_master()
         self.__connect_clocker()
         self.__connect_uut()
         self.__connect_tb_deps()
+
+
+def get_entity_from_file(path: str, name: str) -> Entity:
+    """Extract entity declaration of TCON master from tb_tcon.vhd
+
+    Args:
+        path : os.path type string for entity's source code
+        name : name of the tb component whose entity needs to be
+                        extracted
+
+    Returns:
+        Entity object for the tb component
+
+    """
+    if not name:
+        entity = os.path.basename(path)
+        comppath = f"src/{entity}.vhd"
+    elif name != "tb_tcon":
+        comppath = f"{name}/src/{name}.vhd"
+        entity = name
+    else:
+        comppath = f"{name}/src/tcon_template.vhd"
+        entity = name
+
+    filepath = os.path.join(path, comppath)
+    filestring = get_filestring(filepath)
+    entity_glob = ParserType("entity", filestring, entity).string
+    ports_parser = ParserType("port", entity_glob)
+    generics_parser = ParserType("generic", entity_glob)
+    entity_inst = Entity(entity, ports_parser, generics_parser)
+    return entity_inst
