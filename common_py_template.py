@@ -1,32 +1,28 @@
 import os
-import logging, sys
+import logging
+import sys
 import pytcon
 import pytcon_objects
 
 # Setup logging
-log = logging.getLogger() # 'root' Logger
-
+log = logging.getLogger()  # 'root' Logger
 console = logging.StreamHandler()
-
 format_str = '%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s: '
 console.setFormatter(logging.Formatter(format_str))
+log.addHandler(console)  # prints to console.
+log.setLevel(logging.ERROR)  # anything ERROR or above
 
-log.addHandler(console) # prints to console.
-
-
-log.setLevel(logging.ERROR) # anything ERROR or above
-
-##################################################################################
-##
-##    Functions/constants common to all tests
-##
-##################################################################################
+################################################################################
+#
+#    Functions/constants common to all tests
+#
+################################################################################
 
 # Initialize TCON 2.0
 from zeromq_manager import ZeromqManager
 print(f"TCON instance '{sys.argv[-2]}' connecting to"
       f"FA at tcp://127.0.0.1:{sys.argv[-1]}")
-tcon = pytcon.Tcon(ZeromqManager("tcp://127.0.0.1:"+sys.argv[-1]))
+tcon = pytcon.Tcon(ZeromqManager("tcp://127.0.0.1:" + sys.argv[-1]))
 tcon.resolution = tcon.NANOSECONDS
 
 ##########################################################
@@ -34,9 +30,10 @@ tcon.resolution = tcon.NANOSECONDS
 ##########################################################
 
 CLEAR = 0
-SET   = 1
-
+SET = 1
 ONES = 0xFFFFFFFF
+GPIO_RESET = (1 << 0)  # Output
+
 
 def do_reset(num_clocks):
     """Asserts reset for number of cycles to reset, if implemented, the
@@ -78,8 +75,8 @@ def verify_gpio(name, exp, mask):
         None
 
     Example:
-        Check 6th GPIO line, which represents a "Begin Pulses", for assertion and
-        5th GPIO line, which represents end pulse, for deassertion:
+        Check 6th GPIO line, which represents a "Begin Pulses", for assertion
+        and 5th GPIO line, which represents end pulse, for deassertion:
         >>> verify_gpio("Begin and End Pulse", 0x40, 0x60)
 
     """
@@ -132,12 +129,13 @@ def verify_signal(name, sig, exp):
     return result
 
 
-def print_banner (test_dir, testplan_no):
+def print_banner(test_dir, testplan_no):
     """Print starting banner for a test
 
     Args:
         test_dir (str)    : Test directory name
-        testplan_no (str) : Testplan number. This should match the number from                        the testplan.
+        testplan_no (str) : Testplan number. This should match the number from
+                            the testplan.
 
     Returns:
         None
@@ -150,11 +148,11 @@ def print_banner (test_dir, testplan_no):
     log.info(f"***  {test_dir.upper()} :  Test {testplan_no}")
 
 
-def print_complete ():
+def print_complete():
     """Print a message after a test has completed (successfully or otherwise).
     This function also checks if test has actually run for non-zero time. This
-    function should be called at the end of every tcon.py, right before simulation
-    is halted with tcon.halt()
+    function should be called at the end of every tcon.py, right before
+    simulation is halted with tcon.halt()
 
     Args:
         None
@@ -174,8 +172,8 @@ def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
     """Read (and check) a register value in TCON address map
 
     Args:
-        req (int): TCON request line number at which the component, with the read
-                   register, is mapped
+        req (int): TCON request line number at which the component, with the
+                   read register, is mapped
         addr (int): Address offset of the register
         mask (int): Bitmask to represent which register bit(s) are read/checked
         name (str): Name to represent the register
@@ -197,10 +195,10 @@ def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
     read_val = tcon.read(req, addr)
     read_val = read_val & mask
 
-    if name != None:
+    if name is not None:
         if read_val != expected:
-            log.error(f"({tcon.now()} ns) read value of {name} = {read_val:#0x},"
-                      f"expected = {expected:#0x}")
+            log.error(f"({tcon.now()} ns) read value of {name} = "
+                      f"{read_val:#0x}, expected = {expected:#0x}")
     return read_val
 
 
@@ -217,7 +215,7 @@ def write_reg(req, addr, val, mask=0xFFFFFFFF):
     Returns:
         int: Read-after-write register value
     """
-    write_val = val & mask;
+    write_val = val & mask
     read_val = tcon.write(req, addr, write_val)
     return read_val
 
@@ -227,8 +225,8 @@ def wait_on_reg(name, req, addr, expected, timeout=10000):
 
     Args:
         name     (str): Name to represent the register
-        req      (int): TCON request line number at which the component, with the
-                        checked register resides, is mapped
+        req      (int): TCON request line number at which the component, with
+                        the checked register resides, is mapped
         addr     (int): Address offset of the register
         expected (int): Expected value of the register
         timeout  (int): Number of clock cycles to wait before timeout
@@ -257,7 +255,6 @@ def wait_on_reg(name, req, addr, expected, timeout=10000):
         status = "TIMEOUT"
         log.error(f"{tcon.now()}ns : Timed-out waiting for {name}={expected}")
     return status
-
 
 
 def wait_on_signal(name, sig, expected, timeout=100):
@@ -360,14 +357,15 @@ def get_generics(sim_dir):
                 {generic name: value}
 
     Example:
-        Get generics from test "001_reset" and a sim_params.txt with content shown above in notes.
+        Get generics from test "001_reset" and a sim_params.txt with content
+        shown above in notes.
         >>> get_generics("001_reset")
         {"GENERIC_INT" : 0, "GENERIC_STR": "00001111", "GENERIC_HEX": 11256099,
          "GENERIC_BOOL": True}
 
     """
     generics = {}
-    fname = (sim_dir+"/sim_params.txt").replace("\\", "/")
+    fname = (sim_dir + "/sim_params.txt").replace("\\", "/")
     # Use what's in sim.params if it exists.
     if os.path.exists(fname):
 
@@ -383,8 +381,8 @@ def get_generics(sim_dir):
         log.error("sim_params.txt path does not exist")
         return None
 
-##################################################################################
-##
-##                      UUT/TB-specific functions starts below
-##
-##################################################################################
+################################################################################
+#
+#                      UUT/TB-specific functions starts below
+#
+################################################################################

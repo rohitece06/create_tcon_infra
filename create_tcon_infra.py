@@ -8,6 +8,7 @@ import parser_classes as PC
 from inspect import currentframe
 import logging
 
+
 def get_linenumber():
     cf = currentframe()
     return cf.f_back.f_lineno
@@ -30,8 +31,8 @@ if __name__ == "__main__":
         folder content will not be overwritten in case of name conflict and
         file names suffixed with seconds since epoch will be created.
 
-        NOTE:: All dependencies must be pull into the component with rtlenv before
-               running this script
+        NOTE:: All dependencies must be pull into the component with rtlenv
+               before running this script
 
         Args:
             1)  Full path to the component. Current directory will be used
@@ -51,14 +52,14 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', type=str, help="Full path for\
                         bus configuration file", required=False)
 
-    #############################################################################
+    ###########################################################################
     #
     #           TODO:: perform sanity checks
     #
-    #############################################################################
+    ###########################################################################
     args = parser.parse_args()
     uutpath = os.path.abspath(os.path.join(args.component_path)) \
-              if args.component_path else os.getcwd()
+        if args.component_path else os.getcwd()
     uutname = os.path.basename(uutpath)
     tb_obj = PC.TB(uutpath, uutname)
     # tb_obj.uut.print_generics()

@@ -8,12 +8,13 @@ from datetime import datetime
 import templates_and_constants as TC
 
 # Setup logging
-log = logging.getLogger() # 'root' Logger
+log = logging.getLogger()  # 'root' Logger
 console = logging.StreamHandler()
 format_str = '%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s'
 console.setFormatter(logging.Formatter(format_str))
-log.addHandler(console) # prints to console.
-log.setLevel(logging.WARN) # anything ERROR or above
+log.addHandler(console)  # prints to console.
+log.setLevel(logging.WARN)  # anything ERROR or above
+
 
 def get_filestring(filename, parser=None):
 
@@ -34,6 +35,7 @@ def get_filestring(filename, parser=None):
     filestring = filestring.replace(";", "; ")
     filestring = filestring.replace(";  ", "; ")
     return filestring
+
 
 def assign_buses(fname):
     bus_cfg = OrderedDict()
@@ -98,6 +100,7 @@ def assign_buses(fname):
 
     return bus_cfg
 
+
 def get_instance_name(bus, ports):
     """Identify a possible instance prefix name for the TCON tb component. For
     example, if a SAIF slave port has out_rtr port, a tb_tcon_saif component will
@@ -129,6 +132,7 @@ def get_instance_name(bus, ports):
                                 TC.DEFAULT_TCON_TBS[bus_id].split("tb_tcon_")[1]
                             inst_name = f"{prefix}{logical_name}"
                             return inst_name
+
 
 def get_entity_from_file(path, name):
     """Extract entity declaration of TCON master from tb_tcon.vhd
@@ -345,7 +349,7 @@ class Entity:
 class Port_Generic:
     def __init__(self, entrystring):
         self.name, self.direc, self.datatype, self.range, self.default = \
-                                              self.__get_typevalues(entrystring)
+            self.__get_typevalues(entrystring)
 
     def __get_typevalues(self, entrystring):
         """Finds default value provided for a generic or a port.
@@ -421,7 +425,6 @@ class Port_Generic:
         else:
             return "", "", "", "", ""
 
-
     def print(self):
         print(f"'Name': {self.name},    'Direction': {self.direc},    "
               f"'Datatype': {self.datatype},    "
@@ -441,15 +444,18 @@ class Port_Generic:
         """Creates entries for a port declaration
         """
         if self.default:
-            fulldatatype = f"{self.direc} {self.datatype}{self.range} := {self.default}"
+            fulldatatype = (f"{self.direc} {self.datatype}{self.range} := "
+                            f"{self.default}")
         else:
             fulldatatype = f"{self.direc} {self.datatype}{self.range}"
 
         if last:
-            return TC.PORT_GENERIC_LAST_ENTRY.format(fill, self.name+add_space,
+            return TC.PORT_GENERIC_LAST_ENTRY.format(fill,
+                                                     f"{self.name}{add_space}",
                                                      fulldatatype)
         else:
-            return TC.PORT_GENERIC_ENTRY.format(fill, self.name+add_space,
+            return TC.PORT_GENERIC_ENTRY.format(fill,
+                                                f"{self.name}{add_space}",
                                                 fulldatatype)
 
     def form_generic_entry(self, fill_before="", fill_after="", last=False,
@@ -463,10 +469,11 @@ class Port_Generic:
 
         if last:
             return TC.PORT_GENERIC_LAST_ENTRY.format(fill_before,
-                                                     self.name+fill_after,
+                                                     f"{self.name}{fill_after}",
                                                      fulldatatype)
         else:
-            return TC.PORT_GENERIC_ENTRY.format(fill_before, self.name+fill_after,
+            return TC.PORT_GENERIC_ENTRY.format(fill_before,
+                                                f"{self.name}{fill_after}",
                                                 fulldatatype)
 
 
@@ -475,18 +482,21 @@ class TB:
     IND_PORT_LIST = 1
     IND_INST_NAME = 2
     IND_TCON_REQ  = 3
+
     def __init__(self, uutpath, uutname):
         self.tb_comp_path = os.path.abspath(os.path.join(uutpath,
                                             TC.TB_SRC_LOCATION))
-        # Entity object for tcon master entity from tb_tcon component diretory in syn\rtlenv
+        # Entity object for tcon master entity from tb_tcon component diretory
+        # in syn\rtlenv
         self.tcon_master = get_entity_from_file(self.tb_comp_path, "tb_tcon")
         self.uut = get_entity_from_file(uutpath, None)
         # List of Entity objects for tb components
         # used by this testbench
-        self.tb_deps = self.__get_tb_deps() # List of Entity objects
+        self.tb_deps = self.__get_tb_deps()  # List of Entity objects
         self.tb_entity = self.__create_tb_entity()
         self.tb_dep_maps = self.__connect_tb_deps()
-        self.arch_constants = list() # List of tuples (name, type, default value)
+        # List of tuples (name, type, default, value)
+        self.arch_constants = list()
         self.arch_decl = list()
         self.arch_def  = list()
         # List that contains already defined signals and constants in the TB
@@ -530,11 +540,12 @@ class TB:
         Args:
             {str} : Bus type (e.g., "CLK", "SAIFM", "SAIFS", etc)
         Returns:
-            {str} : Returns the bus name if the bus type exists in UUT's bus list
+            {str} : Returns the bus name if the bus type exists in UUT's bus
+            list
         """
         if bus_type and bus_type.upper() not in TC.DEFAULT_TCON_TBS.keys():
             log.error(f"{bus_type} does not exists in recongnized bus types "
-                      f"in templates_and_constants.py (DEFAULT_TCON_TBS.keys())")
+                      f"in templates_and_constants.py (DEFAULT_TCON_TBS)")
         else:
             for bus, entry in self.uut.port_buses.items():
                 if bus.startswith(bus_type.upper()):
@@ -547,7 +558,8 @@ class TB:
             entity {str} -- Name of the entity object to be retrieved
 
         Returns:
-            Entity object - Entity object corresponding to the "entity" parameter
+            Entity object - Entity object corresponding to the "entity"
+            parameter
 
         """
         log.info(f"Finding entity {entity_name} in TB dependencies")
@@ -557,7 +569,6 @@ class TB:
                 return entity
             else:
                 log.warn(f"Could not find entity {entity_name}!!!")
-
 
     def __create_tb_entity(self):
         """Create basic TB entity .
@@ -574,15 +585,16 @@ class TB:
         if self.uut.generics:
             len_diff = len(default_generic) - len(self.uut.generics[0].name)
             if len_diff <= 0:
-                default_generic += " "*(0-len_diff)
-                add_space = ""
+                default_generic += " " * abs(len_diff)
+                fill_after = ""
             else:
-                add_space = " "*len_diff
+                fill_after = " " * len_diff
 
             for generic in self.uut.generics:
-                generic_entry += generic.form_generic_entry(
-                                                    fill_before=TC.TB_ENTITY_FILL,
-                                                    fill_after=add_space, add_defaults=False)
+                generic_entry += \
+                    generic.form_generic_entry(fill_before=TC.TB_ENTITY_FILL,
+                                               fill_after=fill_after,
+                                               add_defaults=False)
 
         generic_entry += TC.PORT_GENERIC_LAST_ENTRY.format(TC.TB_ENTITY_FILL,
                                                            default_generic,
@@ -611,10 +623,10 @@ class TB:
                                                  f'"{INST_NAME}"'))
         generic_map.append(TC.GENERIC_MAP_LAST.format(TC.TB_DEP_FILL,
                                                       "COMMAND_LINE",
-                                                       CMD))
+                                                      CMD))
 
         decl_hdr = "  -- TCON master signals"
-        self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
+        self.arch_decl.append(f"{decl_hdr}\n  {'-'*len(decl_hdr.strip())} \n")
         for port in self.tcon_master.ports:
             if port.range:
                 portrange = f"({port.range})"
@@ -636,13 +648,14 @@ class TB:
                                                    port.name,
                                                    port.direc))
             else:
-                port_map.append(TC.PORT_MAP_LAST.format(TC.TB_DEP_FILL, port.name,
+                port_map.append(TC.PORT_MAP_LAST.format(TC.TB_DEP_FILL,
+                                                        port.name,
                                                         port.name,
                                                         port.direc))
         self.arch_decl.append("\n")
         self.arch_def.append(TC.TB_DEP_MAP_WITH_GENERICS.format(
-                                INST_NAME, INST_NAME, self.tcon_master.name,
-                                "".join(generic_map), "".join(port_map)))
+                             INST_NAME, INST_NAME, self.tcon_master.name,
+                             "".join(generic_map), "".join(port_map)))
 
     def __connect_uut(self):
         """Connect UUT's generics and ports to TB's generic and dedicated
@@ -659,40 +672,42 @@ class TB:
                declared
         """
         decl_hdr = "  -- UUT signals"
-        self.arch_decl.append(decl_hdr + "\n  "+"-"*len(decl_hdr.strip())+"\n")
 
-        generic_map= ""
+        self.arch_decl.append(f"{decl_hdr}\n  {'-'*len(decl_hdr.strip())} \n")
+
+        generic_map = ""
         for generic in self.uut.generics:
             if generic != self.uut.generics[-1]:
                 generic_map += TC.GENERIC_MAP.format(TC.TB_DEP_FILL,
-                                                       generic.name, generic.name)
+                                                     generic.name,
+                                                     generic.name)
             else:
                 generic_map += TC.GENERIC_MAP_LAST.format(TC.TB_DEP_FILL,
-                                                            generic.name,
-                                                            generic.name)
+                                                          generic.name,
+                                                          generic.name)
         port_map = ""
         for port in self.uut.ports:
             if port != self.uut.ports[-1]:
                 port_map += TC.PORT_MAP.format(TC.TB_DEP_FILL, port.name,
-                                                 port.name, port.direc)
+                                               port.name, port.direc)
             else:
                 port_map += TC.PORT_MAP_LAST.format(TC.TB_DEP_FILL, port.name,
-                                                      port.name, port.direc)
+                                                    port.name, port.direc)
 
             if port.name.strip() not in self.already_defined:
-                signal_decl = port.form_signal_entry(fill_before=TC.TB_ARCH_FILL)
+                signal_decl = port.form_signal_entry(
+                    fill_before=TC.TB_ARCH_FILL)
                 self.arch_decl.append(signal_decl)
                 self.already_defined.append(port.name.strip())
 
         if generic_map:
             uut_map = TC.TB_DEP_MAP_WITH_GENERICS.format(self.uut.name,
-                                                            "UUT", self.uut.name,
-                                                            generic_map,
-                                                            port_map)
+                                                         "UUT", self.uut.name,
+                                                         generic_map, port_map)
         else:
             uut_map = TC.TB_DEP_MAP_WO_GENERICS.format(self.uut.name,
-                                                          "UUT", self.uut.name,
-                                                          port_map)
+                                                       "UUT", self.uut.name,
+                                                       port_map)
 
         self.arch_def.append(uut_map)
 
@@ -730,7 +745,6 @@ class TB:
                     self.already_defined.append(port.name)
                     break
 
-
     def __create_typical_map(self, obj_list, fill_before=TC.TB_ENTITY_FILL,
                              prefix=""):
         """Creates a typical port/generic port map when there are no special mapping
@@ -746,9 +760,9 @@ class TB:
         Returns:
             A string that contains objects port mapping
         """
-        string =""
+        string = ""
         for obj in obj_list:
-            if obj.direc: # Only ports have non-None type direction
+            if obj.direc:  # Only ports have non-None type direction
                 if "tcon" in obj.name:
                     name = obj.name
                 else:
@@ -757,9 +771,9 @@ class TB:
                     string += TC.PORT_MAP.format(fill_before, obj.name, name,
                                                  obj.direc)
                 else:
-                    string += TC.PORT_MAP_LAST.format(fill_before, obj.name, name,
-                                                      obj.direc)
-            else: # Generics dont have direction value
+                    string += TC.PORT_MAP_LAST.format(fill_before, obj.name,
+                                                      name, obj.direc)
+            else:  # Generics dont have direction value
                 if obj != obj_list[-1]:
                     string += TC.GENERIC_MAP.format(fill_before, obj.name,
                                                     obj.name)
@@ -778,9 +792,6 @@ class TB:
             Update arch_decl, arch_def, and already_defined class members
 
         """
-
-
-
 
     def generate_mapping(self):
         """This function generates mapping for each tb dependency

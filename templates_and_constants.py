@@ -36,14 +36,14 @@ SIG_ASSIGN_OP = "<="
 
 
 # Use default BUS configurations if user did not provide one
-DEFAULT_TCON_TBS =  {"CLK"   : "tb_tcon_clocker",
-                     "MISC"  : None,
-                     "IRBM"  : "tb_tcon_irb_slave",
-                     "IRBS"  : "tb_tcon_irb_master",
-                     "SAIFM" : "tb_tcon_saif",
-                     "SAIFS" : "tb_tcon_saif",
-                     "SDM"   : "tb_tcon_start_done_slave",
-                     "SDS"   : "tb_tcon_start_done"}
+DEFAULT_TCON_TBS = {"CLK": "tb_tcon_clocker",
+                    "MISC": None,
+                    "IRBM": "tb_tcon_irb_slave",
+                    "IRBS": "tb_tcon_irb_master",
+                    "SAIFM": "tb_tcon_saif",
+                    "SAIFS": "tb_tcon_saif",
+                    "SDM": "tb_tcon_start_done_slave",
+                    "SDS": "tb_tcon_start_done"}
 
 # Location where all tb components are (must use rtlenv to pull all dependencies
 # before running this script)
@@ -52,7 +52,7 @@ TB_SRC_LOCATION = "./syn/rtlenv/"
 BUS_CFG_FILE = "BUS_CONFIG.cfg"
 
 
-TB_HEADER ="""
+TB_HEADER = """
 --------------------------------------------------------------------------------
 -- COPYRIGHT (c) {} Schweitzer Engineering Laboratories, Inc.
 -- SEL Confidential
@@ -121,9 +121,9 @@ GENERIC_MAP = "{}{} => {}, \n"
 # Last entry do not have comma
 GENERIC_MAP_LAST = "{}{} => {}"
 
-TB_ARCH_FILL = " "*2
-TB_ENTITY_FILL = " "*4
-TB_DEP_FILL = " "*4
+TB_ARCH_FILL = " " * 2
+TB_ENTITY_FILL = " " * 4
+TB_DEP_FILL = " " * 4
 
 
 # Port map entries are formed as
@@ -152,15 +152,14 @@ NAMES_CLOCK = ["CLK", "CLOCK"]
 # VECTOR_TYPES =
 
 SAIFM_MAP = {"rts": "ctr", "cts": "rtr"}
-SAIFS_MAP = {"rtr":"cts", "ctr":"rts"}
-IRB_MAP = {"wr":"wr", "rd":"rd", "ack":"ack", "busy":"busy", "addr":"addr"}
-SD_MAP  = {"start":"start", "done":"done"}
+SAIFS_MAP = {"rtr": "cts", "ctr": "rts"}
+IRB_MAP = {"wr": "wr", "rd": "rd", "ack": "ack", "busy": "busy", "addr": "addr"}
+SD_MAP  = {"start": "start", "done": "done"}
 
-TB_BUS_IDS =  OrderedDict(
-              {"CLK"   : NAMES_CLOCK,
-               "IRBM"  : IRB_MAP.keys(),
-               "IRBS"  : IRB_MAP.keys(),
-               "SAIFM" : SAIFM_MAP.keys(),
-               "SAIFS" : SAIFS_MAP.keys(),
-               "SDM"   : SD_MAP.keys(),
-               "SDS"   : SD_MAP.keys()})
+TB_BUS_IDS = OrderedDict({"CLK": NAMES_CLOCK,
+                          "IRBM": IRB_MAP.keys(),
+                          "IRBS": IRB_MAP.keys(),
+                          "SAIFM": SAIFM_MAP.keys(),
+                          "SAIFS": SAIFS_MAP.keys(),
+                          "SDM": SD_MAP.keys(),
+                          "SDS": SD_MAP.keys()})
