@@ -34,7 +34,6 @@ INST_ASSIGN_OP = ":="
 # Signal assignment operator
 SIG_ASSIGN_OP = "<="
 
-
 # Use default BUS configurations if user did not provide one
 DEFAULT_TCON_TBS = {"CLK": "tb_tcon_clocker",
                     "MISC": None,
@@ -115,31 +114,10 @@ TB_DEP_MAP_WO_GENERICS = """
 {}
   );
 """
-# Generic map entries are formed as
-#       <name> => <value>,
-GENERIC_MAP = "{}{} => {}, \n"
-# Last entry do not have comma
-GENERIC_MAP_LAST = "{}{} => {}"
 
 TB_ARCH_FILL = " " * 2
 TB_ENTITY_FILL = " " * 4
 TB_DEP_FILL = " " * 4
-
-
-# Port map entries are formed as
-#       <name> => <value>, -- <direction>
-# The comma should be removed for last entry
-PORT_MAP  = "{}{} => {}, -- {}\n"
-# Last entry do not have comma before comment
-PORT_MAP_LAST  = "{}{} => {}  -- {}"
-
-# Signal declaration entries are formed as
-#   signal name <variable number of spaces>: <type>;
-SIGNAL_ENTRY = "{}signal {} : {};\n"
-# Generic declaration in an entity is formed as
-#   <name> : value;
-PORT_GENERIC_ENTRY = "{}{} : {};\n"
-PORT_GENERIC_LAST_ENTRY = "{}{} : {}"
 
 # Similar names that typically represent the same idea
 MATCH_DWIDTH = ["DWIDTH", "DATA_DWIDTH", "D_WIDTH"]
@@ -163,5 +141,3 @@ TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLOCK,
                            "SAIFS": SAIFS_MAP.keys(),
                            "SDM": SD_MAP.keys(),
                            "SDS": SD_MAP.keys()})
-
-SIG_ASSIGN_ENTRY = "{}{} <= {};\n"

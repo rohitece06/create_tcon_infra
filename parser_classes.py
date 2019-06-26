@@ -135,6 +135,94 @@ def get_instance_name(bus: str, ports: List) -> str:
                             return inst_name
 
 
+def port_map_entry(lfill: str, left: str, right: str,
+                   comment: str, last: bool) -> str:
+    """Generate formatted string for mapping a port
+
+    Arguments:
+        lfill -- Amount of spaces to filled on the left
+        left -- Left entry for the port map
+        right -- Right entry for the port map
+        comment -- Comment for this mapping (e.g., port direction)
+        last -- Whether this port map is the last entry
+
+    Returns:
+        Returns Port mapping string
+    """
+    if last:
+        return f"{lfill}{left} => {right}  -- {comment}"
+    else:
+        return f"{lfill}{left} => {right},  -- {comment}\n"
+
+
+def generic_map_entry(lfill: str, left: str, right: str,
+                      last: bool) -> str:
+    """Generate formatted string for mapping a generic
+
+    Arguments:
+        lfill -- Amount of spaces to filled on the left
+        left -- Left entry for the port map
+        right -- Right entry for the port map
+        last -- Whether this generic map is the last entry
+
+    Returns:
+        Returns Generic mapping string
+    """
+    if last:
+        return f"{lfill}{left} => {right}"
+    else:
+        return f"{lfill}{left} => {right},\n"
+
+
+def port_generic_entry(lfill: str, name: str, fulltype: str, last: bool) -> str:
+    """Create a string for port/generic for a VHDL entity
+
+    Arguments:
+        lfill -- Spaces to fill on the left
+        name -- Name of the port
+        fulltype -- Full datatype of the port. It includes any range or
+                    default value
+        last -- Whether this entry is the last entry
+
+    Returns:
+        String that represents a port/generic entry in a VHDL entity
+    """
+    if last:
+        return f"{lfill}{name} : {fulltype};\n"
+    else:
+        return f"{lfill}{name} : {fulltype}"
+
+
+def signal_entry(lfill: str, name: str, fulltype: str) -> str:
+    """Create a string for a signal entry for a VHDL architecture
+
+    Arguments:
+        lfill -- Spaces to fill on the left
+        name -- Name of the signal
+        fulltype -- Full datatype of the signal. It includes any range or
+                    default value
+
+    Returns:
+        String that represents the signal entry
+    """
+
+    return f"{lfill}signal {name} : {fulltype};\n"
+
+
+def sig_assignment(lfill: str, left: str, right: str) -> str:
+    """String for VHDL signal assignment
+
+    Arguments:
+        lfill {str} -- Spaces to fill on the left
+        left {str} -- Left entry of the assignment
+        right {str} -- Right entry of the assignment
+
+    Returns:
+        str -- [description]
+    """
+    return f"{lfill}{left} <= {right};\n"
+
+
 class ParserType:
     def __init__(self, globtype: str, glob, name: str="") -> None:
         """
@@ -204,7 +292,7 @@ class ParserType:
                     false_end = False
 
                 if start_collecting:
-                    found += " "+token_to_add
+                    found += f" {token_to_add}"
 
             # Remove space before ; and (
             no_space_end = re.sub(r'\s+;', ';', found)
@@ -347,7 +435,7 @@ class Port_Generic:
         return f"{fill_before}{self.name}{fill_after}: {fulldatatype};\n"
         # return TC.SIGNAL_ENTRY.format(fill, self.name+add_space, fulldatatype)
 
-    def form_port_entry(self, fill: str="", add_space: str="",
+    def form_port_entry(self, fill_before: str="", fill_after: str="",
                         last: bool=False) -> str:
         """Creates entries for a port declaration
         """
@@ -357,14 +445,8 @@ class Port_Generic:
         else:
             fulldatatype = f"{self.direc} {self.datatype}{self.range}"
 
-        if last:
-            return TC.PORT_GENERIC_LAST_ENTRY.format(fill,
-                                                     f"{self.name}{add_space}",
-                                                     fulldatatype)
-        else:
-            return TC.PORT_GENERIC_ENTRY.format(fill,
-                                                f"{self.name}{add_space}",
-                                                fulldatatype)
+        return port_generic_entry(fill_before, f"{self.name}{fill_after}",
+                                  fulldatatype, last)
 
     def form_generic_entry(self, fill_before: str="", fill_after: str="",
                            last: bool=False, add_defaults: bool=True) -> str:
@@ -375,14 +457,8 @@ class Port_Generic:
         else:
             fulldatatype = f"{self.datatype}{self.range}"
 
-        if last:
-            return TC.PORT_GENERIC_LAST_ENTRY.format(fill_before,
-                                                     f"{self.name}{fill_after}",
-                                                     fulldatatype)
-        else:
-            return TC.PORT_GENERIC_ENTRY.format(fill_before,
-                                                f"{self.name}{fill_after}",
-                                                fulldatatype)
+        return port_generic_entry(fill_before, f"{self.name}{fill_after}",
+                                  fulldatatype, last)
 
 
 class Entity:
@@ -593,9 +669,9 @@ class TB:
                                                fill_after=fill_after,
                                                add_defaults=False)
 
-        generic_entry += TC.PORT_GENERIC_LAST_ENTRY.format(TC.TB_ENTITY_FILL,
-                                                           default_generic,
-                                                           "string")
+        generic_entry += port_generic_entry(TC.TB_ENTITY_FILL, default_generic,
+                                            "string", True)
+
         return TC.TB_ENTITY.format(self.uut.name, generic_entry, self.uut.name)
 
     def __connect_tcon_master(self) -> NoReturn:
@@ -615,12 +691,10 @@ class TB:
         CMD = '"py -u " & TEST_PREFIX & "/tcon.py"'
         generic_map = list()
         port_map = list()
-        generic_map.append(TC.GENERIC_MAP.format(TC.TB_DEP_FILL,
-                                                 "INST_NAME   ",
-                                                 f'"{INST_NAME}"'))
-        generic_map.append(TC.GENERIC_MAP_LAST.format(TC.TB_DEP_FILL,
-                                                      "COMMAND_LINE",
-                                                      CMD))
+        generic_map.append(generic_map_entry(TC.TB_DEP_FILL, "INST_NAME   ",
+                                             f'"{INST_NAME}"', False))
+        generic_map.append(generic_map_entry(TC.TB_DEP_FILL, "COMMAND_LINE",
+                                             CMD, True))
 
         decl_hdr = "  -- TCON master signals"
         self.arch_decl.append(f"{decl_hdr}\n  {'-'*len(decl_hdr.strip())} \n")
@@ -640,23 +714,16 @@ class TB:
             self.arch_decl.append(signal)
             self.already_defined.append(port.name.strip())
 
-            if port != self.tcon_master.ports[-1]:
-                port_map.append(TC.PORT_MAP.format(TC.TB_DEP_FILL, port.name,
-                                                   port.name,
-                                                   port.direc))
-            else:
-                port_map.append(TC.PORT_MAP_LAST.format(TC.TB_DEP_FILL,
-                                                        port.name,
-                                                        port.name,
-                                                        port.direc))
+            last = port == self.tcon_master.ports[-1]
+            port_map.append(port_map_entry(TC.TB_DEP_FILL, port.name,
+                                           port.name, port.direc, last))
         self.arch_decl.append("\n")
         self.arch_def.append(TC.TB_DEP_MAP_WITH_GENERICS.format(
                              INST_NAME, INST_NAME, self.tcon_master.name,
                              "".join(generic_map), "".join(port_map)))
 
         # Connect tcon_clk to clks out of the clocker
-        assignment = TC.SIG_ASSIGN_ENTRY.format(TC.TB_ARCH_FILL,
-                                                "tcon_clk", "clks(0)")
+        assignment = sig_assignment(TC.TB_ARCH_FILL, "tcon_clk", "clks(0)")
         self.arch_def.append(assignment)
 
     def __connect_uut(self) -> NoReturn:
@@ -679,22 +746,14 @@ class TB:
 
         generic_map = ""
         for generic in self.uut.generics:
-            if generic != self.uut.generics[-1]:
-                generic_map += TC.GENERIC_MAP.format(TC.TB_DEP_FILL,
-                                                     generic.name,
-                                                     generic.name)
-            else:
-                generic_map += TC.GENERIC_MAP_LAST.format(TC.TB_DEP_FILL,
-                                                          generic.name,
-                                                          generic.name)
+            last = generic == self.uut.generics[-1]
+            generic_map += generic_map_entry(TC.TB_DEP_FILL, generic.name,
+                                             generic.name, last)
         port_map = ""
         for port in self.uut.ports:
-            if port != self.uut.ports[-1]:
-                port_map += TC.PORT_MAP.format(TC.TB_DEP_FILL, port.name,
-                                               port.name, port.direc)
-            else:
-                port_map += TC.PORT_MAP_LAST.format(TC.TB_DEP_FILL, port.name,
-                                                    port.name, port.direc)
+            last = port == self.uut.ports[-1]
+            port_map += port_map_entry(TC.TB_DEP_FILL, port.name, port.name,
+                                       port.direc, last)
 
             if port.name.strip() not in self.already_defined:
                 signal_decl = port.form_signal_entry(
@@ -716,8 +775,7 @@ class TB:
             # All clocks input to the UUT are connected to same output of the
             # tb_tcon_clocker. Designer will have to cross check
             if direc == "in":
-                assignment = TC.SIG_ASSIGN_ENTRY.format(TC.TB_ARCH_FILL,
-                                                        port, "clks(0)")
+                assignment = sig_assignment(TC.TB_ARCH_FILL, port, "clks(0)")
             self.arch_def.append(assignment)
             log.warn("Please update clock mapping as required")
 
@@ -778,19 +836,14 @@ class TB:
                     name = obj.name
                 else:
                     name = f"{prefix}{obj.name}"
-                if obj != obj_list[-1]:
-                    string += TC.PORT_MAP.format(fill_before, obj.name, name,
-                                                 obj.direc)
-                else:
-                    string += TC.PORT_MAP_LAST.format(fill_before, obj.name,
-                                                      name, obj.direc)
+
+                last = obj == obj_list[-1]
+                string += port_map_entry(fill_before, obj.name, name,
+                                         obj.direc, last)
             else:  # Generics dont have direction value
-                if obj != obj_list[-1]:
-                    string += TC.GENERIC_MAP.format(fill_before, obj.name,
-                                                    obj.name)
-                else:
-                    string += TC.GENERIC_MAP_LAST.format(fill_before, obj.name,
-                                                         obj.name)
+                last = obj == obj_list[-1]
+                string += port_map_entry(fill_before, obj.name, obj.name,
+                                         obj.direc, last)
         return string
 
     def __connect_tb_deps(self) -> NoReturn:
