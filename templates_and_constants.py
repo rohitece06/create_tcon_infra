@@ -82,6 +82,7 @@ architecture sim of {}_tb is
 {}
 
   -- Signals
+  signal tb_reset : std_logic;
 {}
 begin
 {}
@@ -120,13 +121,17 @@ TB_ENTITY_FILL = " " * 4
 TB_DEP_FILL = " " * 4
 
 # Similar names that typically represent the same idea
-MATCH_DWIDTH = ["DWIDTH", "DATA_DWIDTH", "D_WIDTH"]
+MATCH_DWIDTH = ["DWIDTH", "DATA_WIDTH", "D_WIDTH"]
 MATCH_AWIDTH = ["AWIDTH", "ADDR_WIDTH", "A_WIDTH"]
-MATCH_BASE   = ["BASE", "BASE_ADDR"]
-MATCH_WRITE  = ["WR", "WRITE"]
-MATCH_READ  = ["RD", "READ"]
-MATCH_RESET = ["RESET", "RST"]
-MATCH_CLOCK = ["CLK", "CLOCK"]
+MATCH_BASE = ["BASE", "BASE_ADDR"]
+MATCH_WR = ["WR", "WRITE"]
+MATCH_RD = ["RD", "READ"]
+MATCH_RST = ["RESET", "RST"]
+MATCH_CLK = ["CLK", "CLOCK"]
+MATCH_LOG = ["LOG", "LOG_FILE", "LOGFILE"]
+MATCH_DIN = ["DIN", "DATA_IN"]
+MATCH_DOUT = ["DOUT", "DATA_OUT"]
+MATCH_CMD = ["CMD", "COMMAND"]
 # VECTOR_TYPES =
 
 SAIFM_MAP = {"rts": "ctr", "cts": "rtr"}
@@ -134,7 +139,7 @@ SAIFS_MAP = {"rtr": "cts", "ctr": "rts"}
 IRB_MAP = {"wr": "wr", "rd": "rd", "ack": "ack", "busy": "busy", "addr": "addr"}
 SD_MAP  = {"start": "start", "done": "done"}
 
-TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLOCK,
+TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLK,
                            "IRBM": IRB_MAP.keys(),
                            "IRBS": IRB_MAP.keys(),
                            "SAIFM": SAIFM_MAP.keys(),
