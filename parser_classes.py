@@ -477,6 +477,7 @@ class Entity:
         #   {busname : (tb_entity name, [list of ports], inst_name, tcon req no}
         self.port_buses = assign_buses(config_file)
         self.inst_name = ""
+        self.tb_bus_name = ""
 
     def __get_entries(self, parserobject: ParserType) -> List[Port_Generic]:
         """Extract entry members of a port or a generic like name of the port,
@@ -604,11 +605,12 @@ class TB:
 
         """
         deplist = []
-        for tb_dep, vals in self.uut.port_buses.items():
-            if tb_dep:
-                def_tb_file = self.uut.port_buses[tb_dep][self.IND_TB_ENTITY]
+        for bus_name, bus_desc in self.uut.port_buses.items():
+            if bus_name:
+                def_tb_file = bus_desc[self.IND_TB_ENTITY]
                 entity = get_entity_from_file(self.tb_comp_path, def_tb_file)
-                entity.inst_name = vals[self.IND_INST_NAME]
+                entity.inst_name = bus_desc[self.IND_INST_NAME]
+                entity.tb_bus_name = bus_name
                 deplist.append(entity)
 
         return deplist
@@ -772,13 +774,12 @@ class TB:
                                        port.direc, last)
 
             if port_map_name.strip() not in self.already_defined:
-                signal_decl = port.form_signal_entry(
-                    fill_before=TC.TB_ARCH_FILL)
+                signal_decl = port.form_signal_entry(TC.TB_ARCH_FILL)
                 self.arch_decl.append(signal_decl)
                 self.already_defined.append(port_map_name.strip())
             else:
-                log.warn(f"{port_map_name.strip()} for the UUT already exists "
-                         f"in the architecture")
+                log.debug(f"{port_map_name.strip()} for the UUT already exists "
+                          f"in the architecture")
                 log.debug(f"{''.join(self.already_defined)}")
 
         if generic_map:
@@ -852,18 +853,20 @@ class TB:
                     self.already_defined.append(port.name)
                     break
                 else:
-                    log.warn(f"{port.name.strip()} for tb_tcon_clocker already "
-                             f"exists in the architecture")
+                    log.debug(f"{port.name.strip()} for tb_tcon_clocker already"
+                              f" exists in the architecture")
                     log.debug(f"{''.join(self.already_defined)}")
 
     def __create_typical_map(self, obj_list: List[Port_Generic],
                              fill_before: str=TC.TB_ENTITY_FILL,
-                             prefix: str="") -> str:
-        """Creates a typical port/generic port map when there are no special mapping
-        requirements
+                             prefix: str="", just_tcon: bool=False) -> str:
+        """Creates a typical port/generic port map when there are no special
+        mapping requirements
 
         Arguments:
             obj_list -- A list of port generic objects
+            fill_before -- Spaces to fill before port map
+            prefix -- The prefix string to be appended to all non-tcon port name
 
         Keyword Arguments:
             fill_before -- Additional space to fill before the mapping
@@ -875,32 +878,52 @@ class TB:
         string = ""
         for obj in obj_list:
             if obj.direc:  # Only ports have non-None type direction
-                if "tcon" in obj.name:
+                if "tcon_" in obj.name:
                     name = obj.name
                 else:
                     name = f"{prefix}{obj.name}"
-
-                last = obj == obj_list[-1]
-                string += port_map_entry(fill_before, obj.name, name,
-                                         obj.direc, last)
+                # Mapping is create when
+                #   1) When all ports need to be mapped (just_tcon = False)
+                #   2) When only tcon ports are to be mapped
+                if not just_tcon or just_tcon and "tcon_" in obj.name:
+                    last = obj == obj_list[-1]
+                    string += port_map_entry(fill_before, obj.name, name,
+                                             obj.direc, last)
             else:  # Generics dont have direction value
                 last = obj == obj_list[-1]
                 string += port_map_entry(fill_before, obj.name, obj.name,
                                          obj.direc, last)
         return string
 
-    def __connect_irb_master(self) -> NoReturn:
+    def __connect_irb_master(self, entity: Entity) -> NoReturn:
         """Create mapping for IRB master TB component
 
         Arguments:
-            None
+            entity -- Entity object
 
         Returns:
             Update arch_decl, arch_def, and already_defined class members
 
         """
+        port_map = ""
+        port_map += self.__create_typical_map(obj_list=entity.ports,
+                                              just_tcon=True)
 
-    def __connect_saif_master(self) -> NoReturn:
+    def __connect_irb_slave(self, entity: Entity) -> NoReturn:
+        """Create mapping for IRB slave TB component
+
+        Arguments:
+            entity -- Entity object
+
+        Returns:
+            Update arch_decl, arch_def, and already_defined class members
+
+        """
+        port_map = ""
+        port_map += self.__create_typical_map(obj_list=entity.ports,
+                                              just_tcon=True)
+
+    def __connect_saif_master(self, entity: Entity) -> NoReturn:
         """Create mapping for SAIF master TB component
 
         Arguments:
@@ -910,38 +933,51 @@ class TB:
             Update arch_decl, arch_def, and already_defined class members
 
         """
-    def __connect_saif_slave(self) -> NoReturn:
+        port_map = ""
+        port_map += self.__create_typical_map(obj_list=entity.ports,
+                                              just_tcon=True)
+
+    def __connect_saif_slave(self, entity: Entity) -> NoReturn:
         """Create mapping for SAIF slave TB component
 
         Arguments:
-            None
+            entity -- Entity object
 
         Returns:
             Update arch_decl, arch_def, and already_defined class members
 
         """
+        port_map = ""
+        port_map += self.__create_typical_map(obj_list=entity.ports,
+                                              just_tcon=True)
 
-    def __connect_sd_master(self) -> NoReturn:
+    def __connect_sd_master(self, entity: Entity) -> NoReturn:
         """Create mapping for Start-Done master TB component
 
         Arguments:
-            None
+            entity -- Entity object
 
         Returns:
             Update arch_decl, arch_def, and already_defined class members
 
         """
+        port_map = ""
+        port_map += self.__create_typical_map(obj_list=entity.ports,
+                                              just_tcon=True)
 
-    def __connect_sd_slave(self) -> NoReturn:
+    def __connect_sd_slave(self, entity: Entity) -> NoReturn:
         """Create mapping for Start-Done slave TB component
 
         Arguments:
-            None
+            entity -- Entity object
 
         Returns:
             Update arch_decl, arch_def, and already_defined class members
 
         """
+        port_map = ""
+        port_map += self.__create_typical_map(obj_list=entity.ports,
+                                              just_tcon=True)
 
     def __connect_tb_deps(self) -> NoReturn:
         """Create mapping for TB dependencies for this UUT
@@ -953,6 +989,36 @@ class TB:
             Update arch_decl, arch_def, and already_defined class members
 
         """
+        connected = 0
+        for entity in self.tb_deps:
+            if "SAIFM" in entity.tb_bus_name:
+                self.__connect_saif_master(entity)
+                connected += 1
+                log.info("Connected TB SAIF master! ")
+            if "SAIFS" in entity.tb_bus_name:
+                self.__connect_saif_slave(entity)
+                connected += 1
+                log.info("Connected TB SAIF slave! ")
+            if "IRBM" in entity.tb_bus_name:
+                self.__connect_irb_master(entity)
+                connected += 1
+                log.info("Connected TB IRB master! ")
+            if "IRBS" in entity.tb_bus_name:
+                self.__connect_irb_slave(entity)
+                connected += 1
+                log.info("Connected TB IRB slave! ")
+            if "SDM" in entity.tb_bus_name:
+                self.__connect_sd_master(entity)
+                connected += 1
+                log.info("Connected TB Start-Done master! ")
+            if "SDS" in entity.tb_bus_name:
+                self.__connect_sd_slave(entity)
+                connected += 1
+                log.info("Connected TB Start-Done slave! ")
+        if connected == 0:
+            log.error("**** Cound not find any TB components to connect ****")
+        else:
+            log.info(f"Connected {connected} TB components")
 
     def generate_mapping(self) -> NoReturn:
         """This function generates mapping for each tb dependency

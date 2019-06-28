@@ -82,5 +82,5 @@ if __name__ == "__main__":
     #         print(port)
 
     tb_obj.generate_mapping()
-    print("".join(tb_obj.arch_decl))
-    print("".join(tb_obj.arch_def))
+    # print("".join(tb_obj.arch_decl))
+    # print("".join(tb_obj.arch_def))
