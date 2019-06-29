@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 import re
 import os
 import time
@@ -97,5 +97,5 @@ if __name__ == "__main__":
     #         print(port)
 
     tb_obj.generate_mapping()
-    # print("".join(tb_obj.arch_decl))
-    # print("".join(tb_obj.arch_def))
+    print("".join(tb_obj.arch_decl))
+    print("".join(tb_obj.arch_def))
