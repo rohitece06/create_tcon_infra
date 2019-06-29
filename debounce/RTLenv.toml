@@ -53,3 +53,7 @@ location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_irb_maste
 type = "git"
 spec = {tagspec = '>=1.1.0,<2.0.0'}
 
+[test_dependencies.tb_tcon_irb_slave]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_irb_slave.git"
+type = "git"
+spec = {tagspec = '>=1.0.0,<2.0.0'}

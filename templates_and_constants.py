@@ -129,14 +129,15 @@ MATCH_RD = ["RD", "READ"]
 MATCH_RST = ["RESET", "RST"]
 MATCH_CLK = ["CLK", "CLOCK"]
 MATCH_LOG = ["LOG", "LOG_FILE", "LOGFILE"]
-MATCH_DIN = ["DIN", "DATA_IN"]
-MATCH_DOUT = ["DOUT", "DATA_OUT"]
+MATCH_DI = ["din", "data_in", "di"]
+MATCH_DO = ["dout", "data_out", "do"]
 MATCH_CMD = ["CMD", "COMMAND"]
 # VECTOR_TYPES =
 
 SAIFM_MAP = {"rts": "ctr", "cts": "rtr"}
 SAIFS_MAP = {"rtr": "cts", "ctr": "rts"}
-IRB_MAP = {"wr": "wr", "rd": "rd", "ack": "ack", "busy": "busy", "addr": "addr"}
+IRB_MAP = {"wr": "wr", "rd": "rd", "ack": "ack", "busy": "busy",
+           "addr": "addr", "di": MATCH_DO, "do": MATCH_DI}
 SD_MAP  = {"start": "start", "done": "done"}
 
 TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLK,
@@ -146,3 +147,11 @@ TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLK,
                            "SAIFS": SAIFS_MAP.keys(),
                            "SDM": SD_MAP.keys(),
                            "SDS": SD_MAP.keys()})
+
+TB_MAP = OrderedDict({"CLK": MATCH_CLK,
+                      "IRBM": IRB_MAP,
+                      "IRBS": IRB_MAP,
+                      "SAIFM": SAIFM_MAP,
+                      "SAIFS": SAIFS_MAP,
+                      "SDM": SD_MAP,
+                      "SDS": SD_MAP})

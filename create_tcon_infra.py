@@ -7,14 +7,23 @@ import sys
 import parser_classes as PC
 from inspect import currentframe
 import logging
+from typing import NoReturn
 
 
-def get_linenumber():
-    cf = currentframe()
-    return cf.f_back.f_lineno
+def setloglevel(loglevel: str) -> NoReturn:
+    if loglevel.lower() == "info":
+        PC.log.setLevel(logging.INFO)
+    if loglevel.lower() == "debug":
+        PC.log.setLevel(logging.DEBUG)
+    if loglevel.lower() == "warn":
+        PC.log.setLevel(logging.WARN)
+    if loglevel.lower() == "error":
+        PC.log.setLevel(logging.ERROR)
+    if loglevel.lower() == "critical":
+        PC.log.setLevel(logging.CRITICAL)
 
 
-def get_tb_file(comppath):
+def get_tb_file(comppath: str) -> str:
     compname = os.path.basename(comppath)
     tb_file = os.path.join(comppath, "tb/{}_tb/src/{}_tb.vhd".
                            format(compname, compname))
@@ -52,14 +61,20 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', type=str, help="Full path for\
                         bus configuration file", required=False)
 
+    parser.add_argument('-l', '--loglevel', type=str, help="Set logging level: \
+                        info, debug, warn, error, critical", default="error",
+                        required=False)
+
     ###########################################################################
     #
     #           TODO:: perform sanity checks
     #
     ###########################################################################
     args = parser.parse_args()
+    setloglevel(args.loglevel)
     uutpath = os.path.abspath(os.path.join(args.component_path)) \
         if args.component_path else os.getcwd()
+
     uutname = os.path.basename(uutpath)
     tb_obj = PC.TB(uutpath, uutname)
     # tb_obj.uut.print_generics()

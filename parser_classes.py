@@ -43,7 +43,7 @@ def assign_buses(fname: str) -> OrderedDict:
     try:
         cfgfile = open(fname, "r")
     except OSError:
-        logging.error("open({}) failed".format(fname))
+        log.error("open({}) failed".format(fname))
         return None
 
     prev_bus = None
@@ -69,7 +69,7 @@ def assign_buses(fname: str) -> OrderedDict:
                     port_list = list()
 
                 if bus not in bus_cfg.keys():
-                    bus_cfg[bus] = [None, None, None, None]
+                    bus_cfg[bus] = [None, None, None, None, None]
 
                 port_list.append(port)
                 # if bus:
@@ -96,6 +96,7 @@ def assign_buses(fname: str) -> OrderedDict:
         bus_cfg[bus][0] = tb_entity
         bus_cfg[bus][2] = inst_name
         bus_cfg[bus][3] = tcon_req_id
+        bus_cfg[bus][4] = tb_dep
         if bus:
             tcon_req_id += 1
 
@@ -408,13 +409,13 @@ class Port_Generic:
                     # Add paranthesis back to the range value
                     range = f"({temp})"
                 except AttributeError:
-                    logging.warn("No valid vector range found")
+                    log.warn("No valid vector range found")
                     range = ""
             else:
                 range = ""
 
-            logging.info(f"name: {name}, direc: {direc}, datatype: {datatype}, "
-                         f"range: {range}, default:{default}\n")
+            log.info(f"name: {name}, direc: {direc}, datatype: {datatype}, "
+                     f"range: {range}, default:{default}\n")
 
             return name, direc, datatype, range, default
         else:
@@ -478,6 +479,7 @@ class Entity:
         self.port_buses = assign_buses(config_file)
         self.inst_name = ""
         self.tb_bus_name = ""
+        self.tb_bus_type = ""
 
     def __get_entries(self, parserobject: ParserType) -> List[Port_Generic]:
         """Extract entry members of a port or a generic like name of the port,
@@ -560,6 +562,7 @@ class TB:
     IND_PORT_LIST = 1  # All ports connected to a bus
     IND_INST_NAME = 2  # Instance name for a bus's TB component`
     IND_TCON_REQ  = 3  # Tcon request number
+    IND_BUS_TYPE  = 4  # Bus type for the tb component
 
     def __init__(self, uutpath: str, uutname: str) -> None:
         self.tb_comp_path = os.path.abspath(os.path.join(uutpath,
@@ -611,6 +614,7 @@ class TB:
                 entity = get_entity_from_file(self.tb_comp_path, def_tb_file)
                 entity.inst_name = bus_desc[self.IND_INST_NAME]
                 entity.tb_bus_name = bus_name
+                entity.tb_bus_type = bus_desc[self.IND_BUS_TYPE]
                 deplist.append(entity)
 
         return deplist
@@ -630,8 +634,11 @@ class TB:
             return ""
         else:
             for bus, entry in self.uut.port_buses.items():
-                if bus.startswith(bus_type.upper()):
-                    return entry
+                if bus:
+                    if bus.startswith(bus_type.upper()):
+                        return entry
+                else:
+                    log.warn(f"Nonetype bus found in {self.uut.name}")
 
     def __get_entity_from_tb_dep(self, entity_name: str) -> Entity:
         """Get the entity object from tb_dependency list
@@ -770,6 +777,7 @@ class TB:
                                  f"{updated_fill}")
             else:
                 port_map_name = port.name
+
             port_map += port_map_entry(TC.TB_DEP_FILL, port.name, port_map_name,
                                        port.direc, last)
 
@@ -906,8 +914,48 @@ class TB:
 
         """
         port_map = ""
+        bus_entry = self.__check_bus_in_uut_buses(entity.tb_bus_name)
         port_map += self.__create_typical_map(obj_list=entity.ports,
                                               just_tcon=True)
+        clk_rst_ports = entity.find_matching_ports(TC.MATCH_CLK +
+                                                   TC.MATCH_RST)
+        clk_rst_port_names = [x[0] for x in clk_rst_ports]
+        port_map_name = None
+        for port in entity.ports:
+            if port.name.strip() in clk_rst_port_names:
+                updated_fill = " " * (len(port.name) - len(port.name.strip()) -
+                                      len(entity.tb_bus_name) - 1)
+                port_map_name = (f"{entity.tb_bus_name.lower()}_"
+                                 f"{port.name.strip()}{updated_fill}")
+                # TODO: Add to already defined
+            else:
+                # Associate TB port names with UUT bus port name
+                if "tcon_" not in port.name:
+                    for tb_hint, uut_hint in \
+                            TC.TB_MAP[entity.tb_bus_type].items():
+                        for uut_port in bus_entry[self.IND_PORT_LIST]:
+                            if tb_hint in port.name:
+                                if isinstance(uut_hint, list):
+                                    for hint in uut_hint:
+                                        if f"_{hint}" in uut_port:
+                                            port_map_name = uut_port
+                                        break
+                                else:
+                                    if uut_hint in uut_port:
+                                        port_map_name = uut_port
+
+                    # If did not find a mathing port
+                    if port_map_name is None:
+                        port_map_name = port.name
+                        # TODO: Add to already defined
+
+            last = port == entity.ports[-1]
+            if port_map_name:
+                port_map += port_map_entry(TC.TB_DEP_FILL, port.name,
+                                           port_map_name, port.direc, last)
+                port_map_name = None
+
+        print(port_map)
 
     def __connect_irb_slave(self, entity: Entity) -> NoReturn:
         """Create mapping for IRB slave TB component
@@ -1015,6 +1063,7 @@ class TB:
                 self.__connect_sd_slave(entity)
                 connected += 1
                 log.info("Connected TB Start-Done slave! ")
+
         if connected == 0:
             log.error("**** Cound not find any TB components to connect ****")
         else:
