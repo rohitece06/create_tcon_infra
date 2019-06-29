@@ -1,0 +1,30 @@
+# Any microsoft documents
+*.doc filter=lfs diff=lfs merge=lfs -text
+*.docx filter=lfs diff=lfs merge=lfs -text
+*.vsd filter=lfs diff=lfs merge=lfs -text
+*.vsdx filter=lfs diff=lfs merge=lfs -text
+*.xls filter=lfs diff=lfs merge=lfs -text
+*.xlsx filter=lfs diff=lfs merge=lfs -text
+*.xlsm filter=lfs diff=lfs merge=lfs -text
+*.ppt filter=lfs diff=lfs merge=lfs -text
+*.pptx filter=lfs diff=lfs merge=lfs -text
+
+# Any PDFs
+*.pdf filter=lfs diff=lfs merge=lfs -text
+
+# Executables, dlls, software
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.dll filter=lfs diff=lfs merge=lfs -text
+
+# Zip
+*.zip filter=lfs diff=lfs merge=lfs -text
+
+# ModelSim Waveforms
+*.wlf filter=lfs diff=lfs merge=lfs -text
+
+# PCAP files
+*.pcap filter=lfs diff=lfs merge=lfs -text
+*.pcapng filter=lfs diff=lfs merge=lfs -text
+
+# Make sure batch files have the right line endings
+.bat text eol=crlf

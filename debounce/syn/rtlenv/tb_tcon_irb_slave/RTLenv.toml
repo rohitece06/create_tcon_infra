@@ -1,0 +1,27 @@
+################################################################################
+# Copyright (c) 2018 Schweitzer Engineering Laboratories, Inc.
+# SEL Confidential
+################################################################################
+
+[package]
+name = "tb_tcon_irb_slave"
+
+[test_dependencies.rtl_make]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtltools/rtl_make.git"
+type = "git"
+spec = {tagspec = '>=1.0.0,<2.0.0'}
+
+[test_dependencies.tb_tcon]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.tb_tcon_clocker]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_clocker.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}
+
+[test_dependencies.tb_tcon_irb_master]
+location = "ssh://git@bitbucket.metro.ad.selinc.com:7999/ccrtl/tb_tcon_irb_master.git"
+type = "git"
+spec = {tagspec = '>=1.1.0,<2.0.0'}

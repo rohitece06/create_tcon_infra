@@ -1,0 +1,60 @@
+#Exclude various file extensions regardless of where they are found
+*.acdb
+*.asdb
+*.awf
+*.awc
+*.bak
+*.bin
+*.cfg
+*.cof
+*.dag
+*.ekp
+*.error
+*.garbage
+*.lib
+*.log
+*.mgf
+*.rpt
+*.sld
+*.smsg
+*.summary
+*.tmp
+*.wlf
+*.pyc
+*.tcon
+*.exp
+
+#Exclude specific tool generated files
+reg_restore.pl
+vhd_source_list.tcl
+transcript
+junit.xml
+RTLenv.lock
+coverage_misses.txt
+init_memory.txt
+final_memory.txt
+
+#Exclude all code coverage files
+coverage.*
+**/sim/coverage*/**
+
+#Exclude the work folder under sim
+**/sim/work*/**
+
+#Exclude all reports folders
+**/reports/
+
+#Exclude everything in the syn folders except the build scripts
+**/syn/**
+!**/syn/build.pl
+
+#Exclude Microsoft Office temporary files
+~$*.doc
+~$*.docx
+~$*.vsd
+~$*.vsdx
+~$*.xls
+~$*.xlsx
+~$*.xlsm
+~$*.ppt
+~$*.pptx
