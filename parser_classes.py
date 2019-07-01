@@ -839,8 +839,8 @@ class TB:
                 assignment = sig_assignment(TC.TB_ARCH_FILL,
                                             f"{inst_name}_{port}", signal)
             else:
-                log.warn(f"{port} in {name} has out direction and "
-                         f"needs to be mapped manually!!!")
+                log.warn(f"{port} in {inst_name} is an 'output' needs to be "
+                         f"mapped manually!!!")
 
             self.arch_def.append(assignment)
             log.warn(f"Please update the {clk_rst} mapping as required")
@@ -885,8 +885,8 @@ class TB:
                     log.debug(defined)
 
     def create_typical_map(self, obj_list: List[Port_Generic],
-                             fill_before: str=TC.TB_ENTITY_FILL,
-                             prefix: str="", just_tcon: bool=False) -> str:
+                           fill_before: str=TC.TB_ENTITY_FILL,
+                           prefix: str="", just_tcon: bool=False) -> str:
         """Creates a typical port/generic port map when there are no special
         mapping requirements
 
@@ -923,7 +923,7 @@ class TB:
                                          obj.direc, last)
         return string
 
-    def __connect_irb_master(self, entity: Entity) -> NoReturn:
+    def __connect_irb_master(self, irbm_entity: Entity) -> NoReturn:
         """Create mapping for IRB master TB component
 
         Arguments:
@@ -933,9 +933,9 @@ class TB:
             Update arch_decl, arch_def, and already_defined class members
 
         """
-        map_tb_component_ports(self, entity)
+        map_tb_component_ports(self, irbm_entity)
 
-    def __connect_irb_slave(self, entity: Entity) -> NoReturn:
+    def __connect_irb_slave(self, irbs_entity: Entity) -> NoReturn:
         """Create mapping for IRB slave TB component
 
         Arguments:
@@ -945,9 +945,9 @@ class TB:
             Update arch_decl, arch_def, and already_defined class members
 
         """
-        map_tb_component_ports(self, entity)
+        map_tb_component_ports(self, irbs_entity)
 
-    def __connect_saif_master(self, entity: Entity) -> NoReturn:
+    def __connect_saif_master(self, sdm_entity: Entity) -> NoReturn:
         """Create mapping for SAIF master TB component
 
         Arguments:
@@ -958,10 +958,10 @@ class TB:
 
         """
         port_map = ""
-        port_map += self.create_typical_map(obj_list=entity.ports,
+        port_map += self.create_typical_map(obj_list=sdm_entity.ports,
                                             just_tcon=True)
 
-    def __connect_saif_slave(self, entity: Entity) -> NoReturn:
+    def __connect_saif_slave(self, sds_entity: Entity) -> NoReturn:
         """Create mapping for SAIF slave TB component
 
         Arguments:
@@ -972,7 +972,7 @@ class TB:
 
         """
         port_map = ""
-        port_map += self.create_typical_map(obj_list=entity.ports,
+        port_map += self.create_typical_map(obj_list=sds_entity.ports,
                                             just_tcon=True)
 
     def __connect_sd_master(self, entity: Entity) -> NoReturn:
@@ -1135,8 +1135,8 @@ def map_tb_component_ports(tb_obj: TB, entity: Entity) -> NoReturn:
             if port_map_name not in tb_obj.already_defined:
                 tb_obj.already_defined.append(port_map_name)
                 signal = port.form_signal_entry(
-                        fill_before=TC.TB_ARCH_FILL,
-                        new_name=port_map_name)
+                    fill_before=TC.TB_ARCH_FILL,
+                    new_name=port_map_name)
                 tb_obj.arch_decl.append(signal)
             port_map_name = None
 
