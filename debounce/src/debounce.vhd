@@ -49,17 +49,21 @@ entity debounce is -- hello there
 	ext_rts    : out std_logic; --NR
 	ext_cts    : in std_logic;
 	ext_dout   : out std_logic_vector(DWIDTH-1 downto 0);
+	ext_sof		 : out std_logic;
+	ext_eof		 : out std_logic;
+	ext_df		 : out std_logic;
 
-	start_out  	: out std_logic; --NR
-	done_in  	: in std_logic; --NR
+	onem_start  	: out std_logic; --NR
+	onem_done  	: in std_logic; --NR
+	onem_data  	: out std_logic_vector(DWIDTH-1 downto 0); --NR
 
-	start_in  	: in std_logic; --NR
-	done_out  	: out std_logic; --NR
+	tenk_start  	: in std_logic; --NR
+	tenk_done  	: out std_logic; --NR
+	tenk_data  	: in std_logic_vector(DWIDTH-1 downto 0); --NR
 
 	serial_in  	: in  std_logic  ;
 	serial_out 	: out std_logic;
-	serial_out2 : out std_logic_vector(0 to 4) := (others => '0');
-	serial_out2 : out unsigned(0 to 4) --NR
+	serial_out2 : out std_logic_vector(0 to 4) := (others => '0')
 	);
 end entity debounce;
 

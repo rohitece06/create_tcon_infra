@@ -124,21 +124,26 @@ TB_DEP_FILL = " " * 4
 MATCH_DWIDTH = ["DWIDTH", "DATA_WIDTH", "D_WIDTH"]
 MATCH_AWIDTH = ["AWIDTH", "ADDR_WIDTH", "A_WIDTH"]
 MATCH_BASE = ["BASE", "BASE_ADDR"]
-MATCH_WR = ["WR", "WRITE"]
-MATCH_RD = ["RD", "READ"]
-MATCH_RST = ["RESET", "RST"]
-MATCH_CLK = ["CLK", "CLOCK"]
+MATCH_WR = ["wr", "write"]
+MATCH_RD = ["rd", "read"]
+MATCH_ADDR = ["addr", "address"]
+MATCH_RST = ["reset", "rst"]
+MATCH_CLK = ["clk", "clock"]
 MATCH_LOG = ["LOG", "LOG_FILE", "LOGFILE"]
-MATCH_DI = ["din", "data_in", "di"]
-MATCH_DO = ["dout", "data_out", "do"]
+MATCH_DI = ["din", "data_in", "di", "data"]
+MATCH_DO = ["dout", "data_out", "do", "data"]
 MATCH_CMD = ["CMD", "COMMAND"]
 # VECTOR_TYPES =
 
-SAIFM_MAP = {"rts": "ctr", "cts": "rtr"}
-SAIFS_MAP = {"rtr": "cts", "ctr": "rts"}
-IRB_MAP = {"wr": "wr", "rd": "rd", "ack": "ack", "busy": "busy",
-           "addr": "addr", "di": MATCH_DO, "do": MATCH_DI}
-SD_MAP  = {"start": "start", "done": "done"}
+# If UUT is a SAIF slave, then tb's rtr connects to UUT's cts, ctr to rts, etc
+SAIFM_MAP = {"rtr": ["cts"], "ctr": ["rts"], "data": MATCH_DO,
+             "eof": ["eof"], "df": ["df"], "sof": ["sof"]}
+# If UUT is a SAIF slace, then tb's rts connects to UUT's ctr, cts to rtr, etc
+SAIFS_MAP = {"rts": ["ctr"], "cts": ["rtr"], "data": MATCH_DI,
+             "eof": ["eof"], "df": ["df"], "sof": ["sof"]}
+IRB_MAP = {"wr": MATCH_WR, "rd": MATCH_RD, "ack": "ack", "busy": "busy",
+           "addr": MATCH_ADDR, "di": MATCH_DO, "do": MATCH_DI}
+SD_MAP  = {"start": ["start"], "done": ["done"]}
 
 TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLK,
                            "IRBM": IRB_MAP.keys(),
@@ -155,3 +160,18 @@ TB_MAP = OrderedDict({"CLK": MATCH_CLK,
                       "SAIFS": SAIFS_MAP,
                       "SDM": SD_MAP,
                       "SDS": SD_MAP})
+
+# CLOCKER_GENERICS = OrderedDict({"NUM_CLOCKS": None})
+# IRBM_GENERICS = OrderedDict({"A_WIDTH": 31, "TIMEOUT": 1})
+# IRBS_GENERICS = OrderedDict({})
+# SDS_GENERICS = OrderedDict({})
+# SDM_GENERICS = OrderedDict({})
+# SAIF_GENERICS = OrderedDict({})
+
+# TB_DEP_GENERICS = OrderedDict({"CLK": MATCH_CLK,
+#                                "IRBM": IRB_MAP,
+#                                "IRBS": IRB_MAP,
+#                                "SAIFM": SAIFM_MAP,
+#                                "SAIFS": SAIFS_MAP,
+#                                "SDM": SD_MAP,
+#                                "SDS": SD_MAP})
