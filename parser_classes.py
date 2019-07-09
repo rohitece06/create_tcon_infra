@@ -137,7 +137,8 @@ def get_instance_name(bus: str, ports: List) -> str:
                             return inst_name
                         else:
                             logical_name =\
-                                TC.DEFAULT_TCON_TBS[bus_id].split("tb_tcon_")[1]
+                                TC.DEFAULT_TCON_TBS[bus_id].split(
+                                    "tb_tcon_")[1]
                             inst_name = f"{prefix}{logical_name}"
                             return inst_name
 
@@ -618,7 +619,8 @@ class TB:
         self.uutname = uutname
         self.tb_path = os.path.abspath(os.path.join(uutpath,
                                                     f"tb\\{uutname}_tb"))
-        self.tb_file_path = os.path.join(self.tb_path, f"src\\{uutname}_tb.vhd")
+        self.tb_file_path = os.path.join(self.tb_path,
+                                         f"src\\{uutname}_tb.vhd")
         # List of tuples (name, type, default, value)
         self.arch_constants = list()
 
@@ -919,8 +921,8 @@ class TB:
                 self.arch_decl.append(signal_decl)
                 self.already_defined.append(port_map_name.strip())
             else:
-                log.debug(f"{port_map_name.strip()} for the UUT already exists "
-                          f"in the architecture")
+                log.debug(f"{port_map_name.strip()} for the UUT already exists"
+                          f" in the architecture")
                 defined = '\n'.join(self.already_defined)
                 log.debug(defined)
 
@@ -961,7 +963,8 @@ class TB:
                     else:
                         val = 0
 
-                    self.arch_constants.append((generic, generic.datatype, val))
+                    self.arch_constants.append((generic,
+                                                generic.datatype, val))
 
             port_str = self.create_typical_map(obj_list=entity.ports,
                                                req_no=entity.tcon_req_no)
@@ -1050,8 +1053,8 @@ class TB:
 
                 self.arch_decl.append(signal)
             else:
-                log.debug(f"{tb_port} for {entity.inst_name} component already "
-                          f"exists in the architecture")
+                log.debug(f"{tb_port} for {entity.inst_name} component already"
+                          f" exists in the architecture")
                 defined = '\n'.join(self.already_defined)
                 log.debug(defined)
 
