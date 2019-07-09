@@ -54,19 +54,18 @@ BUS_CFG_FILE = "BUS_CONFIG.cfg"
 
 
 TB_HEADER = """
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- COPYRIGHT (c) {} Schweitzer Engineering Laboratories, Inc.
 -- SEL Confidential
 --
 -- Description: {}_tb, testbench of the {} component
 --
 -- NR = Not Registered
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
 """
 
 TB_ENTITY = """
@@ -75,28 +74,25 @@ entity {}_tb is
 {}
   );
 end {}_tb;
-
 """
 
 TB_BODY = """
 architecture sim of {}_tb is
+
   -- Constants
 {}
-
   -- Signals
   signal tb_reset : std_logic;
 {}
 begin
 {}
+
 end sim;
 """
 
-INIT_HEADER = """
+INIT_PY = """
 # Copyright (c) {}, Schweitzer Engineering Laboratories, Inc.
 # SEL Confidential
-"""
-
-INIT_ENTRY = """
 from .common import *
 """
 
@@ -153,8 +149,8 @@ SD_MAP  = {"start": ["start"], "done": ["done"]}
 TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLK,
                            "IRBM": IRB_MAP.keys(),
                            "IRBS": IRB_MAP.keys(),
-                           "SAIFM": SAIFM_MAP.keys(),
-                           "SAIFS": SAIFS_MAP.keys(),
+                           "SAIFM": SAIFS_MAP.keys(),
+                           "SAIFS": SAIFM_MAP.keys(),
                            "SDM": SD_MAP.keys(),
                            "SDS": SD_MAP.keys()})
 

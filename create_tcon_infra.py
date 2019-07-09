@@ -68,34 +68,19 @@ if __name__ == "__main__":
     ###########################################################################
     #
     #           TODO:: perform sanity checks
-    #
+    #   1) tb build.pl needs to exist
+    #   2) syn/rtlenv and all dependencies folders needs to exist
+    #   3)
     ###########################################################################
     args = parser.parse_args()
     setloglevel(args.loglevel)
-    uutpath = os.path.abspath(os.path.join(args.component_path)) \
-        if args.component_path else os.getcwd()
-
+    if args.component_path:
+        if os.path.isdir(args.component_path):
+            uutpath = os.path.abspath(args.component_path)
+        else:
+            uutpath = os.path.abspath(os.getcwd(), os.path.join(uutpath))
+    else:
+        uutpath = os.getcwd()
     uutname = os.path.basename(uutpath)
     tb_obj = PC.TB(uutpath, uutname)
-    # tb_obj.uut.print_generics()
-    # tb_obj.uut.print_ports()
-    # print("\n")
-    # for bus, entry in tb_obj.uut.port_buses.items():
-    #     print(bus, "\t", entry)
-    # print("\n")
-    # tb_obj.tcon_master.print_generics()
-    # tb_obj.tcon_master.print_ports()
-
-    # for dep in tb_obj.tb_dep:
-    #     PC.log.setLevel(logging.INFO)
-    #     print("\n\n")
-    #     PC.log.info(f"{dep.name}\n\n")
-    #     PC.log.setLevel(logging.ERROR)
-    #     for generic in dep.generics:
-    #         print(generic)
-    #     for port in dep.ports:
-    #         print(port)
-
-    tb_obj.generate_mapping()
-    print("".join(tb_obj.arch_decl))
-    print("".join(tb_obj.arch_def))
+    tb_obj.generate_tb_file()

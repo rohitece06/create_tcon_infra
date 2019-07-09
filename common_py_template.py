@@ -2,37 +2,43 @@ import os
 import logging
 import sys
 import pytcon
-import pytcon_objects
+
+from zeromq_manager import ZeromqManager
+
+# Import and initialize pytcon objects
+from pytcon_objects import TconClocker
+from pytcon_objects import TconSAIF
+from pytcon_objects import TconSDSlave
+from pytcon_objects import TconGPIO
+from pytcon_objects import TconIRBMaster
+
+###############################################################################
+#
+#    Functions/constants common to all tests. Needs approval for modification
+#
+###############################################################################
 
 # Setup logging
 log = logging.getLogger()  # 'root' Logger
 console = logging.StreamHandler()
-format_str = '%(levelname)s -- %(filename)s:%(lineno)s -- %(message)s: '
+format_str = '%(levelname)s::%(filename)s:line-%(lineno)s:: %(message)s: '
 console.setFormatter(logging.Formatter(format_str))
 log.addHandler(console)  # prints to console.
 log.setLevel(logging.ERROR)  # anything ERROR or above
 
-################################################################################
-#
-#    Functions/constants common to all tests
-#
-################################################################################
-
 # Initialize TCON 2.0
-from zeromq_manager import ZeromqManager
-print(f"TCON instance '{sys.argv[-2]}' connecting to"
-      f"FA at tcp://127.0.0.1:{sys.argv[-1]}")
-tcon = pytcon.Tcon(ZeromqManager("tcp://127.0.0.1:" + sys.argv[-1]))
+print(f"TCON instance '{sys.argv[-2]}' connecting to FA at tcp://127.0.0.1: "
+      f"{sys.argv[-1]}")
+tcon = pytcon.Tcon(ZeromqManager(f"tcp://127.0.0.1:{sys.argv[-1]}"))
 tcon.resolution = tcon.NANOSECONDS
+TIME_UNIT = "ps" if tcon.resolution == tcon.PICOSECONDS else \
+            "ns" if tcon.resolution == tcon.NANOSECONDS else \
+            "ms"
 
 ##########################################################
 # System Definitions
 ##########################################################
-
-CLEAR = 0
-SET = 1
-ONES = 0xFFFFFFFF
-GPIO_RESET = (1 << 0)  # Output
+GPIO_RESET          = (1 << 0)   # Output
 
 
 def do_reset(num_clocks):
@@ -89,7 +95,7 @@ def verify_gpio(name, exp, mask):
         output = 1
 
     if output != exp:
-        log.error(f"{tcon.now()}ns :"
+        log.error(f"{tcon.now()} {TIME_UNIT} :"
                   f"{name} signal value is {output}, expects {exp}")
 
 
@@ -134,8 +140,8 @@ def print_banner(test_dir, testplan_no):
 
     Args:
         test_dir (str)    : Test directory name
-        testplan_no (str) : Testplan number. This should match the number from
-                            the testplan.
+        testplan_no (str) : Testplan number. This should match
+                            the number from the testplan.
 
     Returns:
         None
@@ -144,14 +150,14 @@ def print_banner(test_dir, testplan_no):
         >>> print_banner("001_reset", "1.1")
 
     """
-    print("*"*80)
-    log.info(f"***  {test_dir.upper()} :  Test {testplan_no}")
+    print("**************************************************************")
+    print(f"***  {test_dir}:  Test {testplan_no}")
 
 
 def print_complete():
     """Print a message after a test has completed (successfully or otherwise).
     This function also checks if test has actually run for non-zero time. This
-    function should be called at the end of every tcon.py, right before
+    function should be called at the end of every tcon.py, right befor
     simulation is halted with tcon.halt()
 
     Args:
@@ -162,10 +168,11 @@ def print_complete():
 
     """
     if tcon.now() == 0:
-        log.error(f"\n Test Not Executed!\n")
+        print("\n")
+        log.error(" Test Not Executed!\n")
     else:
-        log.info(f"\n************ Time {tcon.now()}ns: "
-                 f"Testbench Completed ******************")
+        print(f"\n************ Time {tcon.now()} {TIME_UNIT}: "
+              f"Testbench Completed *****************")
 
 
 def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
@@ -195,10 +202,11 @@ def read_reg(req, addr, mask=0xFFFFFFFF, name=None, expected=None):
     read_val = tcon.read(req, addr)
     read_val = read_val & mask
 
-    if name is not None:
+    if name:
         if read_val != expected:
-            log.error(f"({tcon.now()} ns) read value of {name} = "
-                      f"{read_val:#0x}, expected = {expected:#0x}")
+            log.error(f"({tcon.now()} {TIME_UNIT}) read value of "
+                      f"{name} = {read_val:#0x}, "
+                      f"expected = {expected:#0x}")
     return read_val
 
 
@@ -232,13 +240,13 @@ def wait_on_reg(name, req, addr, expected, timeout=10000):
         timeout  (int): Number of clock cycles to wait before timeout
 
     Returns:
-        str: "OK" if register reached the desired value before timeout otherwise
-             "TIMEOUT"
+        str: "OK" if register reached the desired value before timeout
+              otherwise "TIMEOUT"
 
     Example:
         Wait until "frame count" register (address = 4) inside the
-        component mapped to first TCON request line (req=0) reached a value of 5
-        (assuming frame count successfully reaches 5)
+        component mapped to first TCON request line (req=0) reached a value of
+        5 (assuming frame count successfully reaches 5)
         >>> wait_on_reg("frame count", 0, 4, 5)
         "OK"
 
@@ -253,7 +261,8 @@ def wait_on_reg(name, req, addr, expected, timeout=10000):
 
     if cnt == timeout:
         status = "TIMEOUT"
-        log.error(f"{tcon.now()}ns : Timed-out waiting for {name}={expected}")
+        log.error(f"{tcon.now()} {TIME_UNIT} : Timed-out waiting for "
+                  f"{name}={expected}")
     return status
 
 
@@ -267,14 +276,14 @@ def wait_on_signal(name, sig, expected, timeout=100):
         timeout  (int): Number of clock cycles to wait before timeout
 
     Returns:
-        str: "OK" if register reached the desired value before timeout otherwise
-             "TIMEOUT"
+        str: "OK" if register reached the desired value before timeout
+             otherwise "TIMEOUT"
 
     Example:
-        Wait for internal signal .tb.uut.begin_counting for assertion;
-        timeout if it does not occur within 5 clock cycles:
+        Wait for internal signal .tb.uut.begin_counting for assertion
+        (assuming it does get asserted)
 
-        >>> wait_on_signal("Begin Counting", ".tb.uut.begin_counting ", 1, 5)
+        >>> verify_signal("Begin Counting", ".tb.uut.begin_counting ", 1)
         "OK"
 
     """
@@ -290,12 +299,12 @@ def wait_on_signal(name, sig, expected, timeout=100):
 
     if cnt == timeout:
         status = "TIMEOUT"
-        if expected == CLEAR:
+        if expected == 0:
             log.error(f"wait_on_signal() timed-out: {name} "
-                      f"never went LOW since {start_time}")
+                      f"never went LOW since {start_time} {TIME_UNIT}")
         else:
             log.error(f"wait_on_signal() timed-out: {name} "
-                      f"never went HIGH since {start_time}")
+                      f"never went HIGH since {start_time} {TIME_UNIT}")
 
     return status
 
@@ -327,7 +336,7 @@ def conv_val_str(val):
         return False
     # String.
     elif val[0] == '"':
-        return val.strip('"').upper() # Remove the quotes.
+        return val.strip('"').upper()  # Remove the quotes.
     # Hexadecimal string.
     elif val[0] == "x":
         return int(val[2:-1], 16)  # Remove the quotes, convert to int.
@@ -336,7 +345,7 @@ def conv_val_str(val):
         return int(val)
     # Unsupported.
     else:
-        raise ValueError(f"Unsupported generic value: {val}.")
+        raise ValueError("Unsupported generic value: {}.".format(val))
 
 
 def get_generics(sim_dir):
@@ -344,10 +353,12 @@ def get_generics(sim_dir):
     NOTE: only supports integer, boolean, string, and hexadecimal SLV types.
     If sim.params exists, generic values will be pulled from there first. The
     expected format in that file looks like:
-        GENERIC_INT 0
-        GENERIC_STR "00001111"
-        GENERIC_HEX x"ABC123"
-        GENERIC_BOOL TRUE
+        GENERIC_INT = 0
+        GENERIC_STR = "00001111"
+        GENERIC_HEX = x"ABC123"
+        GENERIC_BOOL = TRUE
+    Values to the left of "=" must be upper case. Value to the right of "="
+    can be either case. Any number of spaces are allowed around "="
 
     Args:
         sim_dir (str): Test directory name with respect to "sim" directory
@@ -365,7 +376,7 @@ def get_generics(sim_dir):
 
     """
     generics = {}
-    fname = (sim_dir + "/sim_params.txt").replace("\\", "/")
+    fname = (f"{sim_dir}/sim_params.txt").replace("\\", "/")
     # Use what's in sim.params if it exists.
     if os.path.exists(fname):
 
@@ -381,8 +392,38 @@ def get_generics(sim_dir):
         log.error("sim_params.txt path does not exist")
         return None
 
-################################################################################
+
+###############################################################################
 #
-#                      UUT/TB-specific functions starts below
+#                      UUT/TB-specific functions
 #
-################################################################################
+###############################################################################
+
+def setup_sim():
+    """Setup the simulation by initializing clock, reset, and GPIO direction. This
+    function is called after TCON instantiation in tcon.py before performing
+    any test simulation related action
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    """
+
+    # Setup CLK_SYS = 125 MHz, delay first rising edge for easy waveform
+    # viewing
+    tb_clocker.add_clock(0, "clk", period_in_ps=8000)
+    tb_clocker.enable("clk")
+
+    # TCON GPIO OUTPUTS
+    tcon.gpio_set_as_outputs(GPIO_RESET)
+
+    #################
+    # SETUP all GPIOs
+    #################
+
+    tcon.sync(1)
+    do_reset(1)
+    tcon.sync(1)

@@ -7,6 +7,7 @@ from inspect import currentframe
 from datetime import datetime
 import templates_and_constants as TC
 from typing import Dict, Tuple, List, Any, OrderedDict, NoReturn, Optional
+from datetime import date
 
 # Setup logging
 log = logging.getLogger()  # 'root' Logger
@@ -78,11 +79,12 @@ def assign_buses(fname: str) -> OrderedDict:
 
     # Assign tb file name required for simulating each bus interface whenever
     # applicable. Assign a TCON request ID
-    tcon_req_id = 0
+    tcon_req_id = -1
     for bus, entry in bus_cfg.items():
         for tb_dep, tb_file in TC.DEFAULT_TCON_TBS.items():
             if bus and bus.upper().startswith(tb_dep):
                 tb_entity = tb_file
+                tcon_req_id += 1
                 break
             else:
                 tb_entity = None
@@ -97,8 +99,6 @@ def assign_buses(fname: str) -> OrderedDict:
         bus_cfg[bus][2] = inst_name
         bus_cfg[bus][3] = tcon_req_id
         bus_cfg[bus][4] = tb_dep
-        if bus:
-            tcon_req_id += 1
 
     return bus_cfg
 
@@ -117,12 +117,18 @@ def get_instance_name(bus: str, ports: List) -> str:
     """
     inst_name = ""
     for bus_id, pos_ids in TC.TB_MAP_KEYS.items():
+        log.setLevel(logging.DEBUG)
         if bus.startswith(bus_id):
+            log.info(f"{bus_id} {pos_ids}")
             for pos_id in pos_ids:
                 for port in ports:
-                    if f"_{pos_id.lower()}" in port or "clk" in port:
+                    if (f"_{pos_id.lower()}" in port or
+                            ("clk" in port and bus_id not in
+                             TC.SUPPORTED_BUSSES)):
                         temp = port.strip().split(pos_id.lower())[0]
                         prefix = temp if temp else f"{port.strip()}_"
+                        # log.info(f"{bus_id}, {temp}, {prefix}")
+                        log.setLevel(logging.ERROR)
                         if bus_id == "SAIFM":
                             inst_name = f"{prefix}saif_master"
                             return inst_name
@@ -189,7 +195,7 @@ def port_generic_entry(lfill: str, name: str, fulltype: str,
     Returns:
         String that represents a port/generic entry in a VHDL entity
     """
-    if last:
+    if not last:
         return f"{lfill}{name} : {fulltype};\n"
     else:
         return f"{lfill}{name} : {fulltype}"
@@ -222,7 +228,7 @@ def sig_assignment(lfill: str, left: str, right: str) -> str:
     Returns:
         str -- [description]
     """
-    return f"{lfill}{left} <= {right};\n"
+    return f"{lfill}{left} <= {right};"
 
 
 class ParserType:
@@ -499,6 +505,7 @@ class Entity:
         self.inst_name = ""
         self.tb_bus_name = ""
         self.tb_bus_type = ""
+        self.tcon_req_no = ""
 
     def __get_entries(self, parserobject: ParserType) -> List[Port_Generic]:
         """Extract entry members of a port or a generic like name of the port,
@@ -607,8 +614,14 @@ class TB:
     def __init__(self, uutpath: str, uutname: str) -> None:
         self.tb_comp_path = os.path.abspath(os.path.join(uutpath,
                                             TC.TB_SRC_LOCATION))
+        self.uutpath = uutpath
+        self.uutname = uutname
+        self.tb_path = os.path.abspath(os.path.join(uutpath,
+                                                    f"tb\\{uutname}_tb"))
+        self.tb_file_path = os.path.join(self.tb_path, f"src\\{uutname}_tb.vhd")
         # List of tuples (name, type, default, value)
         self.arch_constants = list()
+
         self.arch_decl = list()
         self.arch_def = list()
         # List that contains already defined signals and constants in the TB
@@ -623,6 +636,7 @@ class TB:
         # used by this testbench
         self.tb_deps = self.__get_tb_deps()  # List of Entity objects
         self.tb_entity = self.__create_tb_entity()
+        self.sanity_check_passed = True
 
     def __str__(self) -> str:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
@@ -659,7 +673,8 @@ class TB:
 
     def create_typical_map(self, obj_list: List[Port_Generic],
                            fill_before: str=TC.TB_ENTITY_FILL,
-                           prefix: str="", just_tcon: bool=False) -> str:
+                           prefix: str="", just_tcon: bool=False,
+                           req_no: int=0) -> str:
         """Creates a typical port/generic port map when there are no special
         mapping requirements
 
@@ -680,7 +695,10 @@ class TB:
         for obj in obj_list:
             if obj.direc:  # Only ports have non-None type direction
                 if "tcon_" in obj.name:
-                    name = obj.name
+                    if "tcon_req" in obj.name:
+                        name = f"{obj.name.strip()}({req_no})"
+                    else:
+                        name = obj.name
                 else:
                     name = f"{prefix}{obj.name}"
                 # Mapping is create when
@@ -721,11 +739,11 @@ class TB:
         """Create constant declaration entries based on constants
         """
         entry = ""
-        max_len = max([len(const[0]) for const in arch_constants])
+        max_len = max([len(const[0].name) for const in self.arch_constants])
         fill_before = TC.TB_ARCH_FILL
-        for name, type, default in arch_constants:
-            fill_after = max_len - len(name) + 1
-            entry += (f"{fill_before}{name}{fill_after} : "
+        for generic, type, default in self.arch_constants:
+            fill_after = max_len - len(generic.name) + 1
+            entry += (f"{fill_before}{generic.name}{fill_after} : "
                       f"{type} := {default};\n")
 
         return entry
@@ -748,6 +766,7 @@ class TB:
                 entity.inst_name = bus_desc[self.IND_INST_NAME]
                 entity.tb_bus_name = bus_name
                 entity.tb_bus_type = bus_desc[self.IND_BUS_TYPE]
+                entity.tcon_req_no = bus_desc[self.IND_TCON_REQ]
                 deplist.append(entity)
 
         return deplist
@@ -797,8 +816,9 @@ class TB:
                                                fill_after=fill_after,
                                                add_defaults=False)
 
-        generic_entry += port_generic_entry(TC.TB_ENTITY_FILL, default_generic,
-                                            "string", True)
+        generic_entry += port_generic_entry(lfill=TC.TB_ENTITY_FILL,
+                                            name=default_generic,
+                                            fulltype="string", last=True)
 
         return TC.TB_ENTITY.format(self.uut.name, generic_entry, self.uut.name)
 
@@ -933,7 +953,7 @@ class TB:
             entity_name = bus[self.IND_TB_ENTITY]
             entity = self.__get_entity_from_tb_dep(entity_name)
             gen_str = ""
-            gen_str = self.create_typical_map(entity.generics)
+            gen_str = self.create_typical_map(obj_list=entity.generics)
             for generic in entity.generics:
                 if generic not in self.already_defined:
                     if generic == "NUM_CLOCKS":
@@ -943,7 +963,8 @@ class TB:
 
                     self.arch_constants.append((generic, generic.datatype, val))
 
-            port_str = self.create_typical_map(entity.ports)
+            port_str = self.create_typical_map(obj_list=entity.ports,
+                                               req_no=entity.tcon_req_no)
             inst_name = bus[self.IND_INST_NAME]
 
             block_line = "-" * (len(inst_name) + 12)
@@ -973,7 +994,8 @@ class TB:
         port_map = ""
         bus_entry = self.uut.port_buses[entity.tb_bus_name][self.IND_PORT_LIST]
         port_map += self.create_typical_map(obj_list=entity.ports,
-                                            just_tcon=True)
+                                            just_tcon=True,
+                                            req_no=entity.tcon_req_no)
         clk_rst_ports = entity.find_matching_ports(TC.MATCH_CLK +
                                                    TC.MATCH_RST)
         clk_rst_port_names = [x[0] for x in clk_rst_ports]
@@ -1067,7 +1089,11 @@ class TB:
         """
         connected = 0
         for entity in self.tb_deps:
-            if entity.tb_bus_name in TC.SUPPORTED_BUSSES:
+            if entity.tb_bus_type in TC.SUPPORTED_BUSSES:
+                log.setLevel(logging.DEBUG)
+                log.info(f"Generating mapping for {entity.tb_bus_name} of "
+                         f"type {entity.tb_bus_type} ")
+                log.setLevel(logging.ERROR)
                 self.__map_tb_component_ports(entity)
                 connected += 1
 
@@ -1083,6 +1109,33 @@ class TB:
         self.__connect_clocker()
         self.__connect_uut()
         self.__connect_tb_deps()
+
+    def generate_tb_file(self) -> NoReturn:
+        year = date.today().year
+        uut = self.uut.name
+        tb_header = TC.TB_HEADER.format(year, uut, uut)
+        tb_entity = self.__create_tb_entity()
+        self.generate_mapping()
+        constants = self.__tb_arch_constant_entry()
+        tb_body = TC.TB_BODY.format(uut, constants,
+                                    ''.join(self.arch_decl),
+                                    '\n'.join(self.arch_def))
+        tb_data = tb_header + tb_entity + tb_body
+        tb_src_dir = os.path.join(self.tb_path, "src")
+        if self.sanity_check_passed:
+            os.makedirs(tb_src_dir, exist_ok=True)
+        overwrite = None
+        log.setLevel(logging.DEBUG)
+        if self.sanity_check_passed:
+            if os.path.isfile(self.tb_file_path):
+                overwrite = input("\nTB file exists. Overwrite(y/n):[y] - ")
+            if overwrite is None or overwrite.lower() not in ["n", "no"]:
+                log.info(f"Creating TB file {self.tb_file_path}")
+                with open(self.tb_file_path, "w") as f:
+                    f.write(tb_data)
+            else:
+                log.info("Skipping creating/overwriting TB file")
+        log.setLevel(logging.ERROR)
 
 
 def get_entity_from_file(path: str, name: str) -> Entity:
