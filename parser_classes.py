@@ -570,6 +570,27 @@ class Entity:
                     names.append((port.name.strip(), port.direc))
         return names
 
+    def generic_map_template(self, fill_before: str="") -> str:
+        """Creates a template generic map with all generics of this component
+
+        Returns:
+            A string representing a template of the generic map
+
+        Example:
+            If entity has three generics named A, B_XX, and C then this
+            function will return following formatted/space-aligned string:
+                A    => ,
+                B_XX => ,
+                C    =>
+        """
+        map_str = ""
+        for generic in self.generics:
+            if generic != self.generics[-1]:
+                map_str += f"{fill_before}{generic.name} => ,\n"
+            else:
+                map_str += f"{fill_before}{generic.name} => "
+        return map_str
+
     def __str__(self) -> str:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
 
@@ -629,6 +650,7 @@ class TB:
                 assignment = sig_assignment(TC.TB_ARCH_FILL,
                                             f"{inst_name}_{port}", signal)
             else:
+                assignment = ""
                 log.warn(f"{port} in {inst_name} is an 'output' needs to be "
                          f"mapped manually!!!")
 
@@ -824,7 +846,8 @@ class TB:
             port_map.append(port_map_entry(TC.TB_DEP_FILL, port.name,
                                            port.name, port.direc, last))
         self.arch_decl.append("\n")
-        self.arch_def.append(TC.TB_DEP_MAP_WITH_GENERICS.format(
+        block_line = "-" * (len(INST_NAME) + 12)
+        self.arch_def.append(TC.TB_DEP_MAP_WITH_GENERICS.format(block_line,
                              INST_NAME, INST_NAME, self.tcon_master.name,
                              "".join(generic_map), "".join(port_map)))
 
@@ -881,13 +904,16 @@ class TB:
                 defined = '\n'.join(self.already_defined)
                 log.debug(defined)
 
+        block_line = "-" * (len(self.uut.name) + 12)
         if generic_map:
-            uut_map = TC.TB_DEP_MAP_WITH_GENERICS.format(self.uut.name,
+            uut_map = TC.TB_DEP_MAP_WITH_GENERICS.format(block_line,
+                                                         self.uut.name,
                                                          self.uut.inst_name,
                                                          self.uut.name,
                                                          generic_map, port_map)
         else:
-            uut_map = TC.TB_DEP_MAP_WO_GENERICS.format(self.uut.name,
+            uut_map = TC.TB_DEP_MAP_WO_GENERICS.format(block_line,
+                                                       self.uut.name,
                                                        self.uut.inst_name,
                                                        self.uut.name,
                                                        port_map)
@@ -919,10 +945,12 @@ class TB:
 
             port_str = self.create_typical_map(entity.ports)
             inst_name = bus[self.IND_INST_NAME]
+
+            block_line = "-" * (len(inst_name) + 12)
             self.arch_def.append(
-                TC.TB_DEP_MAP_WITH_GENERICS.format(inst_name, inst_name,
-                                                   entity_name, gen_str,
-                                                   port_str))
+                TC.TB_DEP_MAP_WITH_GENERICS.format(block_line, inst_name,
+                                                   inst_name, entity_name,
+                                                   gen_str, port_str))
             for port in entity.ports:
                 if port.name.strip() not in self.already_defined:
                     signal = port.form_signal_entry(
@@ -936,77 +964,96 @@ class TB:
                     defined = '\n'.join(self.already_defined)
                     log.debug(defined)
 
-    def __connect_irb_master(self, irbm_entity: Entity) -> NoReturn:
-        """Create mapping for IRB master TB component
+    def __map_tb_component_ports(self, entity: Entity) -> NoReturn:
+        """Create component mappings for just the ports
 
         Arguments:
-            irbm_entity -- Entity object
-
-        Returns:
-            Update arch_decl, arch_def, and already_defined class members
-
+            entity -- TB component Entity used in component mapping
         """
-        map_tb_component_ports(self, irbm_entity)
+        port_map = ""
+        bus_entry = self.uut.port_buses[entity.tb_bus_name][self.IND_PORT_LIST]
+        port_map += self.create_typical_map(obj_list=entity.ports,
+                                            just_tcon=True)
+        clk_rst_ports = entity.find_matching_ports(TC.MATCH_CLK +
+                                                   TC.MATCH_RST)
+        clk_rst_port_names = [x[0] for x in clk_rst_ports]
+        port_map_name = None
+        max_len = 0
+        port_map_list = list()
+        for port in entity.ports:
+            if port.name.strip() in clk_rst_port_names:
+                updated_fill = " " * (len(port.name) - len(port.name.strip()) -
+                                      len(entity.tb_bus_name) - 1)
+                port_map_name = (f"{entity.tb_bus_name.lower()}_"
+                                 f"{port.name.strip()}{updated_fill}")
+            else:
+                # Associate TB port names with UUT bus port name
+                if "tcon_" not in port.name:
+                    log.info(f"********** trying to map {port.name.strip()}")
+                    for tb_hint, uut_hint in \
+                            TC.TB_MAP[entity.tb_bus_type].items():
+                        for uut_port in bus_entry:
+                            for hint in uut_hint:
+                                if f"_{hint}" in uut_port \
+                                        and tb_hint in port.name:
+                                    port_map_name = uut_port
+                                    log.info("@@@@@ match @@@@@")
+                                break
 
-    def __connect_irb_slave(self, irbs_entity: Entity) -> NoReturn:
-        """Create mapping for IRB slave TB component
+                    # If did not find a mathing port
+                    if port_map_name is None:
+                        port_map_name = (f"{entity.tb_bus_name.lower()}_"
+                                         f"{port.name.strip()}")
 
-        Arguments:
-            irbs_entity -- Entity object
+            if port_map_name:
+                max_len = max(max_len, len(port_map_name))
+                port_map_list.append((port.name, port_map_name, port.direc,
+                                      port.datatype, port.range))
+                port_map_name = None
 
-        Returns:
-            Update arch_decl, arch_def, and already_defined class members
+        for tb_port, port_map_name, direc, dtype, drange in port_map_list:
+            last = tb_port == port_map_list[-1][0]
+            rfill = " " * (max_len - len(port_map_name) + 1)
+            port_map += port_map_entry(TC.TB_DEP_FILL, tb_port, port_map_name,
+                                       direc, last, rfill)
 
-        """
-        map_tb_component_ports(self, irbs_entity)
+            if port_map_name not in self.already_defined:
+                self.already_defined.append(port_map_name)
+                fill_after = " " * (max_len - len(port_map_name) + 1)
+                signal = form_custom_signal_entry(fill_before=TC.TB_ARCH_FILL,
+                                                  fill_after=fill_after,
+                                                  name=port_map_name,
+                                                  datatype=dtype,
+                                                  range=drange)
 
-    def __connect_saif_master(self, saifm_entity: Entity) -> NoReturn:
-        """Create mapping for SAIF master TB component
+                self.arch_decl.append(signal)
+            else:
+                log.debug(f"{tb_port} for {entity.inst_name} component already "
+                          f"exists in the architecture")
+                defined = '\n'.join(self.already_defined)
+                log.debug(defined)
 
-        Arguments:
-            saifm_entity -- Entity object
-
-        Returns:
-            Update arch_decl, arch_def, and already_defined class members
-
-        """
-        map_tb_component_ports(self, saifm_entity)
-
-    def __connect_saif_slave(self, saifs_entity: Entity) -> NoReturn:
-        """Create mapping for SAIF slave TB component
-
-        Arguments:
-            saifs_entity -- Entity object
-
-        Returns:
-            Update arch_decl, arch_def, and already_defined class members
-
-        """
-        map_tb_component_ports(self, saifs_entity)
-
-    def __connect_sd_master(self, sdm_entity: Entity) -> NoReturn:
-        """Create mapping for Start-Done master TB component
-
-        Arguments:
-            sdm_entity -- Entity object
-
-        Returns:
-            Update arch_decl, arch_def, and already_defined class members
-
-        """
-        map_tb_component_ports(self, sdm_entity)
-
-    def __connect_sd_slave(self, sds_entity: Entity) -> NoReturn:
-        """Create mapping for Start-Done slave TB component
-
-        Arguments:
-            sds_entity -- Entity object
-
-        Returns:
-            Update arch_decl, arch_def, and already_defined class members
-
-        """
-        map_tb_component_ports(self, sds_entity)
+        block_line = "-" * (len(entity.name) + 12)
+        if entity.generics:
+            generic_map = entity.generic_map_template(
+                fill_before=TC.TB_DEP_FILL)
+            entity_map = TC.TB_DEP_MAP_WITH_GENERICS.format(block_line,
+                                                            entity.name,
+                                                            entity.inst_name,
+                                                            entity.name,
+                                                            generic_map,
+                                                            port_map)
+        else:
+            entity_map = TC.TB_DEP_MAP_WO_GENERICS.format(block_line,
+                                                          entity.name,
+                                                          entity.inst_name,
+                                                          entity.name,
+                                                          port_map)
+        self.arch_def.append(entity_map)
+        # Connect global clock/reset
+        self.map_global_clk_rst(entity, "clk", entity.tb_bus_name.lower())
+        self.map_global_clk_rst(entity, "rst", entity.tb_bus_name.lower())
+        self.arch_decl.append("\n")
 
     def __connect_tb_deps(self) -> NoReturn:
         """Create mapping for TB dependencies for this UUT
@@ -1020,33 +1067,12 @@ class TB:
         """
         connected = 0
         for entity in self.tb_deps:
-            if "SAIFM" in entity.tb_bus_name:
-                self.__connect_saif_master(entity)
+            if entity.tb_bus_name in TC.SUPPORTED_BUSSES:
+                self.__map_tb_component_ports(entity)
                 connected += 1
-                log.info("Connected TB SAIF master! ")
-            if "SAIFS" in entity.tb_bus_type:
-                self.__connect_saif_slave(entity)
-                connected += 1
-                log.info("Connected TB SAIF slave! ")
-            if "IRBM" in entity.tb_bus_name:
-                self.__connect_irb_master(entity)
-                connected += 1
-                log.info("Connected TB IRB master! ")
-            if "IRBS" in entity.tb_bus_name:
-                self.__connect_irb_slave(entity)
-                connected += 1
-                log.info("Connected TB IRB slave! ")
-            if "SDM" in entity.tb_bus_name:
-                self.__connect_sd_master(entity)
-                connected += 1
-                log.info("Connected TB Start-Done master! ")
-            if "SDS" in entity.tb_bus_name:
-                self.__connect_sd_slave(entity)
-                connected += 1
-                log.info("Connected TB Start-Done slave! ")
 
         if connected == 0:
-            log.error("**** Cound not find any TB components to connect ****")
+            log.error("** Cound not find any TB components to connect **")
         else:
             log.info(f"Connected {connected} TB components")
 
@@ -1088,80 +1114,3 @@ def get_entity_from_file(path: str, name: str) -> Entity:
     generics_parser = ParserType("generic", entity_glob)
     entity_inst = Entity(entity, ports_parser, generics_parser)
     return entity_inst
-
-
-def map_tb_component_ports(tb_obj: TB, entity: Entity) -> Tuple[str, str]:
-    """Create component mappings for just the ports
-
-    Arguments:
-        tb_obj -- testbench object
-        entity -- TB component Entity used in component mapping
-    """
-    port_map = ""
-    bus_entry = tb_obj.uut.port_buses[entity.tb_bus_name][tb_obj.IND_PORT_LIST]
-    port_map += tb_obj.create_typical_map(obj_list=entity.ports,
-                                          just_tcon=True)
-    clk_rst_ports = entity.find_matching_ports(TC.MATCH_CLK +
-                                               TC.MATCH_RST)
-    clk_rst_port_names = [x[0] for x in clk_rst_ports]
-    port_map_name = None
-    max_len = 0
-    port_map_list = list()
-    for port in entity.ports:
-        if port.name.strip() in clk_rst_port_names:
-            updated_fill = " " * (len(port.name) - len(port.name.strip()) -
-                                  len(entity.tb_bus_name) - 1)
-            port_map_name = (f"{entity.tb_bus_name.lower()}_"
-                             f"{port.name.strip()}{updated_fill}")
-        else:
-            # Associate TB port names with UUT bus port name
-            if "tcon_" not in port.name:
-                log.info(f"************* trying to connect {port.name.strip()}")
-                for tb_hint, uut_hint in TC.TB_MAP[entity.tb_bus_type].items():
-                    for uut_port in bus_entry:
-                        for hint in uut_hint:
-                            log.info(f"uut_hint:{hint},\tuut_port:{uut_port},"
-                                     f"\ttb:{tb_hint},\ttb_port:{port.name}")
-                            if f"_{hint}" in uut_port and tb_hint in port.name:
-                                port_map_name = uut_port
-                                log.info("@@@@@ match @@@@@")
-                            break
-
-                # If did not find a mathing port
-                if port_map_name is None:
-                    port_map_name = (f"{entity.tb_bus_name.lower()}_"
-                                     f"{port.name.strip()}")
-
-        if port_map_name:
-            max_len = max(max_len, len(port_map_name))
-            port_map_list.append((port.name, port_map_name, port.direc,
-                                  port.datatype, port.range))
-            port_map_name = None
-
-    for tb_port, port_map_name, direc, dtype, drange in port_map_list:
-        last = tb_port == port_map_list[-1][0]
-        rfill = " " * (max_len - len(port_map_name) + 1)
-        port_map += port_map_entry(TC.TB_DEP_FILL, tb_port, port_map_name,
-                                   direc, last, rfill)
-
-        if port_map_name not in tb_obj.already_defined:
-            tb_obj.already_defined.append(port_map_name)
-            fill_after = " " * (max_len - len(port_map_name) + 1)
-            signal = form_custom_signal_entry(fill_before=TC.TB_ARCH_FILL,
-                                              fill_after=fill_after,
-                                              name=port_map_name,
-                                              datatype=dtype,
-                                              range=drange)
-
-            tb_obj.arch_decl.append(signal)
-        else:
-            log.debug(f"{tb_port} for {entity.inst_name} component already "
-                      f"exists in the architecture")
-            defined = '\n'.join(tb_obj.already_defined)
-            log.debug(defined)
-
-    tb_obj.arch_def.append(port_map)
-    tb_obj.arch_decl.append("\n")
-    # Connect global clock/reset
-    tb_obj.map_global_clk_rst(entity, "clk", entity.tb_bus_name.lower())
-    tb_obj.map_global_clk_rst(entity, "rst", entity.tb_bus_name.lower())

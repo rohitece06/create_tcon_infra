@@ -44,6 +44,8 @@ DEFAULT_TCON_TBS = {"CLK": "tb_tcon_clocker",
                     "SDM": "tb_tcon_start_done_slave",
                     "SDS": "tb_tcon_start_done"}
 
+SUPPORTED_BUSSES = list(set(DEFAULT_TCON_TBS.keys()) - set(["CLK", "MISC"]))
+
 # Location where all tb components are (must use rtlenv to pull all dependencies
 # before running this script)
 TB_SRC_LOCATION = "./syn/rtlenv/"
@@ -99,6 +101,7 @@ from .common import *
 """
 
 TB_DEP_MAP_WITH_GENERICS = """
+  {}
   -- {} instance
   {} : entity work.{}
   generic map  (
@@ -110,6 +113,8 @@ TB_DEP_MAP_WITH_GENERICS = """
   );
 """
 TB_DEP_MAP_WO_GENERICS = """
+  {}
+  -- {} instance
   {} : entity work.{}
   port map  (
 {}
@@ -160,18 +165,3 @@ TB_MAP = OrderedDict({"CLK": MATCH_CLK,
                       "SAIFS": SAIFS_MAP,
                       "SDM": SD_MAP,
                       "SDS": SD_MAP})
-
-# CLOCKER_GENERICS = OrderedDict({"NUM_CLOCKS": None})
-# IRBM_GENERICS = OrderedDict({"A_WIDTH": 31, "TIMEOUT": 1})
-# IRBS_GENERICS = OrderedDict({})
-# SDS_GENERICS = OrderedDict({})
-# SDM_GENERICS = OrderedDict({})
-# SAIF_GENERICS = OrderedDict({})
-
-# TB_DEP_GENERICS = OrderedDict({"CLK": MATCH_CLK,
-#                                "IRBM": IRB_MAP,
-#                                "IRBS": IRB_MAP,
-#                                "SAIFM": SAIFM_MAP,
-#                                "SAIFS": SAIFS_MAP,
-#                                "SDM": SD_MAP,
-#                                "SDS": SD_MAP})
