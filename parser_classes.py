@@ -130,10 +130,10 @@ def get_instance_name(bus: str, ports: List) -> str:
                         # log.info(f"{bus_id}, {temp}, {prefix}")
                         log.setLevel(logging.ERROR)
                         if bus_id == "SAIFM":
-                            inst_name = f"{prefix}saif_master"
+                            inst_name = f"{prefix}saif_slave"
                             return inst_name
                         elif bus_id == "SAIFS":
-                            inst_name = f"{prefix}saif_slave"
+                            inst_name = f"{prefix}saif_master"
                             return inst_name
                         else:
                             logical_name =\
@@ -1032,6 +1032,7 @@ class TB:
         port_map += self.create_typical_map(obj_list=entity.ports,
                                             just_tcon=True,
                                             req_no=entity.tcon_req_no)
+        port_map += "\n"
         clk_rst_ports = entity.find_matching_ports(TC.MATCH_CLK +
                                                    TC.MATCH_RST)
         clk_rst_port_names = [x[0] for x in clk_rst_ports]
