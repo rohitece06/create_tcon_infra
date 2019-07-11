@@ -117,7 +117,7 @@ def get_instance_name(bus: str, ports: List) -> str:
     """
     inst_name = ""
     for bus_id, pos_ids in TC.TB_MAP_KEYS.items():
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
         if bus.startswith(bus_id):
             log.info(f"{bus_id} {pos_ids}")
             for pos_id in pos_ids:
@@ -447,7 +447,7 @@ class Port_Generic:
                 log.warn(f"{name} has vector datatype ({self.datatype}) "
                          f"but has no range!!")
         fulldatatype = f"{self.datatype}{self.range}"
-        return f"{fill_before}{name}{fill_after}: {fulldatatype};\n"
+        return f"{fill_before}signal {name}{fill_after}: {fulldatatype};\n"
 
     def form_port_entry(self, fill_before: str="", fill_after: str="",
                         last: bool=False) -> str:
@@ -485,7 +485,7 @@ def form_custom_signal_entry(fill_before: str="", fill_after: str="",
             log.warn(f"{name} has vector datatype ({datatype}) "
                      f"but has no range!!")
     fulldatatype = f"{datatype}{range}"
-    return f"{fill_before}{name}{fill_after}: {fulldatatype};\n"
+    return f"{fill_before}signal {name}{fill_after}: {fulldatatype};\n"
 
 
 class Entity:
@@ -860,7 +860,7 @@ class TB:
                     portrange = ""
 
             fulldatatype = f"{port.datatype}{portrange}"
-            signal = f"{TC.TB_ARCH_FILL}{port.name} : {fulldatatype};\n"
+            signal = f"{TC.TB_ARCH_FILL}signal {port.name} : {fulldatatype};\n"
             self.arch_decl.append(signal)
             self.already_defined.append(port.name.strip())
 
@@ -988,6 +988,39 @@ class TB:
                     defined = '\n'.join(self.already_defined)
                     log.debug(defined)
 
+    def __associate_bus_port(self, entity: Entity, bus_entry: List,
+                             portname: str) -> str:
+        """Associate a port on a bus of tcon slave component to the
+           corresponding port on the UUT
+
+        Arguments:
+            entity -- Entity object of the tcon slave component
+            bus_entry -- List of ports on the UUT bus to be connected
+            portname -- TCON slave component port name to be mapped
+
+        Returns:
+            Return a name of the UUT port to be mapped to portname. It could be
+            a port on the
+        """
+        port_map_name = ""
+        if "tcon_" not in portname:
+            log.info(f"********** trying to map {portname.strip()}")
+            for tb_hint, uut_hint in TC.TB_MAP[entity.tb_bus_type].items():
+                for uut_port in bus_entry:
+                    for hint in uut_hint:
+                        if f"_{hint}" in uut_port \
+                                and tb_hint in portname:
+                            port_map_name = uut_port
+                            log.info("@@@@@ match @@@@@")
+                        break
+
+            # If did not find a mathing port
+            if port_map_name is None:
+                port_map_name = (f"{entity.tb_bus_name.lower()}_"
+                                 f"{portname.strip()}")
+
+        return port_map_name
+
     def __map_tb_component_ports(self, entity: Entity) -> NoReturn:
         """Create component mappings for just the ports
 
@@ -1012,23 +1045,25 @@ class TB:
                 port_map_name = (f"{entity.tb_bus_name.lower()}_"
                                  f"{port.name.strip()}{updated_fill}")
             else:
-                # Associate TB port names with UUT bus port name
-                if "tcon_" not in port.name:
-                    log.info(f"********** trying to map {port.name.strip()}")
-                    for tb_hint, uut_hint in \
-                            TC.TB_MAP[entity.tb_bus_type].items():
-                        for uut_port in bus_entry:
-                            for hint in uut_hint:
-                                if f"_{hint}" in uut_port \
-                                        and tb_hint in port.name:
-                                    port_map_name = uut_port
-                                    log.info("@@@@@ match @@@@@")
-                                break
+                port_map_name = self.__associate_bus_port(entity, bus_entry,
+                                                          port.name)
+                # # Associate TB port names with UUT bus port name
+                # if "tcon_" not in port.name:
+                #     log.info(f"********** trying to map {port.name.strip()}")
+                #     for tb_hint, uut_hint in \
+                #             TC.TB_MAP[entity.tb_bus_type].items():
+                #         for uut_port in bus_entry:
+                #             for hint in uut_hint:
+                #                 if f"_{hint}" in uut_port \
+                #                         and tb_hint in port.name:
+                #                     port_map_name = uut_port
+                #                     log.info("@@@@@ match @@@@@")
+                #                 break
 
-                    # If did not find a mathing port
-                    if port_map_name is None:
-                        port_map_name = (f"{entity.tb_bus_name.lower()}_"
-                                         f"{port.name.strip()}")
+                #     # If did not find a mathing port
+                #     if port_map_name is None:
+                #         port_map_name = (f"{entity.tb_bus_name.lower()}_"
+                #                          f"{port.name.strip()}")
 
             if port_map_name:
                 max_len = max(max_len, len(port_map_name))
@@ -1050,7 +1085,6 @@ class TB:
                                                   name=port_map_name,
                                                   datatype=dtype,
                                                   range=drange)
-
                 self.arch_decl.append(signal)
             else:
                 log.debug(f"{tb_port} for {entity.inst_name} component already"
@@ -1093,10 +1127,10 @@ class TB:
         connected = 0
         for entity in self.tb_deps:
             if entity.tb_bus_type in TC.SUPPORTED_BUSSES:
-                log.setLevel(logging.DEBUG)
+                # log.setLevel(logging.DEBUG)
                 log.info(f"Generating mapping for {entity.tb_bus_name} of "
                          f"type {entity.tb_bus_type} ")
-                log.setLevel(logging.ERROR)
+                # log.setLevel(logging.ERROR)
                 self.__map_tb_component_ports(entity)
                 connected += 1
 
