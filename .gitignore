@@ -7,7 +7,7 @@
 *.o
 *.so
 *.pyc
-*.vhdl
+*.vhd
 *.log
 try.py
 *vscode*
