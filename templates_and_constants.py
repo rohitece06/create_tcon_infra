@@ -83,6 +83,7 @@ architecture sim of {}_tb is
 {}
   -- Signals
   signal tb_reset : std_logic;
+
 {}
 begin
 {}
