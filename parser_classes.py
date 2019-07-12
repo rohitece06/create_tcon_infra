@@ -157,10 +157,11 @@ def port_map_entry(lfill: str, left: str, right: str,
     Returns:
         Returns Port mapping string
     """
+    mod_com = f" -- {comment}" if comment else ""
     if last:
-        return f"{lfill}{left} => {right}{rfill}   -- {comment}"
+        return f"{lfill}{left} => {right}{rfill} {mod_com}"
     else:
-        return f"{lfill}{left} => {right}{rfill},  -- {comment}\n"
+        return f"{lfill}{left} => {right}{rfill},{mod_com}\n"
 
 
 def generic_map_entry(lfill: str, left: str, right: str,
@@ -1065,7 +1066,7 @@ class TB:
 
         return port_map_name
 
-    def __map_tb_component_ports(self, entity: Entity) -> NoReturn:
+    def __connect_tb_component(self, entity: Entity) -> NoReturn:
         """Create component mappings for just the ports
 
         Arguments:
@@ -1157,11 +1158,13 @@ class TB:
         connected = 0
         for entity in self.tb_deps:
             if entity.tb_bus_type in TC.SUPPORTED_BUSSES:
-                # log.setLevel(logging.DEBUG)
+                log.setLevel(logging.DEBUG)
                 log.info(f"Generating mapping for {entity.tb_bus_name} of "
-                         f"type {entity.tb_bus_type} ")
-                # log.setLevel(logging.ERROR)
-                self.__map_tb_component_ports(entity)
+                         f"type {entity.tb_bus_type} "
+                         f"with entity file {entity.name} ")
+                entity.print_ports()
+                log.setLevel(logging.ERROR)
+                self.__connect_tb_component(entity)
                 connected += 1
 
         if connected == 0:
