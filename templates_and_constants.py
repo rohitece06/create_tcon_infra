@@ -130,10 +130,12 @@ MATCH_RD = ["rd", "read"]
 MATCH_ADDR = ["addr", "address"]
 MATCH_RST = ["reset", "rst"]
 MATCH_CLK = ["clk", "clock"]
-MATCH_LOG = ["LOG", "LOG_FILE", "LOGFILE"]
+MATCH_LOG_FILE = ["LOG", "LOG_FILE", "LOGFILE"]
 MATCH_DI = ["din", "data_in", "di", "data"]
 MATCH_DO = ["dout", "data_out", "do", "data"]
-MATCH_CMD = ["CMD", "COMMAND"]
+MATCH_DATA = MATCH_DI + MATCH_DO
+MATCH_CMD_FILE = ["CMD_FILE", "COMMAND_FILE"]
+MATCH_IGNORE_GENERICS = ["FLOP_DELAY", "FLOPDELAY"]
 # VECTOR_TYPES =
 
 # If UUT is a SAIF slave, then tb's rtr connects to UUT's cts, ctr to rts, etc

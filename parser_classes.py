@@ -158,7 +158,7 @@ def port_map_entry(lfill: str, left: str, right: str,
         Returns Port mapping string
     """
     if last:
-        return f"{lfill}{left} => {right}{rfill}  -- {comment}"
+        return f"{lfill}{left} => {right}{rfill}   -- {comment}"
     else:
         return f"{lfill}{left} => {right}{rfill},  -- {comment}\n"
 
@@ -578,9 +578,13 @@ class Entity:
                     names.append((port.name.strip(), port.direc))
         return names
 
-    def generic_map_template(self, fill_before: str="") -> str:
+    def generic_map_template(self, fill_before: str="", def_gen: str="",
+                             port_list: List=[]) -> str:
         """Creates a template generic map with all generics of this component
 
+        Arguments:
+            fill_before -- Spaces to fil before generic map
+            def_gen -- Default generic for the TB
         Returns:
             A string representing a template of the generic map
 
@@ -593,14 +597,52 @@ class Entity:
         """
         map_str = ""
         for generic in self.generics:
-            if generic != self.generics[-1]:
-                map_str += f"{fill_before}{generic.name} => ,\n"
+            if generic.name.strip() in TC.MATCH_CMD_FILE:
+                gen_value = f'{def_gen} & "/{self.inst_name}.stim"'
+            elif generic.name.strip() in TC.MATCH_LOG_FILE:
+                gen_value = f'{def_gen} & "/{self.inst_name}.log"'
+            elif generic.name.strip() in TC.MATCH_AWIDTH:
+                port_name = find_matching_ports(TC.MATCH_ADDR, port_list)
+                gen_value = f"{port_name}'length"
+            elif generic.name.strip() in TC.MATCH_DWIDTH:
+                port_name = find_matching_ports(TC.MATCH_DATA, port_list)
+                gen_value = f"{port_name}'length"
+            elif generic.name.strip() in ["FLOP_DELAY"]:
+                gen_value = '1 ps'
             else:
-                map_str += f"{fill_before}{generic.name} => "
+                gen_value = ''
+
+            if generic != self.generics[-1]:
+                map_str += f"{fill_before}{generic.name} => {gen_value},\n"
+            else:
+                map_str += f"{fill_before}{generic.name} => {gen_value} "
         return map_str
 
     def __str__(self) -> str:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
+
+
+def find_matching_ports(match_pattern: List[str], port_list: List) -> str:
+    """Find list of port names matching (case-insensitive) with
+        pre-existing template.
+
+    Arguments:
+        match -- List of possible matching terms
+        port_list -- List of ports to match
+
+    Returns:
+        First matching port
+
+    Example:
+        MATCH_PATTERN = ["CLK", "CLOCK"]
+        PORT_NAMES = ["clk_sys", "sys_clock2", reset, in, out]
+        >>>find_matching_ports(MATCH_PATTERN, PORT_NAMES)
+        "clk_sys"
+    """
+    for pattern in match_pattern:
+        for port in port_list:
+            if pattern.lower() in port.strip().lower():
+                return port.strip()
 
 
 class TB:
@@ -623,6 +665,7 @@ class TB:
                                          f"src\\{uutname}_tb.vhd")
         # List of tuples (name, type, default, value)
         self.arch_constants = list()
+        self.default_generic = "TEST_FOLDER"
 
         self.arch_decl = list()
         self.arch_def = list()
@@ -697,10 +740,11 @@ class TB:
         for obj in obj_list:
             if obj.direc:  # Only ports have non-None type direction
                 if "tcon_" in obj.name:
+
                     if "tcon_req" in obj.name:
                         name = f"{obj.name.strip()}({req_no})"
                     else:
-                        name = obj.name
+                        name = f"{obj.name} "
                 else:
                     name = f"{prefix}{obj.name}"
                 # Mapping is create when
@@ -802,7 +846,7 @@ class TB:
             A string that descirbes the entity declaration for the TB
 
         """
-        default_generic = "TEST_PREFIX"
+        default_generic = self.default_generic
         generic_entry = ""
         if self.uut.generics:
             len_diff = len(default_generic) - len(self.uut.generics[0].name)
@@ -1048,24 +1092,6 @@ class TB:
             else:
                 port_map_name = self.__associate_bus_port(entity, bus_entry,
                                                           port.name)
-                # # Associate TB port names with UUT bus port name
-                # if "tcon_" not in port.name:
-                #     log.info(f"********** trying to map {port.name.strip()}")
-                #     for tb_hint, uut_hint in \
-                #             TC.TB_MAP[entity.tb_bus_type].items():
-                #         for uut_port in bus_entry:
-                #             for hint in uut_hint:
-                #                 if f"_{hint}" in uut_port \
-                #                         and tb_hint in port.name:
-                #                     port_map_name = uut_port
-                #                     log.info("@@@@@ match @@@@@")
-                #                 break
-
-                #     # If did not find a mathing port
-                #     if port_map_name is None:
-                #         port_map_name = (f"{entity.tb_bus_name.lower()}_"
-                #                          f"{port.name.strip()}")
-
             if port_map_name:
                 max_len = max(max_len, len(port_map_name))
                 port_map_list.append((port.name, port_map_name, port.direc,
@@ -1095,8 +1121,11 @@ class TB:
 
         block_line = "-" * (len(entity.name) + 12)
         if entity.generics:
+            port_list = [x[1] for x in port_map_list]
             generic_map = entity.generic_map_template(
-                fill_before=TC.TB_DEP_FILL)
+                def_gen=self.default_generic,
+                fill_before=TC.TB_DEP_FILL,
+                port_list=port_list)
             entity_map = TC.TB_DEP_MAP_WITH_GENERICS.format(block_line,
                                                             entity.name,
                                                             entity.inst_name,
