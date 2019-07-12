@@ -79,8 +79,10 @@ end {}_tb;
 TB_BODY = """
 architecture sim of {}_tb is
 
+  ------------
   -- Constants
 {}
+  ----------
   -- Signals
   signal tb_reset : std_logic;
 
