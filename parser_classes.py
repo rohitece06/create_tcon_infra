@@ -789,8 +789,8 @@ class TB:
         max_len = max([len(const[0].name) for const in self.arch_constants])
         fill_before = TC.TB_ARCH_FILL
         for generic, type, default in self.arch_constants:
-            fill_after = max_len - len(generic.name) + 1
-            entry += (f"{fill_before}{generic.name}{fill_after} : "
+            fill_after = " " * (max_len - len(generic.name) + 1)
+            entry += (f"{fill_before}constant {generic.name}{fill_after} : "
                       f"{type} := {default};\n")
 
         return entry
@@ -1002,8 +1002,8 @@ class TB:
             gen_str = ""
             gen_str = self.create_typical_map(obj_list=entity.generics)
             for generic in entity.generics:
-                if generic not in self.already_defined:
-                    if generic == "NUM_CLOCKS":
+                if generic.name not in self.already_defined:
+                    if generic.name.strip() == "NUM_CLOCKS":
                         val = len(ports)
                     else:
                         val = 0
@@ -1028,10 +1028,10 @@ class TB:
                     self.already_defined.append(port.name)
                     break
                 else:
-                    log.debug(f"{port.name.strip()} for tb_tcon_clocker "
-                              f"already exists in the architecture")
+                    log.info(f"{port.name.strip()} for tb_tcon_clocker "
+                             f"already exists in the architecture")
                     defined = '\n'.join(self.already_defined)
-                    log.debug(defined)
+                    log.info(defined)
 
     def __associate_bus_port(self, entity: Entity, bus_entry: List,
                              portname: str) -> str:
@@ -1047,24 +1047,38 @@ class TB:
             Return a name of the UUT port to be mapped to portname. It could be
             a port on the
         """
-        port_map_name = ""
+        log.setLevel(logging.DEBUG)
         if "tcon_" not in portname:
-            log.info(f"********** trying to map {portname.strip()}")
+            log.info(f"********** trying to map {portname}")
             for tb_hint, uut_hint in TC.TB_MAP[entity.tb_bus_type].items():
-                for uut_port in bus_entry:
-                    for hint in uut_hint:
-                        if f"_{hint}" in uut_port \
-                                and tb_hint in portname:
-                            port_map_name = uut_port
-                            log.info("@@@@@ match @@@@@")
-                        break
+                if tb_hint in portname:
+                    port_map_name = ""
+                    for uut_port in bus_entry:
+                        uut_pdirec = \
+                            self.uut.find_matching_ports(
+                                [uut_port.strip()])[0][1]
+                        log.info(f"{uut_port} direction is {uut_pdirec}")
+                        tb_pdirec = \
+                            entity.find_matching_ports(
+                                [portname])[0][1]
+                        log.info(f"tb {portname} direction is {tb_pdirec}")
+                        for hint in uut_hint:
+                            log.info(f"Matching {tb_hint} in {portname}"
+                                     f" and  _{hint} in {uut_port}")
+                            if uut_port.endswith(f"_{hint}") and \
+                                    direction_match(uut_pdirec, tb_pdirec):
+                                port_map_name = uut_port
+                                log.info("@@@@@ match @@@@@")
+                                log.setLevel(logging.ERROR)
+                                return port_map_name
 
-            # If did not find a mathing port
-            if port_map_name is None:
-                port_map_name = (f"{entity.tb_bus_name.lower()}_"
-                                 f"{portname.strip()}")
-
-        return port_map_name
+                    # If did not find a mathing port
+                    if port_map_name is None:
+                        port_map_name = (f"{entity.tb_bus_name.lower()}_"
+                                         f"{portname.strip()}")
+                        log.setLevel(logging.ERROR)
+                        return port_map_name
+            log.setLevel(logging.ERROR)
 
     def __connect_tb_component(self, entity: Entity) -> NoReturn:
         """Create component mappings for just the ports
@@ -1092,7 +1106,7 @@ class TB:
                                  f"{port.name.strip()}{updated_fill}")
             else:
                 port_map_name = self.__associate_bus_port(entity, bus_entry,
-                                                          port.name)
+                                                          port.name.strip())
             if port_map_name:
                 max_len = max(max_len, len(port_map_name))
                 port_map_list.append((port.name, port_map_name, port.direc,
@@ -1115,8 +1129,8 @@ class TB:
                                                   range=drange)
                 self.arch_decl.append(signal)
             else:
-                log.debug(f"{tb_port} for {entity.inst_name} component already"
-                          f" exists in the architecture")
+                log.debug(f"{tb_port.strip()} for {entity.inst_name} component"
+                          f"already exists in the architecture")
                 defined = '\n'.join(self.already_defined)
                 log.debug(defined)
 
@@ -1158,12 +1172,9 @@ class TB:
         connected = 0
         for entity in self.tb_deps:
             if entity.tb_bus_type in TC.SUPPORTED_BUSSES:
-                log.setLevel(logging.DEBUG)
                 log.info(f"Generating mapping for {entity.tb_bus_name} of "
                          f"type {entity.tb_bus_type} "
                          f"with entity file {entity.name} ")
-                entity.print_ports()
-                log.setLevel(logging.ERROR)
                 self.__connect_tb_component(entity)
                 connected += 1
 
@@ -1206,6 +1217,17 @@ class TB:
             else:
                 log.info("Skipping creating/overwriting TB file")
         log.setLevel(logging.ERROR)
+
+
+def direction_match(first: str, second: str) -> bool:
+    if (first.strip() in ["in", "inout"] and second.strip() == "out") or \
+        (first.strip() in ["out", "inout"] and second.strip() == "in") or \
+        (second.strip() in ["in", "inout"] and first.strip() == "out") or \
+        (second.strip() in ["out", "inout"] and first.strip() == "in") or \
+            (first.strip() == "inout" and second.strip() == "inout"):
+        return True
+    else:
+        return False
 
 
 def get_entity_from_file(path: str, name: str) -> Entity:

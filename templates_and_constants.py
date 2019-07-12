@@ -139,14 +139,16 @@ MATCH_IGNORE_GENERICS = ["FLOP_DELAY", "FLOPDELAY"]
 # VECTOR_TYPES =
 
 # If UUT is a SAIF slave, then tb's rtr connects to UUT's cts, ctr to rts, etc
-SAIFM_MAP = {"rtr": ["cts"], "ctr": ["rts"], "data": MATCH_DO,
-             "eof": ["eof"], "df": ["df"], "sof": ["sof"]}
+SAIFM_MAP = OrderedDict({"rtr": ["cts"], "ctr": ["rts"], "data": MATCH_DO,
+                         "eof": ["eof"], "df": ["df"], "sof": ["sof"]})
 # If UUT is a SAIF slace, then tb's rts connects to UUT's ctr, cts to rtr, etc
-SAIFS_MAP = {"rts": ["ctr"], "cts": ["rtr"], "data": MATCH_DI,
-             "eof": ["eof"], "df": ["df"], "sof": ["sof"]}
-IRB_MAP = {"wr": MATCH_WR, "rd": MATCH_RD, "ack": "ack", "busy": "busy",
-           "addr": MATCH_ADDR, "di": MATCH_DO, "do": MATCH_DI}
-SD_MAP  = {"start": ["start"], "done": ["done"]}
+SAIFS_MAP = OrderedDict({"rts": ["ctr"], "cts": ["rtr"], "data": MATCH_DI,
+                         "eof": ["eof"], "df": ["df"], "sof": ["sof"]})
+IRB_MAP = OrderedDict({"wr": MATCH_WR, "rd": MATCH_RD, "ack": "ack",
+                       "busy": "busy", "addr": MATCH_ADDR, "di": MATCH_DO,
+                       "do": MATCH_DI})
+SD_MAP  = OrderedDict({"start": ["start"], "done": ["done"],
+                       "data": MATCH_DATA, "din": MATCH_DO, "dout": MATCH_DI})
 
 TB_MAP_KEYS = OrderedDict({"CLK": MATCH_CLK,
                            "IRBM": IRB_MAP.keys(),
