@@ -18,16 +18,6 @@ def setloglevel(loglevel: str):
     if loglevel.lower() == "critical":
         PC.log.setLevel(logging.CRITICAL)
 
-
-def get_tb_file(comppath: str) -> str:
-    compname = os.path.basename(comppath)
-    tb_file = os.path.join(comppath, "tb/{}_tb/src/{}_tb.vhd".
-                           format(compname, compname))
-    if os.path.isfile(tb_file):
-        tb_file = os.path.join(comppath, "tb/{}_tb/src/{}_tb_{}.vhd".
-                               format(compname, compname, time.time()))
-    return tb_file
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
         This script generates TCON infrastructure from an entity. This script
@@ -61,23 +51,15 @@ if __name__ == "__main__":
                         info, debug, warn, error, critical", default="error",
                         required=False)
 
-    ###########################################################################
-    #
-    #           TODO:: perform sanity checks
-    #   1) tb build.pl needs to exist
-    #   2) syn/rtlenv and all dependencies folders needs to exist
-    #   3)
-    ###########################################################################
     args = parser.parse_args()
     setloglevel(args.loglevel)
     if args.component_path:
         if os.path.isdir(args.component_path):
-            uutpath = os.path.abspath(args.component_path)
+            top_entity_path = os.path.abspath(args.component_path)
         else:
-            uutpath = os.path.abspath(os.getcwd(),
-                                      os.path.join(args.component_path))
+            top_entity_path = os.path.abspath(os.getcwd(),
+                                              os.path.join(args.component_path))
     else:
-        uutpath = os.getcwd()
-    uutname = os.path.basename(uutpath)
-    tb_obj = PC.TB(uutpath, uutname)
-    tb_obj.generate_tb_file()
+        top_entity_path = os.getcwd()
+
+    top_entity = os.path.basename(top_entity_path)
