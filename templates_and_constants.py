@@ -25,7 +25,12 @@ VHDL_PROC = {"type": ["process", "block"],
              "start_token": "begin",
              "end_token": "end"}
 
-VHDL_CONSTRUCT_TYPES = [VHDL_BLOCK, VHDL_IF, VHDL_ARCH, VHDL_PROC]
+VHDL_COMP_GEN_MAP = {"type": ["generic map"],
+                     "start_token": "generic map",
+                     "end_token": ")"}
+
+VHDL_CONSTRUCT_TYPES = [VHDL_BLOCK, VHDL_IF, VHDL_ARCH, VHDL_PROC,
+                        VHDL_COMP_GEN_MAP]
 
 # VHDL Port direction types
 VHDL_DIR_TYPE = ["in", "out", "inout"]

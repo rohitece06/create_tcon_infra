@@ -1,12 +1,9 @@
 import re
 import logging
 import os
-import copy
 from collections import OrderedDict
-from inspect import currentframe
-from datetime import datetime
 import templates_and_constants as TC
-from typing import Dict, Tuple, List, Any, OrderedDict, NoReturn, Optional
+from typing import Tuple, List, Any, OrderedDict, Union
 from datetime import date
 
 # Setup logging
@@ -97,13 +94,13 @@ def assign_buses(fname: str) -> OrderedDict:
 
         bus_cfg[bus][0] = tb_entity
         bus_cfg[bus][2] = inst_name
-        bus_cfg[bus][3] = tcon_req_id
+        bus_cfg[bus][3] = f"{tcon_req_id}"
         bus_cfg[bus][4] = tb_dep
 
     return bus_cfg
 
 
-def get_instance_name(bus: str, ports: List) -> str:
+def get_instance_name(bus: str, ports: List) -> Union[str, None]:
     """Identify a possible instance prefix name for the TCON tb component. For
     example, if a SAIF slave port has out_rtr port, a tb_tcon_saif component
     will be instantiated with a name "out_saif_master".
@@ -260,7 +257,7 @@ class ParserType:
             return None, None
             log.error(f"*{globtype}* VHDL construct type is not supported")
 
-    def __get_glob(self, glob: str) -> Any:
+    def __get_glob(self, glob: str) -> Union[str, dict]:
         """
         Get string data for the glob type. For type "entity", it will contain
         the string for entity declaration. For type "port",  it will contain
@@ -343,9 +340,8 @@ class ParserType:
             no_space_start_end = {"arch_decl": arch_split[0].strip(),
                                   "arch_def": ' '.join(arch_split[1:])}
 
-        # If we are looking for definitions (i.e., the actual logic of this
-        # component) inside the architecture
-        # elif self.decl_type in VHDL_arch_decl["type"]:
+        # If we are looking for component maps inside the architecture
+        elif self.decl_type.lower() in TC.VHDL_COMP_GEN_MAP["type"]:
 
         return no_space_start_end
 
@@ -430,7 +426,7 @@ class Port_Generic:
         else:
             return "", "", "", "", ""
 
-    def print(self) -> NoReturn:
+    def print(self):
         print(f"'Name': {self.name},\t'Direction': {self.direc},\t"
               f"'Datatype': {self.datatype},\t"
               f"'Range': {self.range},\t'Default': {self.default}")
@@ -540,14 +536,14 @@ class Entity:
                 entry.name = entry.name + (max_len - len(entry.name) + 1) * " "
         return entries
 
-    def print_generics(self) -> NoReturn:
+    def print_generics(self):
         if self.generics:
             for generic in self.generics:
                 generic.print()
         else:
             log.warn(f"No generics exists for entity {self.name}\n")
 
-    def print_ports(self) -> NoReturn:
+    def print_ports(self):
         if self.ports:
             for port in self.ports:
                 port.print()
@@ -623,7 +619,8 @@ class Entity:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
 
 
-def find_matching_ports(match_pattern: List[str], port_list: List) -> str:
+def find_matching_ports(match_pattern: List[str], port_list: List) -> \
+    Union[str, None]:
     """Find list of port names matching (case-insensitive) with
         pre-existing template.
 
@@ -688,7 +685,7 @@ class TB:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
 
     def map_global_clk_rst(self, entity: Entity, clk_rst: str,
-                           override_inst_name: str="") -> NoReturn:
+                           override_inst_name: str=""):
         """Connect clock and reset signal of the entity to global clock coming
         out of the tb_tcon_clocker (clks[0]) and global reset (tb_reset)
 
@@ -717,10 +714,10 @@ class TB:
             self.arch_def.append(assignment)
             log.warn(f"Please update the {clk_rst} mapping as required")
 
-    def create_typical_map(self, obj_list: List[Port_Generic],
+    def create_typical_map(self, obj_list: Union[List[Port_Generic], None],
                            fill_before: str=TC.TB_ENTITY_FILL,
                            prefix: str="", just_tcon: bool=False,
-                           req_no: int=0) -> str:
+                           req_no: str="0") -> str:
         """Creates a typical port/generic port map when there are no special
         mapping requirements
 
@@ -761,7 +758,7 @@ class TB:
                                          obj.direc, last)
         return string
 
-    def check_bus_in_uut_buses(self, bus_type: str) -> str:
+    def check_bus_in_uut_buses(self, bus_type: str) -> Union[str, None]:
         """Check whether a bus type exists in bus list of the UUT
 
         Args:
@@ -818,7 +815,7 @@ class TB:
 
         return deplist
 
-    def __get_entity_from_tb_dep(self, entity_name: str) -> Entity:
+    def __get_entity_from_tb_dep(self, entity_name: str) -> Union[Entity, None]:
         """Get the entity object from tb_dependency list
 
         Arguments:
@@ -869,7 +866,7 @@ class TB:
 
         return TC.TB_ENTITY.format(self.uut.name, generic_entry, self.uut.name)
 
-    def __connect_tcon_master(self) -> NoReturn:
+    def __connect_tcon_master(self):
         """Create signal definitions and map tcon master entity to signals
 
         Args:
@@ -922,7 +919,7 @@ class TB:
         assignment = sig_assignment(TC.TB_ARCH_FILL, "tcon_clk", "clks(0)")
         self.arch_def.append(assignment)
 
-    def __connect_uut(self) -> NoReturn:
+    def __connect_uut(self):
         """Connect UUT's generics and ports to TB's generic and dedicated
            signals
 
@@ -990,7 +987,7 @@ class TB:
         self.map_global_clk_rst(self.uut, "clk")
         self.map_global_clk_rst(self.uut, "rst")
 
-    def __connect_clocker(self) -> NoReturn:
+    def __connect_clocker(self):
         """Connect clocker entity if any
         """
         bus = self.check_bus_in_uut_buses("CLK")
@@ -1080,7 +1077,7 @@ class TB:
                         return port_map_name
             log.setLevel(logging.ERROR)
 
-    def __connect_tb_component(self, entity: Entity) -> NoReturn:
+    def __connect_tb_component(self, entity: Entity):
         """Create component mappings for just the ports
 
         Arguments:
@@ -1159,7 +1156,7 @@ class TB:
         self.map_global_clk_rst(entity, "rst", entity.tb_bus_name.lower())
         self.arch_decl.append("\n")
 
-    def __connect_tb_deps(self) -> NoReturn:
+    def __connect_tb_deps(self):
         """Create mapping for TB dependencies for this UUT
 
         Arguments:
@@ -1183,7 +1180,7 @@ class TB:
         else:
             log.info(f"Connected {connected} TB components")
 
-    def generate_mapping(self) -> NoReturn:
+    def generate_mapping(self):
         """This function generates mapping for each tb dependency
         """
         self.__connect_tcon_master()
@@ -1191,7 +1188,7 @@ class TB:
         self.__connect_uut()
         self.__connect_tb_deps()
 
-    def generate_tb_file(self) -> NoReturn:
+    def generate_tb_file(self):
         year = date.today().year
         uut = self.uut.name
         tb_header = TC.TB_HEADER.format(year, uut, uut)
@@ -1230,7 +1227,7 @@ def direction_match(first: str, second: str) -> bool:
         return False
 
 
-def get_entity_from_file(path: str, name: str) -> Entity:
+def get_entity_from_file(path: str, name: Union[str, None]) -> Entity:
     """Extract entity declaration of TCON master from tb_tcon.vhd
 
     Args:

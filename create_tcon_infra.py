@@ -1,17 +1,12 @@
 #!/usr/bin/python3
-
-import re
 import os
 import time
 import argparse
-import sys
 import parser_classes as PC
-from inspect import currentframe
 import logging
-from typing import NoReturn
 
 
-def setloglevel(loglevel: str) -> NoReturn:
+def setloglevel(loglevel: str):
     if loglevel.lower() == "info":
         PC.log.setLevel(logging.INFO)
     if loglevel.lower() == "debug":

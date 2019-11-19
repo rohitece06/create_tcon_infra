@@ -13,57 +13,57 @@ entity debounce is -- hello there
 			) ;
 	port
 	(
-	clk         : in  std_logic  ;
-	rst         : in  std_logic  ;
-	max_count   : in  std_logic_vector(7 downto 0);
+		clk         : in  std_logic  ;
+		rst         : in  std_logic  ;
+		max_count   : in  std_logic_vector(7 downto 0);
 
-	irbs_addr    : in std_logic_vector(AWIDTH - 1 downto 0);
-	irbs_rd	    : in std_logic;
-	irbs_wr	    : in std_logic;
-	irbs_ack	   : out std_logic;
-	irbs_din     : in std_logic_vector(DWIDTH - 1 downto 0);
-	irbs_dout    : out std_logic_vector(DWIDTH-1 downto 0);
+		irbs_addr    : in std_logic_vector(AWIDTH - 1 downto 0);
+		irbs_rd	    : in std_logic;
+		irbs_wr	    : in std_logic;
+		irbs_ack	   : out std_logic;
+		irbs_din     : in std_logic_vector(DWIDTH - 1 downto 0);
+		irbs_dout    : out std_logic_vector(DWIDTH-1 downto 0);
 
-	irbm_addr    : out std_logic_vector(AWIDTH - 1 downto 0);
-	irbm_rd	    : out std_logic;
-	irbm_wr	    : out std_logic;
-	irbm_ack	    : in std_logic;
-	irbm_busy	    : in std_logic;
-	irbm_din     : in std_logic_vector(DWIDTH - 1 downto 0);
-	irbm_dout    : out std_logic_vector(DWIDTH-1 downto 0);
+		irbm_addr    : out std_logic_vector(AWIDTH - 1 downto 0);
+		irbm_rd	    : out std_logic;
+		irbm_wr	    : out std_logic;
+		irbm_ack	    : in std_logic;
+		irbm_busy	    : in std_logic;
+		irbm_din     : in std_logic_vector(DWIDTH - 1 downto 0);
+		irbm_dout    : out std_logic_vector(DWIDTH-1 downto 0);
 
-	out_rts    : out std_logic; --NR
-	out_cts    : in std_logic;
-	out_dout   : out std_logic_vector(DWIDTH-1 downto 0);
+		out_rts    : out std_logic; --NR
+		out_cts    : in std_logic;
+		out_dout   : out std_logic_vector(DWIDTH-1 downto 0);
 
-	in_rtr    : out std_logic; --NR
-	in_ctr    : in std_logic; --NR
-	in_din    : in std_logic_vector(DWIDTH-1 downto 0);
-	override_begin : in std_logic;
+		in_rtr    : out std_logic; --NR
+		in_ctr    : in std_logic; --NR
+		in_din    : in std_logic_vector(DWIDTH-1 downto 0);
+		override_begin : in std_logic;
 
-	edits_rtr    : out std_logic; --NR
-	edits_ctr    : in std_logic; --NR
-	edits_din    : in std_logic_vector(DWIDTH-1 downto 0);
-	override_end : in std_logic;
+		edits_rtr    : out std_logic; --NR
+		edits_ctr    : in std_logic; --NR
+		edits_din    : in std_logic_vector(DWIDTH-1 downto 0);
+		override_end : in std_logic;
 
-	ext_rts    : out std_logic; --NR
-	ext_cts    : in std_logic;
-	ext_dout   : out std_logic_vector(DWIDTH-1 downto 0);
-	ext_sof		 : out std_logic;
-	ext_eof		 : out std_logic;
-	ext_df		 : out std_logic;
+		ext_rts    : out std_logic; --NR
+		ext_cts    : in std_logic;
+		ext_dout   : out std_logic_vector(DWIDTH-1 downto 0);
+		ext_sof		 : out std_logic;
+		ext_eof		 : out std_logic;
+		ext_df		 : out std_logic;
 
-	onem_start  	: out std_logic; --NR
-	onem_done  	: in std_logic; --NR
-	onem_data  	: out std_logic_vector(DWIDTH-1 downto 0); --NR
+		onem_start  	: out std_logic; --NR
+		onem_done  	: in std_logic; --NR
+		onem_data  	: out std_logic_vector(DWIDTH-1 downto 0); --NR
 
-	tenk_start  	: in std_logic; --NR
-	tenk_done  	: out std_logic; --NR
-	tenk_data  	: in std_logic_vector(DWIDTH-1 downto 0); --NR
+		tenk_start  	: in std_logic; --NR
+		tenk_done  	: out std_logic; --NR
+		tenk_data  	: in std_logic_vector(DWIDTH-1 downto 0); --NR
 
-	serial_in  	: in  std_logic  ;
-	serial_out 	: out std_logic;
-	serial_out2 : out std_logic_vector(0 to 4) := (others => '0')
+		serial_in  	: in  std_logic  ;
+		serial_out 	: out std_logic;
+		serial_out2 : out std_logic_vector(0 to 4) := (others => '0')
 	);
 end entity debounce;
 
