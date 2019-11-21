@@ -234,7 +234,7 @@ class ParserType:
     def __init__(self, globtype: str, glob, name: str="") -> None:
         """
         Initialize parser class by for certain type by extracting data from
-        provide glob
+        provided glob
         """
         self.decl_name = name
         self.decl_type = globtype
@@ -250,12 +250,11 @@ class ParserType:
         for contype in TC.VHDL_CONSTRUCT_TYPES:
             if globtype in contype["type"]:
                 return contype["start_token"], contype["end_token"]
-                break
             else:
                 continue
         else:
-            return None, None
-            log.error(f"*{globtype}* VHDL construct type is not supported")
+            raise ValueError(f"*{globtype}* VHDL construct type is not "
+                             f"supported")
 
     def __get_glob(self, glob: str) -> Union[str, dict]:
         """
@@ -311,21 +310,17 @@ class ParserType:
             #   architecture xxx of <entity name> is
             start_phrase = (f"{self.decl_type}(.+?)of {self.decl_name} "
                             f"{self.decl_start}")
-            # Finds the name of the architecture
+            # Finds the name of the architecture, the xxx part
             try:
                 arch_type = re.search(start_phrase, glob).group(1).strip()
             except AttributeError:
-                log.error("Couldn't find name of the architecture")
+                raise ValueError("Couldn't find name of the architecture")
 
             start_phrase = (f"architecture {arch_type} of {self.decl_name} "
                             f"{self.decl_start}")
-
+            #
             search_string = f'{start_phrase}(.+?){self.decl_end} {arch_type}'
-            try:
-                arch_string = re.search(search_string, glob).group(1)
-            except AttributeError:
-                log.error(
-                    f"No *{self.decl_type}* type declaration block found")
+            arch_string = glob.split(search_string)[1]
 
             # Split architecture glob into declration and definitition globs
             ####################
@@ -339,9 +334,6 @@ class ParserType:
             arch_split = arch_string.split("begin")
             no_space_start_end = {"arch_decl": arch_split[0].strip(),
                                   "arch_def": ' '.join(arch_split[1:])}
-
-        # If we are looking for component maps inside the architecture
-        elif self.decl_type.lower() in TC.VHDL_COMP_GEN_MAP["type"]:
 
         return no_space_start_end
 
@@ -504,6 +496,7 @@ class Entity:
         self.tb_bus_name = ""
         self.tb_bus_type = ""
         self.tcon_req_no = ""
+        self.arch = ""
 
     def __get_entries(self, parserobject: ParserType) -> List[Port_Generic]:
         """Extract entry members of a port or a generic like name of the port,

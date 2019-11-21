@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 import os
-import time
+import toml
 import argparse
 import parser_classes as PC
 import logging
+from typing import Union, Tuple
 
 
 def setloglevel(loglevel: str):
@@ -17,6 +18,30 @@ def setloglevel(loglevel: str):
         PC.log.setLevel(logging.ERROR)
     if loglevel.lower() == "critical":
         PC.log.setLevel(logging.CRITICAL)
+
+
+def get_direct_deps(entity_path: Union[str, bytes]) -> Tuple[list, list]:
+    toml_path = os.path.join(str(entity_path), "RTLenv.toml")
+    print("")
+    PC.log.info(f"Gathering dependecies from path {entity_path}")
+    parsed_toml = toml.load(toml_path)
+    build_deps = parsed_toml['dependencies'].keys()
+    test_deps = parsed_toml['test_dependencies'].keys()
+    PC.log.info(f"Build dependencies: {build_deps}")
+    PC.log.info(f"Test dependencies: {test_deps}\n")
+    return list(build_deps), list(test_deps)
+
+class CompDep:
+    """Contains an instance's component name, its Entity object, its
+    dependencies CompDep object
+    """
+    def __init__(self, inst: str, src_abs_path: str):
+        self.inst = inst
+        entity = os.path.basename(src_abs_path)
+        src_file = f"/src/{entity}.vhd"
+        self.src_path = os.path.join(src_file, src_abs_path)
+        self.entity = PC.get_entity_from_file(self.src_path, None)
+        self.build_deps, self.test_deps = get_direct_deps(src_abs_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
@@ -57,9 +82,15 @@ if __name__ == "__main__":
         if os.path.isdir(args.component_path):
             top_entity_path = os.path.abspath(args.component_path)
         else:
-            top_entity_path = os.path.abspath(os.getcwd(),
-                                              os.path.join(args.component_path))
+            top_entity_path = os.path.join(os.path.abspath(os.getcwd()),
+                                           args.component_path)
     else:
-        top_entity_path = os.getcwd()
+        top_entity_path = os.path.join(os.getcwd())
+    top_entity_path = str(top_entity_path).replace("\\", "/")
+    top_rtlenv_dir  = f"{top_entity_path}/syn/rtlenv/"
+    PC.log.info(f"Top entity path is {top_entity_path}")
 
-    top_entity = os.path.basename(top_entity_path)
+    top_entity = str(os.path.basename(top_entity_path))
+    top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path)
+    for x in top_comp.entity.generics:
+        print(x)

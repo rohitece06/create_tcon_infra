@@ -10,24 +10,28 @@ VHDL_BLOCK = {"type": ["entity", "component", "package"],
 # VHDL interface types
 VHDL_IF = {"type": ["generic", "port"],
            "start_token": START_PAREN,
-           "end_token": ");"}
+           "end_token": END_PAREN+";"}
 
 # BLocks inside VHDL "architecture": Declaration (_DECL) and Definition (_DEF)
 #   * Declaration contains signal, function, alias declaration inside the
 #     architecture
 VHDL_ARCH = {"type": ["architecture"],
              "start_token": "is",
-             "end_token": "end"}
-VHDL_ARCH_DEF = {"type": ["architecture definition"],
+             "end_token": None}
+
+VHDL_ARCH_DEF = {"type": ["arch definition"],
                  "start_token": "begin",
-                 "end_token": "end"}
+                 "end_token": "end",
+                 "false_start_token": ["begin"]}
+
 VHDL_PROC = {"type": ["process", "block"],
              "start_token": "begin",
              "end_token": "end"}
 
 VHDL_COMP_GEN_MAP = {"type": ["generic map"],
                      "start_token": "generic map",
-                     "end_token": ")"}
+                     "end_token": " )",
+                     "false_start_token": "("}
 
 VHDL_CONSTRUCT_TYPES = [VHDL_BLOCK, VHDL_IF, VHDL_ARCH, VHDL_PROC,
                         VHDL_COMP_GEN_MAP]
