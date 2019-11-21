@@ -231,7 +231,7 @@ def sig_assignment(lfill: str, left: str, right: str) -> str:
 
 
 class ParserType:
-    def __init__(self, globtype: str, glob, name: str="") -> None:
+    def __init__(self, globtype: str, glob: str, name: str="") -> None:
         """
         Initialize parser class by for certain type by extracting data from
         provided glob

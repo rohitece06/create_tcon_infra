@@ -5,6 +5,8 @@ import argparse
 import parser_classes as PC
 import logging
 from typing import Union, Tuple
+import re
+import templates_and_constants as TC
 
 
 def setloglevel(loglevel: str):
@@ -18,6 +20,18 @@ def setloglevel(loglevel: str):
         PC.log.setLevel(logging.ERROR)
     if loglevel.lower() == "critical":
         PC.log.setLevel(logging.CRITICAL)
+
+
+def keyword_line(l_no_cmnt: str) -> bool:
+    ext_keywords = TC.KEYWORDS + [x+"(" for x in TC.KEYWORDS]
+    val = False
+    for keyword in ext_keywords:
+        if " "+keyword in l_no_cmnt or ":"+keyword in l_no_cmnt:
+            val = True
+            PC.log.info(f"Not a instantiation sentence: {l_no_cmnt}")
+            break
+    PC.log.info(f"An instantiation sentence: {l_no_cmnt}")
+    return val
 
 
 def get_direct_deps(entity_path: Union[str, bytes]) -> Tuple[list, list]:
@@ -38,9 +52,9 @@ class CompDep:
     def __init__(self, inst: str, src_abs_path: str):
         self.inst = inst
         entity = os.path.basename(src_abs_path)
-        src_file = f"/src/{entity}.vhd"
-        self.src_path = os.path.join(src_file, src_abs_path)
-        self.entity = PC.get_entity_from_file(self.src_path, None)
+        src_file = f"src/{entity}.vhd"
+        self.src_path = os.path.join(src_abs_path, src_file)
+        self.entity = PC.get_entity_from_file(src_abs_path, None)
         self.build_deps, self.test_deps = get_direct_deps(src_abs_path)
 
 if __name__ == "__main__":
@@ -92,5 +106,25 @@ if __name__ == "__main__":
 
     top_entity = str(os.path.basename(top_entity_path))
     top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path)
-    for x in top_comp.entity.generics:
-        print(x)
+
+    # Find component maps in architecture definitions for each dependecny in
+    # direct build dependency list
+    filestring = PC.get_filestring(top_comp.src_path)
+    with open(top_comp.src_path) as top_f:
+        for lineno, line in enumerate(top_f):
+            # Remove comments
+            l_no_cmnt = line.split("--")[0]
+            # Make sure that line has a : but no other construct that makes
+            # this line a signal/variable/constant declaration
+            if l_no_cmnt \
+                and ":" in l_no_cmnt \
+                and ":=" not in l_no_cmnt \
+                and not keyword_line(l_no_cmnt):
+                print(l_no_cmnt, lineno)
+
+
+        # for dep_name in top_comp.build_deps:
+        #     pattern1 = f' (.+?): {dep_name} generic map (.+?) \) port map'
+        #     comp_generic_maps = re.search(pattern1, filestring).group(2)
+        #     print(f"\n{dep_name}\n{comp_generic_maps}\n")
+

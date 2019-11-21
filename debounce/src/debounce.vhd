@@ -75,65 +75,103 @@ architecture FSM of debounce is
     signal next_state, current_state: state_type;
 
 begin
+	pipe1:   saif_pipeline_stage
+		generic map (
+			DATA_WIDTH => DATA_WIDTH,
+			STAGE_TYPE => 1
+		)
+		port map (
+			clk => clk,
+			reset => reset
+		);
+	pipe2 : entity work.saif_pipeline_stage
+		generic map (
+			DATA_WIDTH => DATA_WIDTH,
+			STAGE_TYPE => 0
+		)
+		port map (
+			clk => clk,
+			reset => reset
+		);
 
-    state_reg: process(clock, max_count)
-    begin
+	state_reg: process(clock, max_count)
+	begin
 
-	if (max_count="00000000") then
-            current_state <= S0;
-	elsif (clock'event and clock='1') then
-	    current_state <= next_state;
-	end if;
+		if (max_count="00000000") then
+							current_state <= S0;
+		elsif (clock'event and clock='1') then
+				current_state <= next_state;
+		end if;
+	end process;
 
-    end process;
+	pipe3 : entity work.saif_pipeline_stage
+		generic map (DATA_WIDTH => DATA_WIDTH,
+			STAGE_TYPE => 0
+		)
+		port map (
+			clk => clk,
+			reset => reset
+		);
 
-    comb_logic: process(current_state, serial_in)
-    begin
+	comb_logic: process(current_state, serial_in)
+	begin
+		case current_state is
 
-	case current_state is
+			when S0 =>	serial_out <= '0';
+				if serial_in='0' then
+					next_state <= S0;
+				elsif serial_in ='1' then
+					next_state <= S1;
+					max_count <= "00000001";
+				end if;
 
-	    when S0 =>	serial_out <= '0';
-			if serial_in='0' then
-			    next_state <= S0;
-			elsif serial_in ='1' then
-			    next_state <= S1;
-                            max_count <= "00000001";
-			end if;
+			when S1 =>
+				serial_out <= '0';
+				if serial_in='0' then
+					next_state <= S1;
+					max_count <= max_count + '1';
+					if (max_count >= "00000111") then
+						next_state <= S3;
+					end if;
+				elsif serial_in='1' then
+					next_state <= S2;
+					max_count <= "00000001";
+				end if;
 
-	    when S1 =>	serial_out <= '0';
-			if serial_in='0' then
-			    next_state <= S1;
-                            max_count <= max_count + '1';
-                            if (max_count >= "00000111") then
-                                next_state <= S3;
-                            end if;
-			elsif serial_in='1' then
-			    next_state <= S2;
-                            max_count <= "00000001";
-			end if;
+			when S2 =>	serial_out <= '0';
+				if serial_in='0' then
+					next_state <= S2;
+					max_count <= max_count + '1';
+					if (unsigned(max_count) >= unsigned(max_count)/3) then
+						next_state <= S4;
+					end if;
+				elsif serial_in='1' then
+					next_state <= S1;
+					max_count <= "00000001";
+				end if;
 
-	    when S2 =>	serial_out <= '0';
-			if serial_in='0' then
-			    next_state <= S2;
-                            max_count <= max_count + '1';
-                            if (unsigned(max_count) >= unsigned(max_count)/3) then
-                                next_state <= S4;
-                            end if;
-			elsif serial_in='1' then
-			    next_state <= S1;
-                            max_count <= "00000001";
-			end if;
+			when S3 =>
+				serial_out <= '1';
+				next_state <= S0 -- For non overlapping sequence of '1'
+			when S4 =>
+				serial_out <= '0';
+				next_state <= S0 -- For non overlapping sequence of '0'
+			when others =>
+				serial_out <= '0';
+				next_state <= S0;
+		end case;
+	end process;
+	pipe4 : entity work.saif_pipeline_stage
+	generic map (DATA_WIDTH => DATA_WIDTH)
+	port map (
+		clk => clk,
+		reset => reset
+	);
 
-	    when S3 =>	serial_out <= '1';
-			next_state <= S0 -- For non overlapping sequence of '1'
-            when S4 =>	serial_out <= '0';
-			next_state <= S0 -- For non overlapping sequence of '0'
-	    when others =>
-			serial_out <= '0';
-			next_state <= S0;
-
-	end case;
-
-    end process;
+	pipe5 : entity work.saif_pipeline_stage
+	port map (
+		clk => clk,
+		reset => reset
+	);
 
 end FSM; -- file ends here
