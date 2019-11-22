@@ -162,7 +162,8 @@ begin
 		end case;
 	end process;
 	pipe4 : entity work.saif_pipeline_stage
-	generic map (DATA_WIDTH => DATA_WIDTH)
+	generic map (
+		DATA_WIDTH => DATA_WIDTH)
 	port map (
 		clk => clk,
 		reset => reset

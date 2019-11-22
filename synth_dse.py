@@ -28,15 +28,13 @@ def keyword_line(l_no_cmnt: str) -> bool:
     for keyword in ext_keywords:
         if " "+keyword in l_no_cmnt or ":"+keyword in l_no_cmnt:
             val = True
-            PC.log.info(f"Not a instantiation sentence: {l_no_cmnt}")
+            PC.log.info(f"Not a component instantiation: {l_no_cmnt}")
             break
-    PC.log.info(f"An instantiation sentence: {l_no_cmnt}")
     return val
 
 
 def get_direct_deps(entity_path: Union[str, bytes]) -> Tuple[list, list]:
     toml_path = os.path.join(str(entity_path), "RTLenv.toml")
-    print("")
     PC.log.info(f"Gathering dependecies from path {entity_path}")
     parsed_toml = toml.load(toml_path)
     build_deps = parsed_toml['dependencies'].keys()
@@ -44,6 +42,7 @@ def get_direct_deps(entity_path: Union[str, bytes]) -> Tuple[list, list]:
     PC.log.info(f"Build dependencies: {build_deps}")
     PC.log.info(f"Test dependencies: {test_deps}\n")
     return list(build_deps), list(test_deps)
+
 
 class CompDep:
     """Contains an instance's component name, its Entity object, its
@@ -61,6 +60,97 @@ class CompDep:
         # {"inst_name":<name>; "comp_name": <name>;
         #  "mapping": [(generic name, lineno)]}
         self.map_dict = []
+
+
+def get_component_mapping(comp: CompDep):
+    """Popiulate the CompDep class object'a map_dict member with all generic
+    mapping from each component mapping.
+    Refer to the map_dict member comment for the format.
+
+    Arguments:
+        comp {CompDep} -- CompDep object
+    """
+    with open(comp.src_path) as top_f:
+        inst_line = 0
+        gen_line = 0
+        map_line = 0
+        paren = 0
+        mapping = []
+        map_dict = {}
+        inst_name = None
+        comp_name = None
+        # Note that the lineno are 0-indexed
+        for lineno, line in enumerate(top_f):
+            # Remove comments
+            l_no_cmnt = line.split("--")[0].strip().strip("\n").strip()
+            # Make sure that line has a : but no other construct that makes
+            # this line a signal/variable/constant declaration
+            if l_no_cmnt \
+                    and ":" in l_no_cmnt \
+                    and ":=" not in l_no_cmnt \
+                    and not keyword_line(l_no_cmnt):
+
+                inst_line = lineno
+                inst_name = l_no_cmnt.split(":")[0].strip()
+                # Potential comp name
+                p_cname = l_no_cmnt.split(":")[1].strip()
+                if "entity" in p_cname:
+                    comp_name = p_cname.split(".")[1].strip()
+                else:
+                    comp_name = p_cname
+
+            if inst_line > 0:
+                PC.log.info(f"Label found at {lineno+1}:: {l_no_cmnt}")
+                if (l_no_cmnt and "generic " in l_no_cmnt
+                        and " map" in l_no_cmnt):
+                    gen_line = lineno
+                    PC.log.info(f"generic map found at {lineno+1}:: "
+                                f"{l_no_cmnt}")
+                if gen_line > 0:
+                    # Make sure
+                    if "(" in l_no_cmnt and paren == 0:
+                        map_line = lineno
+
+                if map_line > 0:
+                    gen_split = l_no_cmnt.split("=>")
+                    if "(" in gen_split[0] and len(gen_split) > 1:
+                        gen_name = gen_split[0].split("(")[1].strip()
+                    elif len(gen_split) > 1:
+                        gen_name = gen_split[0].strip()
+                    else:
+                        gen_name = None
+
+                    if gen_name is not None:
+                        paren = 1
+                        PC.log.info(f"Found mapping at {lineno+1}:: "
+                                    f"{l_no_cmnt}")
+                        mapping.append((gen_name, lineno))
+
+                    # Finish parsing map for this component
+                    if (")" in l_no_cmnt and "(" not in l_no_cmnt
+                            and map_line != lineno):
+                        if inst_name is not None and comp_name is not None \
+                                and len(mapping) > 0:
+                            map_dict["inst_name"] = inst_name
+                            map_dict["comp_name"] = comp_name
+                            map_dict["mapping"] = mapping
+                            comp.map_dict.append(map_dict)
+                        else:
+                            PC.log.error(f"Something went wrong for instance "
+                                         f"at {inst_line+1}, {inst_name} "
+                                         f"{comp_name}")
+
+                    if "port " in l_no_cmnt and " map " in l_no_cmnt:
+                        map_dict = {}
+                        mapping = []
+                        inst_name = None
+                        comp_name = None
+                        gen_name = None
+                        gen_line = 0
+                        inst_line = 0
+                        map_line = 0
+                        paren = 0
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
@@ -83,20 +173,22 @@ if __name__ == "__main__":
                 component instantiation
             2)  Basic tcon.py, common.py, and pysim.xml """)
 
-    parser.add_argument('-p', '--component_path', type=str, help="Path to the\
+    parser.add_argument('-p', '--component_path', type=str, help="Path to the \
                         component's directory. Entity name is \
                         extracted from the path. Default is current directory",
                         default=os.getcwd(), required=False)
 
-    parser.add_argument('-c', '--config', type=str, help="Full path for\
+    parser.add_argument('-c', '--config_toml', type=str, help="Full path for \
                         bus configuration file", required=False)
 
-    parser.add_argument('-l', '--loglevel', type=str, help="Set logging level: \
-                        info, debug, warn, error, critical", default="error",
-                        required=False)
+    parser.add_argument('-l', '--loglevel', type=str, help="Set logging \
+                        level: info, debug, warn, error, critical",
+                        default="error", required=False)
+
+    # Unsupported generic mapping
+    #   Single line generic maps
 
     args = parser.parse_args()
-    setloglevel(args.loglevel)
     if args.component_path:
         if os.path.isdir(args.component_path):
             top_entity_path = os.path.abspath(args.component_path)
@@ -105,96 +197,15 @@ if __name__ == "__main__":
                                            args.component_path)
     else:
         top_entity_path = os.path.join(os.getcwd())
+
     top_entity_path = str(top_entity_path).replace("\\", "/")
-    top_rtlenv_dir  = f"{top_entity_path}/syn/rtlenv/"
+    top_rtlenv_dir = f"{top_entity_path}/syn/rtlenv/"
     PC.log.info(f"Top entity path is {top_entity_path}")
 
     top_entity = str(os.path.basename(top_entity_path))
     top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path)
-
-    # Find component maps in architecture definitions for each dependecny in
-    # direct build dependency list
-    filestring = PC.get_filestring(top_comp.src_path)
-
-    with open(top_comp.src_path) as top_f:
-        inst_line = 0
-        gen_line = 0
-        map_line = 0
-        paren = 0
-        mapping = []
-        map_dict = {}
-        inst_name = None
-        comp_name = None
-        for lineno, line in enumerate(top_f):
-            # Remove comments
-            l_no_cmnt = line.split("--")[0].strip().strip("\n").strip()
-            # Make sure that line has a : but no other construct that makes
-            # this line a signal/variable/constant declaration
-            if l_no_cmnt \
-                    and ":" in l_no_cmnt \
-                    and ":=" not in l_no_cmnt \
-                    and not keyword_line(l_no_cmnt):
-
-                inst_line = lineno
-                inst_name = l_no_cmnt.split(":")[0].strip()
-                # Potential comp name
-                p_cname = l_no_cmnt.split(":")[1].strip()
-                if "entity" in p_cname:
-                    comp_name = p_cname.split(".")[1].strip()
-                else:
-                    comp_name = p_cname
-
-            if inst_line > 0:
-                if l_no_cmnt and "generic map" in l_no_cmnt:
-                    gen_line = lineno
-                if gen_line > 0:
-                    # Make sure
-                    if "(" in l_no_cmnt and paren == 0:
-                        map_line = lineno
-                # Unsupported generic mapping
-                # Single line maps where more than one generics are mapped
-                if map_line > 0:
-                    gen_split = l_no_cmnt.split("=>")
-                    if "(" in gen_split[0] and len(gen_split) > 1:
-                        print(gen_split)
-                        gen_name = gen_split[0].split("(")[1].strip()
-                    elif len(gen_split) > 1:
-                        gen_name = gen_split[0].strip()
-                    else:
-                        gen_name = None
-
-                    if gen_name is not None:
-                        paren = 1
-                        mapping.append((gen_name, lineno))
-
-                    # Finish parsing map for this component
-                    if (")" in l_no_cmnt and "(" not in l_no_cmnt \
-                        and map_line != lineno):
-                        if inst_name is not None and comp_name is not None \
-                                and len(mapping) > 0:
-                            map_dict["inst_name"] = inst_name
-                            map_dict["comp_name"] = comp_name
-                            map_dict["mapping"] = mapping
-                            top_comp.map_dict.append(map_dict)
-                        else:
-                            PC.log.error(f"Something went wrong for instance "
-                                         f"at {inst_line}, {inst_name} "
-                                         f"{comp_name}")
-
-                    if "port map" in l_no_cmnt:
-                        map_dict = {}
-                        mapping = []
-                        inst_name = None
-                        comp_name = None
-                        gen_line = 0
-                        inst_line = 0
-                        map_line = 0
-                        paren = 0
-
-
+    setloglevel(args.loglevel)
+    get_component_mapping(top_comp)
     print(top_comp.map_dict)
-        # for dep_name in top_comp.build_deps:
-        #     pattern1 = f' (.+?): {dep_name} generic map (.+?) \) port map'
-        #     comp_generic_maps = re.search(pattern1, filestring).group(2)
-        #     print(f"\n{dep_name}\n{comp_generic_maps}\n")
 
+    # if args.config:
