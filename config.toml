@@ -1,0 +1,10 @@
+[top.pipe1]
+DATA_WIDTH = "range(16, 64, 16)"
+OTHER_GENERICS = "all"
+
+[top.pipe2]
+DATA_WIDTH = [64, 128]
+STAGE_TYPE = "all"
+
+[top.pipe4]
+STAGE_TYPE = "all"
