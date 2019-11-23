@@ -105,7 +105,8 @@ begin
 	end process;
 
 	pipe3 : entity work.saif_pipeline_stage
-		generic map (DATA_WIDTH => DATA_WIDTH,
+		generic map (
+			DATA_WIDTH => DATA_WIDTH,
 			STAGE_TYPE => 0
 		)
 		port map (

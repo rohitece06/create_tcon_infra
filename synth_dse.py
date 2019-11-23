@@ -179,14 +179,17 @@ if __name__ == "__main__":
                         default=os.getcwd(), required=False)
 
     parser.add_argument('-c', '--config_toml', type=str, help="Full path for \
-                        bus configuration file", required=False)
+                        generic range configuration file", required=False)
 
     parser.add_argument('-l', '--loglevel', type=str, help="Set logging \
                         level: info, debug, warn, error, critical",
                         default="error", required=False)
 
-    # Unsupported generic mapping
-    #   Single line generic maps
+    # !@@@@@@@@@@  Restrictions @@@@@@@@@@
+    # !  1) Single line generic maps (i.e. generic map (NAME => NAME, ...)
+    # !     In other words, each generic should be mappped in its own line.
+    # !     Nothing else should be on that line except comments
+    # !  2) Dictionary as entry value in the config toml
 
     args = parser.parse_args()
     if args.component_path:
@@ -206,6 +209,18 @@ if __name__ == "__main__":
     top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path)
     setloglevel(args.loglevel)
     get_component_mapping(top_comp)
+    for gen in top_comp.entity.generics:
+        print(gen)
+
     print(top_comp.map_dict)
 
-    # if args.config:
+    if args.config_toml:
+        if ".toml" in args.config:
+            config_file = args.config
+        else:
+            config_file = os.path.join(args.config, "config.toml")
+    else:
+        config_file = os.path.join(os.getcwd(), "config.toml")
+
+    toml_data = toml.load(config_file)
+    print(toml_data)
