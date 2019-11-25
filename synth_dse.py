@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-l', '--loglevel', type=str, help="Set logging \
                         level: info, debug, warn, error, critical",
-                        default="error", required=False)
+                        default="error", required= False)
 
     # !@@@@@@@@@@  Restrictions @@@@@@@@@@
     # !  1) Single line generic maps (i.e. generic map (NAME => NAME, ...)
