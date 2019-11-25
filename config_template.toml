@@ -51,21 +51,27 @@
 
 # Record 1
 [top]
-DWIDTH = 32
-AWIDTH = [3, 4, 5] # Integer/hex and strings can not be mixed and matched
-GEN_SLV = "range(3)"
+Generic_1 = [] # List of integers, hex, strings
+Generic_2 = [] # Integer/hex and strings can not be mixed and matched
 
 # Record 2
-[pipe1]
-DATA_WIDTH = [32]
-STAGE_TYPE = [0]
+[inst1]
+GENERIC_1 = [64, 128]
+GENERIC_2 = ["auto"]
 
 # Record 3
-[pipe2]
-DATA_WIDTH = [32]
-STAGE_TYPE = "__all__"
+[inst2]
+GENERIC_2 = "__all__" # Can NOT be an item in a list
 
-# Record 3
-[pipe3]
-DATA_WIDTH = "__min__"
-STAGE_TYPE = "__all__"
+# Record 4
+[inst3]
+GENERIC_1 = "range(16, 128, 8)" # Can be an item of the list
+OTHER_GENERICS = 16
+
+# Record 5
+[inst1.sub_inst1]
+OTHER_GENERICS = "__max__" # Can NOT be an item in a list
+
+# Record 6
+[inst1.sub_inst1.sub_sub_inst1]
+OTHER_GENERICS = "__min__" # Can NOT be an item in a list
