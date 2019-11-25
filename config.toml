@@ -1,18 +1,23 @@
 # Following rules apply in addition to toml standard content rules:
-#   1) Main entity that is the top entity of this build is always referred to
-#      by "top" toml record. See Record 1
+#   1) Main entity (i.e., the top entity) of this build is always referred to
+#      by "top" on toml records. See Record 1
 #   2) The VHDL instance names (and not the entity name of the mapped
 #      component) of internal components are names of asscociated toml records.
-#      See Record 2-4
+#      See Record 2-4 (inst1, inst2, etc)
 #   3) To explore generics of hierchical internal sub-components, provide
 #      full hierarchical name of the instance name. See Record 5-6
-#   4) A component's generic is a toml field in its toml record entry. See
-#      Record 1-3
-#   5) A toml field's value can be a string or a list. See Record 1-2
-#   6) If a generic does not have a toml field entry, it will be unmodified.
+#      (inst1.sub_inst1, inst1.sub_inst1.sub_sub_inst1)
+#   4) A component's generics are the toml fields in its toml record entry. See
+#      Record 1-3 (Generic_1, Generic_2)
+#   5) If a generic does not have a toml field entry, it will be unmodified.
 #      See Record 3
-#   7) If "OTHER_GENERICS" toml field is used, every generic that does not have
-#      corresponding entry in its component map's toml record will be applied #        with the value of "OTHER_GENERICS". See Record 4-6
+#   6) If "OTHER_GENERICS" toml field is used, every generic that does not have
+#      corresponding entry in its toml record will be applied with the value of
+#      "OTHER_GENERICS". See Record 4-6
+#   7) The value of the toml field entry should be a list. A STRING CAN ONLY BE
+#      USED AS A VALUE IFF
+#      1) Special strings are used as per the rule 8 below or
+#      2) A python executable string is used which returns a list. See record 4
 #   8) Three special values can be assigned to a toml field (generic):
 #      1)  "__min__": The min value for the generic's ranges is used for
 #                     exploration. This value only applies to generics which
@@ -32,30 +37,41 @@
 #                     unconstrained integer/natural/positive type, and generics
 #                     with fixed value generics are not affected not affected
 #                     by it. A warning will be issued for each such instance
+#   9) Value of the toml field will be converted to generic's value type when
+#      necessary. For example, if Generic_1 in the Record 2 below is a
+#      std_logic_vector/unsigned, the value 64 and 128 will be converted to
+#      std_logic_vector/unsigned. This does not apply if custom data-type is
+#      used for a generic (array_slv, data_t). For such generics, please
+#      provide exact value as list of strings (e.g.,
+#      ["(others=>(others=>'0'))", "(others=>(others=>'1'))"], etc)
+#  10) List items in a toml field value can not be:
+#      1) Of different data types (i.e., one is an integer/python hex and
+#         other a string)
+#      2) Can not have special values as described in Rule 8 above
 
 # Record 1
 [top]
-Generic_1 = "Generic_1 (string type) value(s)"
-Generic_2 = "Generic_2 value(s)"
+Generic_1 = [] # List of integers, hex, strings
+Generic_2 = [] # Integer/hex and strings can not be mixed and matched
 
 # Record 2
 [inst1]
 GENERIC_1 = [64, 128]
-GENERIC_2 = "auto"
+GENERIC_2 = ["auto"]
 
 # Record 3
 [inst2]
-GENERIC_2 = "__all__"
+GENERIC_2 = "__all__" # Can NOT be an item in a list
 
 # Record 4
 [inst3]
-GENERIC_1 = 0
+GENERIC_1 = "range(16, 128, 8)" # Can be an item of the list
 OTHER_GENERICS = 16
 
 # Record 5
 [inst1.sub_inst1]
-OTHER_GENERICS = "__max__"
+OTHER_GENERICS = "__max__" # Can NOT be an item in a list
 
 # Record 6
 [inst1.sub_inst1.sub_sub_inst1]
-OTHER_GENERICS = "__min__"
+OTHER_GENERICS = "__min__" # Can NOT be an item in a list
