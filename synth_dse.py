@@ -52,13 +52,14 @@ class CompDep:
         self.inst = inst
         entity = os.path.basename(src_abs_path)
         src_file = f"src/{entity}.vhd"
+        self.src_abs_path = src_abs_path
         self.src_path = os.path.join(src_abs_path, src_file)
         self.entity = PC.get_entity_from_file(src_abs_path, None)
         self.build_deps, self.test_deps = get_direct_deps(src_abs_path)
         # Create a list of dictionary that contains the instance name, the
         # generic name, and line no where the generic is mapped
         # {"<instance name>": {"comp_name": <name>;
-        #                "mapping": {generic name: lineno}}}
+        #  "mapping": {generic name: lineno}}}
         self.map_dict = {}
         self.qsf_loc = os.path.join(src_abs_path, f"syn/{entity}.qsf") if \
             qsf_path is None else qsf_path
@@ -180,8 +181,11 @@ def get_paths_from_qsf(top_comp: CompDep):
                 if entry["comp_name"].lower() in line and "VHDL_FILE" in line:
                     path = line.split("VHDL_FILE")[1].strip().strip('"')
                     if dep not in top_comp.realpaths.keys():
-                        top_comp.realpaths[dep] = path
-
+                        if path.startswith("."):
+                            top_comp.realpaths[dep] = \
+                                f"{top_comp.src_abs_path}/{path}"
+                        else:
+                            top_comp.realpaths[dep] = path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""

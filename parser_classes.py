@@ -3,7 +3,7 @@ import logging
 import os
 from collections import OrderedDict
 import templates_and_constants as TC
-from typing import Tuple, List, Any, OrderedDict, Union
+from typing import Tuple, List, Any, Union
 from datetime import date
 
 # Setup logging
@@ -613,7 +613,7 @@ class Entity:
 
 
 def find_matching_ports(match_pattern: List[str], port_list: List) -> \
-    Union[str, None]:
+        Union[str, None]:
     """Find list of port names matching (case-insensitive) with
         pre-existing template.
 
@@ -1234,19 +1234,21 @@ def get_entity_from_file(path: str, name: Union[str, None]) -> Entity:
     """
     if not name:
         if path.endswith(".vhd"):
-            entity = os.path.basename(path).rstrip(".vhd")
-            comppath = path
+            filepath = path.replace("\\", "/")
+            entity = os.path.basename(filepath).rstrip(".vhd")
         else:
             entity = os.path.basename(path)
             comppath = f"src/{entity}.vhd"
+            filepath = os.path.join(path, comppath)
     elif name != "tb_tcon":
         comppath = f"{name}/src/{name}.vhd"
         entity = name
+        filepath = os.path.join(path, comppath)
     else:
         comppath = f"{name}/src/tcon_template.vhd"
         entity = name
+        filepath = os.path.join(path, comppath)
 
-    filepath = os.path.join(path, comppath)
     filestring = get_filestring(filepath)
     entity_glob = ParserType("entity", filestring, entity).string
     ports_parser = ParserType("port", entity_glob)
