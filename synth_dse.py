@@ -48,10 +48,10 @@ class CompDep:
     """Contains an instance's component name, its Entity object, its
     dependencies CompDep object
     """
-    def __init__(self, inst: str, src_abs_path: str, qsf_path: str):
+    def __init__(self, inst: str, src_abs_path: str, qpf_dir: str):
         self.inst = inst
-        entity = os.path.basename(src_abs_path)
-        src_file = f"src/{entity}.vhd"
+        entity_name = os.path.basename(src_abs_path)
+        src_file = f"src/{entity_name}.vhd"
         self.src_abs_path = src_abs_path
         self.src_path = os.path.join(src_abs_path, src_file)
         self.entity = PC.get_entity_from_file(src_abs_path, None)
@@ -61,11 +61,14 @@ class CompDep:
         # {"<instance name>": {"comp_name": <name>;
         #  "mapping": {generic name: lineno}}}
         self.map_dict = {}
-        self.qsf_loc = os.path.join(src_abs_path, f"syn/{entity}.qsf") if \
-            qsf_path is None else qsf_path
+        self.qpf_dir = os.path.join(src_abs_path, "syn") if qpf_dir is None \
+            else qpf_dir
+        self.qsf = os.path.join(self.qpf_dir, f"{entity_name}.qsf")
+        self.qpf = os.path.join(self.qpf_dir, f"{entity_name}.qpf")
         # Save real paths of dependency entities as used in the quartus project
         # List of dicts: {<entity}
         self.realpaths = {}
+        self.rtlenv_path = os.path.join(src_abs_path, "syn/rtlenv")
 
 
 def get_component_mapping(comp: CompDep):
@@ -175,7 +178,7 @@ def get_paths_from_qsf(top_comp: CompDep):
         str -- Path of the file that describes the entity
     """
     # Gather component names
-    with open(top_comp.qsf_loc) as q:
+    with open(top_comp.qsf) as q:
         for line in q.readlines():
             for dep, entry in top_comp.map_dict.items():
                 if entry["comp_name"].lower() in line and "VHDL_FILE" in line:
@@ -186,6 +189,7 @@ def get_paths_from_qsf(top_comp: CompDep):
                                 f"{top_comp.src_abs_path}/{path}"
                         else:
                             top_comp.realpaths[dep] = path
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
@@ -222,9 +226,10 @@ if __name__ == "__main__":
                         level: info, debug, warn, error, critical",
                         default="error", required=False)
 
-    parser.add_argument('-q', '--qsf_path', type=str, help="Give path to the \
-                        .qsf file for this build. By default top entity's \
-                        syn folder is searched for <entity>.qsf",
+    parser.add_argument('-q', '--qpf_dir', type=str, help="Give full path of \
+                        to the directory where the quartus project file(.qpf) \
+                        resides for this build. By default top entity's \
+                        syn folder is searched for <entity>.qpf",
                         required=False)
 
     # !@@@@@@@@@@  Restrictions @@@@@@@@@@
@@ -244,12 +249,12 @@ if __name__ == "__main__":
         top_entity_path = os.path.join(os.getcwd())
 
     top_entity_path = str(top_entity_path).replace("\\", "/")
-    top_rtlenv_dir = os.path.join(top_entity_path, "syn/rtlenv")
+
     PC.log.info(f"Top entity path is {top_entity_path}")
 
     top_entity = str(os.path.basename(top_entity_path))
     top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path,
-                       qsf_path=args.qsf_path)
+                       qpf_dir=args.qpf_dir)
     setloglevel(args.loglevel)
     get_component_mapping(top_comp)
     get_paths_from_qsf(top_comp)
