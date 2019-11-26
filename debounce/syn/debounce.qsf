@@ -1,0 +1,401 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 2017  Intel Corporation. All rights reserved.
+# Your use of Intel Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Intel Program License 
+# Subscription Agreement, the Intel Quartus Prime License Agreement,
+# the Intel FPGA IP License Agreement, or other applicable license
+# agreement, including, without limitation, that your use is for
+# the sole purpose of programming logic devices manufactured by
+# Intel and sold by Intel or its authorized distributors.  Please
+# refer to the applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus Prime
+# Version 17.1.0 Build 590 10/25/2017 SJ Standard Edition
+# Date created = 17:08:40  November 05, 2019
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		b2077_top_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus Prime software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CGXFC5C6F23I7
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 17.1.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:08:40  NOVEMBER 05, 2019"
+set_global_assignment -name LAST_QUARTUS_VERSION "17.1.0 Standard Edition"
+set_global_assignment -name REVISION_TYPE BASE
+set_global_assignment -name CVP_REVISION b2077_cvp
+set_global_assignment -name VHDL_INPUT_VERSION VHDL_2008
+set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
+set_global_assignment -name DEVICE_FILTER_PIN_COUNT 484
+set_global_assignment -name TOP_LEVEL_ENTITY b2077_top
+set_parameter -name BUILD_ID "X\"00000000\""
+set_instance_assignment -name IO_STANDARD LVDS -to clk_125
+set_location_assignment PIN_H15 -to "clk_125(n)"
+set_location_assignment PIN_H16 -to clk_125
+set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to "alt_pll:pll_inst|alt_pll_0002:alt_pll_inst|altera_pll:altera_pll_i|outclk_wire"
+set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to "b2077_upgrades:upgr_inst|asmi_clkin"
+set_instance_assignment -name GLOBAL_SIGNAL OFF -to *eth?_rx_clk*
+set_instance_assignment -name IO_STANDARD HCSL -to pcie_refclk
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx[3]
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx[2]
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx[1]
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx[0]
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx[3]
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx[2]
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx[1]
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx[0]
+set_location_assignment PIN_T17 -to ~ALTERA_CRC_ERROR~
+set_instance_assignment -name IO_STANDARD "2.5 V" -to eth*_tx*
+set_instance_assignment -name IO_STANDARD "2.5 V" -to eth*_rx*
+set_location_assignment PIN_E10 -to eth1_rx_clk
+set_location_assignment PIN_E7 -to eth1_rx_dv
+set_location_assignment PIN_E9 -to eth1_rxd[3]
+set_location_assignment PIN_D9 -to eth1_rxd[2]
+set_location_assignment PIN_D7 -to eth1_rxd[1]
+set_location_assignment PIN_D6 -to eth1_rxd[0]
+set_location_assignment PIN_A9 -to eth1_tx_clk
+set_location_assignment PIN_A10 -to eth1_tx_en
+set_location_assignment PIN_B10 -to eth1_txd[3]
+set_location_assignment PIN_C9 -to eth1_txd[2]
+set_location_assignment PIN_C8 -to eth1_txd[1]
+set_location_assignment PIN_C6 -to eth1_txd[0]
+set_location_assignment PIN_G10 -to eth2_rx_clk
+set_location_assignment PIN_G6 -to eth2_rx_dv
+set_location_assignment PIN_F7 -to eth2_rxd[3]
+set_location_assignment PIN_G8 -to eth2_rxd[2]
+set_location_assignment PIN_H8 -to eth2_rxd[1]
+set_location_assignment PIN_H9 -to eth2_rxd[0]
+set_location_assignment PIN_A5 -to eth2_tx_clk
+set_location_assignment PIN_B5 -to eth2_tx_en
+set_location_assignment PIN_B6 -to eth2_txd[3]
+set_location_assignment PIN_B7 -to eth2_txd[2]
+set_location_assignment PIN_A7 -to eth2_txd[1]
+set_location_assignment PIN_A8 -to eth2_txd[0]
+set_location_assignment PIN_V15 -to eth3_rx_clk
+set_location_assignment PIN_V13 -to eth3_rx_dv
+set_location_assignment PIN_T14 -to eth3_rxd[3]
+set_location_assignment PIN_U15 -to eth3_rxd[2]
+set_location_assignment PIN_U13 -to eth3_rxd[1]
+set_location_assignment PIN_V14 -to eth3_rxd[0]
+set_location_assignment PIN_AB15 -to eth3_tx_clk
+set_location_assignment PIN_AA15 -to eth3_tx_en
+set_location_assignment PIN_AA14 -to eth3_txd[3]
+set_location_assignment PIN_AB12 -to eth3_txd[2]
+set_location_assignment PIN_AA13 -to eth3_txd[1]
+set_location_assignment PIN_AB13 -to eth3_txd[0]
+set_location_assignment PIN_W16 -to eth4_rx_clk
+set_location_assignment PIN_V16 -to eth4_rx_dv
+set_location_assignment PIN_Y14 -to eth4_rxd[3]
+set_location_assignment PIN_Y15 -to eth4_rxd[2]
+set_location_assignment PIN_Y16 -to eth4_rxd[1]
+set_location_assignment PIN_Y17 -to eth4_rxd[0]
+set_location_assignment PIN_AA20 -to eth4_tx_clk
+set_location_assignment PIN_AA22 -to eth4_tx_en
+set_location_assignment PIN_AB17 -to eth4_txd[3]
+set_location_assignment PIN_AB18 -to eth4_txd[2]
+set_location_assignment PIN_AB21 -to eth4_txd[1]
+set_location_assignment PIN_U22 -to eth4_txd[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to eth_led1
+set_instance_assignment -name IO_STANDARD "2.5 V" -to eth_led2
+set_location_assignment PIN_H6 -to eth_led2[1]
+set_location_assignment PIN_K7 -to eth_led1[1]
+set_location_assignment PIN_J7 -to eth_led2[2]
+set_location_assignment PIN_L7 -to eth_led1[2]
+set_location_assignment PIN_AB20 -to eth_led2[3]
+set_location_assignment PIN_Y21 -to eth_led1[3]
+set_location_assignment PIN_AA18 -to eth_led2[4]
+set_location_assignment PIN_AA19 -to eth_led1[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ec_md*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to ec_md*
+set_instance_assignment -name SLEW_RATE 0 -to ec_md*
+set_location_assignment PIN_W22 -to ec_mdc
+set_location_assignment PIN_Y22 -to ec_mdio
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to diag_spi_*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to diag_spi*
+set_instance_assignment -name SLEW_RATE 0 -to diag_spi*
+set_location_assignment PIN_R6 -to diag_spi_cs_n
+set_location_assignment PIN_P7 -to diag_spi_miso
+set_location_assignment PIN_R7 -to diag_spi_mosi
+set_location_assignment PIN_R5 -to diag_spi_clk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sfp_*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to sfp_*
+set_instance_assignment -name SLEW_RATE 0 -to sfp_*
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_detect_n[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_detect_n[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_detect_n[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_detect_n[1]
+set_location_assignment PIN_R16 -to sfp_detect_n[4]
+set_location_assignment PIN_P22 -to sfp_detect_n[3]
+set_location_assignment PIN_M22 -to sfp_detect_n[2]
+set_location_assignment PIN_K22 -to sfp_detect_n[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_disable[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_disable[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_disable[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_disable[1]
+set_location_assignment PIN_R21 -to sfp_disable[4]
+set_location_assignment PIN_P19 -to sfp_disable[3]
+set_location_assignment PIN_M21 -to sfp_disable[2]
+set_location_assignment PIN_K21 -to sfp_disable[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_fault[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_fault[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_fault[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_fault[1]
+set_location_assignment PIN_T20 -to sfp_fault[4]
+set_location_assignment PIN_P18 -to sfp_fault[3]
+set_location_assignment PIN_M20 -to sfp_fault[2]
+set_location_assignment PIN_K17 -to sfp_fault[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_los[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_los[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_los[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sfp_los[1]
+set_location_assignment PIN_T19 -to sfp_los[4]
+set_location_assignment PIN_P17 -to sfp_los[3]
+set_location_assignment PIN_M18 -to sfp_los[2]
+set_location_assignment PIN_L22 -to sfp_los[1]
+set_location_assignment PIN_T18 -to sfp_scl[4]
+set_location_assignment PIN_P16 -to sfp_scl[3]
+set_location_assignment PIN_L17 -to sfp_scl[2]
+set_location_assignment PIN_L19 -to sfp_scl[1]
+set_location_assignment PIN_T22 -to sfp_sda[4]
+set_location_assignment PIN_R15 -to sfp_sda[3]
+set_location_assignment PIN_N19 -to sfp_sda[2]
+set_location_assignment PIN_L18 -to sfp_sda[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to watchdog
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to watchdog
+set_instance_assignment -name SLEW_RATE 0 -to watchdog
+set_location_assignment PIN_M7 -to watchdog
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to manual_reset_n
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to manual_reset_n
+set_instance_assignment -name SLEW_RATE 0 -to manual_reset_n
+set_location_assignment PIN_M6 -to manual_reset_n
+set_instance_assignment -name IO_STANDARD "2.5 V" -to zc_in
+set_location_assignment PIN_V20 -to zc_in
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led_n*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to led_n*
+set_instance_assignment -name SLEW_RATE 0 -to led_n*
+set_location_assignment PIN_T7 -to led_n[0]
+set_location_assignment PIN_U8 -to led_n[1]
+set_location_assignment PIN_U7 -to led_n[2]
+set_location_assignment PIN_V6 -to led_n[3]
+set_location_assignment PIN_U6 -to led_n[4]
+set_location_assignment PIN_W8 -to led_n[5]
+set_location_assignment PIN_P6 -to led_n[6]
+set_location_assignment PIN_N6 -to led_n[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to irig_in_hdr_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to irig_out*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to irig_out*
+set_instance_assignment -name SLEW_RATE 1 -to irig_out*
+set_location_assignment PIN_N20 -to irig_in_hdr_n
+set_location_assignment PIN_T15 -to irig_out_hdr
+set_location_assignment PIN_N21 -to irig_out_en_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to perst_buf_n
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to perst_buf_n
+set_location_assignment PIN_R17 -to perst_buf_n
+set_location_assignment PIN_V4 -to pcie_refclk
+set_location_assignment PIN_U4 -to "pcie_refclk(n)"
+set_location_assignment PIN_AA2 -to pcie_rx[0]
+set_location_assignment PIN_AA1 -to "pcie_rx[0](n)"
+set_location_assignment PIN_W2 -to pcie_rx[1]
+set_location_assignment PIN_W1 -to "pcie_rx[1](n)"
+set_location_assignment PIN_R2 -to pcie_rx[2]
+set_location_assignment PIN_R1 -to "pcie_rx[2](n)"
+set_location_assignment PIN_L2 -to pcie_rx[3]
+set_location_assignment PIN_L1 -to "pcie_rx[3](n)"
+set_location_assignment PIN_Y4 -to pcie_tx[0]
+set_location_assignment PIN_Y3 -to "pcie_tx[0](n)"
+set_location_assignment PIN_U2 -to pcie_tx[1]
+set_location_assignment PIN_U1 -to "pcie_tx[1](n)"
+set_location_assignment PIN_N2 -to pcie_tx[2]
+set_location_assignment PIN_N1 -to "pcie_tx[2](n)"
+set_location_assignment PIN_J2 -to pcie_tx[3]
+set_location_assignment PIN_J1 -to "pcie_tx[3](n)"
+set_instance_assignment -name IO_STANDARD "2.5 V" -to phy_clk125_a
+set_location_assignment PIN_N9 -to phy_clk125_a
+set_instance_assignment -name IO_STANDARD "2.5 V" -to phy_clk125_b
+set_location_assignment PIN_M9 -to phy_clk125_b
+set_instance_assignment -name OUTPUT_TERMINATION "SERIES 50 OHM WITHOUT CALIBRATION" -to eth*_tx*
+set_instance_assignment -name IO_STANDARD "2.5 V" -to link_sig[*]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to activity_sig_n[*]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to link_sig*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to activity_sig_n*
+set_instance_assignment -name SLEW_RATE 0 -to link_sig*
+set_instance_assignment -name SLEW_RATE 0 -to activity_sig_n*
+set_location_assignment PIN_U20 -to link_sig[4]
+set_location_assignment PIN_V21 -to link_sig[3]
+set_location_assignment PIN_B11 -to link_sig[2]
+set_location_assignment PIN_B12 -to link_sig[1]
+set_location_assignment PIN_W21 -to activity_sig_n[4]
+set_location_assignment PIN_U21 -to activity_sig_n[3]
+set_location_assignment PIN_J9 -to activity_sig_n[2]
+set_location_assignment PIN_J8 -to activity_sig_n[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to uart_*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to uart_tx
+set_instance_assignment -name SLEW_RATE 1 -to uart_tx
+set_location_assignment PIN_W9 -to uart_tx
+set_location_assignment PIN_M16 -to uart_rx
+set_instance_assignment -name IO_STANDARD "2.5 V" -to tp19*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to tp19*
+set_instance_assignment -name SLEW_RATE 0 -to tp19*
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to tp192
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to tp195
+set_location_assignment PIN_AB7 -to tp192
+set_location_assignment PIN_AA8 -to tp193
+set_location_assignment PIN_AA7 -to tp194
+set_location_assignment PIN_AB8 -to tp195
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP "-40"
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
+set_global_assignment -name STRATIXV_CONFIGURATION_SCHEME "ACTIVE SERIAL X4"
+set_global_assignment -name ACTIVE_SERIAL_CLOCK FREQ_100MHZ
+set_global_assignment -name STRATIXII_CONFIGURATION_DEVICE EPCQ128
+set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+set_global_assignment -name CONFIGURATION_VCCIO_LEVEL 3.3V
+set_global_assignment -name ENABLE_CRC_ERROR_PIN ON
+set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
+set_global_assignment -name USE_CHECKSUM_AS_USERCODE ON
+set_global_assignment -name OPTIMIZATION_MODE "AGGRESSIVE PERFORMANCE"
+set_global_assignment -name PRE_MAPPING_RESYNTHESIS ON
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name OPTIMIZATION_TECHNIQUE SPEED
+set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
+set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING ON
+set_global_assignment -name PHYSICAL_SYNTHESIS_ASYNCHRONOUS_SIGNAL_PIPELINING ON
+set_global_assignment -name QII_AUTO_PACKED_REGISTERS NORMAL
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name ROUTER_TIMING_OPTIMIZATION_LEVEL MAXIMUM
+set_global_assignment -name ROUTER_LCELL_INSERTION_AND_LOGIC_DUPLICATION ON
+set_global_assignment -name ROUTER_CLOCKING_TOPOLOGY_ANALYSIS ON
+set_global_assignment -name MUX_RESTRUCTURE ON
+set_global_assignment -name REMOVE_REDUNDANT_LOGIC_CELLS ON
+set_global_assignment -name SYNTH_PROTECT_SDC_CONSTRAINT ON
+set_global_assignment -name STATE_MACHINE_PROCESSING "ONE-HOT"
+set_global_assignment -name SAFE_STATE_MACHINE ON
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 2
+set_global_assignment -name MLAB_ADD_TIMING_CONSTRAINTS_FOR_MIXED_PORT_FEED_THROUGH_MODE_SETTING_DONT_CARE ON
+set_global_assignment -name CVP_MODE "CORE UPDATE"
+set_global_assignment -name ENABLE_CVP_CONFDONE ON
+set_global_assignment -name CVP_CONFDONE_OPEN_DRAIN ON
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name ALLOW_REGISTER_RETIMING OFF
+set_global_assignment -name VHDL_FILE ../../ecat_time/syn/rtlenv/imult/src/imult_inferred.vhd
+set_global_assignment -name VHDL_FILE ../../ecat_time/src/ecat_time.vhd
+set_global_assignment -name VHDL_FILE ../eth_quad_sfp_mngr_no_sha1.vhd
+set_global_assignment -name VHDL_FILE ../sel3390_eth_ctrl_no_sha1.vhd
+set_global_assignment -name VHDL_FILE ../../sel3390_eth_ctrl/syn/rtlenv/dma_bd_ctrl/src/dma_bd_ctrl.vhd
+set_global_assignment -name SDC_FILE "C:/Git/rtac2/b2077_top/syn/../src/b2077_top.sdc"
+set_global_assignment -name SDC_FILE "C:/Git/rtac2/b2077_top/syn/../src/asmi.sdc.tcl"
+set_global_assignment -name QSYS_FILE "C:/Git/rtac2/b2077_top/syn/../src/b2077_pcie_core/b2077_pcie_core.qsys"
+set_global_assignment -name QSYS_FILE "C:/Git/rtac2/b2077_top/syn/../src/asmi_parallel/asmi_parallel.qsys"
+set_global_assignment -name QSYS_FILE "C:/Git/rtac2/b2077_top/syn/../src/clk_buf/clk_buf.qsys"
+set_global_assignment -name QIP_FILE "C:/Git/rtac2/b2077_top/syn/../src/pll_sys/pll_sys.qip"
+set_global_assignment -name QIP_FILE "C:/Git/rtac2/b2077_top/syn/../src/alt_ddio_in/alt_ddio_in.qip"
+set_global_assignment -name QIP_FILE "C:/Git/rtac2/b2077_top/syn/../src/alt_ddio_out/alt_ddio_out.qip"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/sel3390_eth_led_ctrl_irb/src/sel3390_eth_led_ctrl_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_pipeline_stage/src/saif_pipeline_stage.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/endec_linear/src/endec_linear_matrices_pkg.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/endec_linear/src/endec_linear.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/ecc_hamming/src/ecc_hamming.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/sdpram_sync_commit_fifo.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/sync_commit_fifo/src/sync_commit_fifo.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/sha1_algorithm/src/sha1_algorithm.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_width_adaptor/src/saif_width_adaptor.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/fifo_rd_to_saif/src/fifo_rd_to_saif.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_to_fifo_wr/src/saif_to_fifo_wr.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_fifo/src/saif_fifo.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_extract/src/saif_extract.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_insert_replace/src/saif_insert_replace.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/irq_ctrl_irb/src/irq_ctrl_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/sdpram.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/fifo_saif_commit/src/fifo_saif_commit.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/fifo_saif_commit_framed/src/fifo_saif_commit_framed.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_to_eth_saif/src/saif_to_eth_saif.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_switch_constants/src/eth_switch_constants_pkg.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_tx_pad_32/src/eth_saif_tx_pad_32.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_to_saif/src/eth_saif_to_saif.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/sdpram_afifo.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/async_fifo/src/async_fifo.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/crc_generic/src/crc_generic.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_rgmii_tx_32/src/rgmii_transmit.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_rgmii_tx_32/src/rgmii_saif_controller.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_rgmii_tx_32/src/eth_saif_rgmii_tx_32.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_rgmii_rx_32/src/rgmii_receive.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_rgmii_rx_32/src/rgmii_saif_driver.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_rgmii_rx_32/src/eth_saif_rgmii_rx_32.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_fifo_32/src/eth_saif_fifo_32.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_failover/src/eth_saif_failover.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_data_merge/src/saif_data_merge.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_saif_data_merge/src/eth_saif_data_merge.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dpram/src/cyclone5.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/dpram_d128_w32.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/i2c_start_done/src/i2c_start_done.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_multicast_filter_hash/src/eth_multicast_filter_hash.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/ethernet_smi/src/ethernet_smi.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_irb_smi/src/eth_irb_smi.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_interrupt_moderation/src/eth_interrupt_moderation.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_checksum_tx_os/src/eth_checksum_tx_os.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_checksum_calc/src/eth_checksum_calc.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_checksum_rx/src/parsing_consts_pkg.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/eth_pkt_parser.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_checksum_rx/src/eth_checksum_rx.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/eth_addr_recognition/src/eth_addr_recognition.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/fifo_saif_simple/src/fifo_saif_simple.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/sel_types_pkg/src/sel_types_pkg.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_framed_byte_realignment/src/saif_framed_byte_realignment.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_engine_avalonmm_irb_fullduplex/src/dma_requester.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_engine_avalonmm_irb_fullduplex/src/dma_completer.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_engine_avalonmm_irb_fullduplex/src/dma_saif_to_avalon_mm.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_engine_avalonmm_irb_fullduplex/src/dma_engine_avalonmm_irb_fullduplex.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/arbiter_priority/src/arbiter_priority.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_arbiter/src/dma_arbiter.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_burst_frag/src/dma_burst_frag.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_bd_writeback/src/dma_bd_writeback.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/functions/src/math_func.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_buf_move/src/dma_buf_move.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/dma_bd_fetch/src/dma_bd_fetch.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/dpram_upgrades.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/sel3390_upgrades/src/sel3390_upgrades.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/dpram_msix.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/pci_msix_interrupt/src/pci_msix_interrupt.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/serial_debounce/src/serial_debounce.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/time_pulse_cap_irb/src/time_pulse_cap_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/irig_decoder/src/irig_decoder.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/irig_dec_irb_ctrl/src/irig_dec_irb_ctrl.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/time_irig_input_irb/src/time_irig_input_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/irig_encoder/src/irig_encoder.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/pdiv1shot/src/pdiv1shot.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/irig_enc_irb_ctrl/src/irig_enc_irb_ctrl.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/time_pulse_gen_irb/src/time_pulse_gen_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/time_irig_output_irb/src/time_irig_output_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/time_accumulator/src/time_accumulator.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/time_master_clock_irb/src/time_master_clock_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/time_m_clk_irig_ctrl_irb/src/time_m_clk_irig_ctrl_irb.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/src/alt_ddio_in/alt_ddio_in.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/src/alt_ddio_out/alt_ddio_out.vhd"
+set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/src/b2077_top.vhd"
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
