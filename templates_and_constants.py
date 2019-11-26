@@ -180,6 +180,6 @@ TB_MAP = OrderedDict({"CLK": MATCH_CLK,
 KEYWORDS = ["variable", "signal", "constant", "natural", "boolean",
             "std_logic", "std_logic_vector", "unsigned", "array_slv",
             "array_slv3d", "string", "positive", "integer", "process"]
-# Component instnatiations are in one of these following templates
-# 1) "inst_name<spaces>:<spaces>entity_name"
-# 2) "inst_name<spaces>:<spaces>entity<spaces>work.entity_name"
+
+# Template to create QSF assignments for top level generics
+QSF_GENERIC_ASSIN = "set_parameter -name {} {}"

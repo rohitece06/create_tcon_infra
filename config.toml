@@ -69,3 +69,8 @@ STAGE_TYPE = "__all__"
 [pipe3]
 DATA_WIDTH = "__min__"
 STAGE_TYPE = "__all__"
+
+# Record 3
+[pipe2.pipe20]
+DATA_WIDTH = [64]
+STAGE_TYPE = "__all__"

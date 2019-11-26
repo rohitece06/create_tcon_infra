@@ -48,7 +48,7 @@ class CompDep:
     """Contains an instance's component name, its Entity object, its
     dependencies CompDep object
     """
-    def __init__(self, inst: str, src_abs_path: str):
+    def __init__(self, inst: str, src_abs_path: str, qsf_path: str):
         self.inst = inst
         entity = os.path.basename(src_abs_path)
         src_file = f"src/{entity}.vhd"
@@ -57,9 +57,14 @@ class CompDep:
         self.build_deps, self.test_deps = get_direct_deps(src_abs_path)
         # Create a list of dictionary that contains the instance name, the
         # generic name, and line no where the generic is mapped
-        # {"inst_name":<name>; "comp_name": <name>;
-        #  "mapping": [(generic name, lineno)]}
-        self.map_dict = []
+        # {"<instance name>": {"comp_name": <name>;
+        #                "mapping": {generic name: lineno}}}
+        self.map_dict = {}
+        self.qsf_loc = os.path.join(src_abs_path, f"syn/{entity}.qsf") if \
+            qsf_path is None else qsf_path
+        # Save real paths of dependency entities as used in the quartus project
+        # List of dicts: {<entity}
+        self.realpaths = {}
 
 
 def get_component_mapping(comp: CompDep):
@@ -75,7 +80,7 @@ def get_component_mapping(comp: CompDep):
         gen_line = 0
         map_line = 0
         paren = 0
-        mapping = []
+        mapping = {}
         map_dict = {}
         inst_name = None
         comp_name = None
@@ -124,25 +129,32 @@ def get_component_mapping(comp: CompDep):
                         paren = 1
                         PC.log.info(f"Found mapping at {lineno+1}:: "
                                     f"{l_no_cmnt}")
-                        mapping.append((gen_name, lineno))
+                        if gen_name not in mapping.keys():
+                            PC.log.info(f"Adding {gen_name} map at {lineno}")
+                            mapping[gen_name] = lineno
+                        else:
+                            PC.log.error(f"A component instantiation can not "
+                                         f"have two generics of same name")
 
                     # Finish parsing map for this component
                     if (")" in l_no_cmnt and "(" not in l_no_cmnt
                             and map_line != lineno):
-                        if inst_name is not None and comp_name is not None \
-                                and len(mapping) > 0:
-                            map_dict["inst_name"] = inst_name
-                            map_dict["comp_name"] = comp_name
-                            map_dict["mapping"] = mapping
-                            comp.map_dict.append(map_dict)
+                        if inst_name is not None and comp_name is not None:
+                            comp.map_dict[inst_name] = {}
+                            PC.log.info(f"Found component mapping for "
+                                        f"{inst_name}: {mapping}")
+                            comp.map_dict[inst_name]["comp_name"] = comp_name
+                            comp.map_dict[inst_name]["mapping"] = mapping
                         else:
                             PC.log.error(f"Something went wrong for instance "
                                          f"at {inst_line+1}, {inst_name} "
-                                         f"{comp_name}")
+                                         f"{comp_name}. Please check the "
+                                         f"restriction imposed on formats of "
+                                         f"supported generic mapping")
 
                     if "port " in l_no_cmnt and " map " in l_no_cmnt:
-                        map_dict = {}
-                        mapping = []
+                        # map_dict = {}
+                        mapping = {}
                         inst_name = None
                         comp_name = None
                         gen_name = None
@@ -150,6 +162,25 @@ def get_component_mapping(comp: CompDep):
                         inst_line = 0
                         map_line = 0
                         paren = 0
+
+
+def get_paths_from_qsf(top_comp: CompDep):
+    """Extract path from the qsf for the given entity
+
+    Arguments:
+
+
+    Returns:
+        str -- Path of the file that describes the entity
+    """
+    # Gather component names
+    with open(top_comp.qsf_loc) as q:
+        for line in q.readlines():
+            for dep, entry in top_comp.map_dict.items():
+                if entry["comp_name"].lower() in line and "VHDL_FILE" in line:
+                    path = line.split("VHDL_FILE")[1].strip().strip('"')
+                    if dep not in top_comp.realpaths.keys():
+                        top_comp.realpaths[dep] = path
 
 
 if __name__ == "__main__":
@@ -179,11 +210,18 @@ if __name__ == "__main__":
                         default=os.getcwd(), required=False)
 
     parser.add_argument('-c', '--config_toml', type=str, help="Full path for \
-                        generic range configuration file", required=False)
+                        generic range configuration file. If not provided, \
+                        then top level entity's directory is searched for  \
+                        config.toml", required=False)
 
     parser.add_argument('-l', '--loglevel', type=str, help="Set logging \
                         level: info, debug, warn, error, critical",
-                        default="error", required= False)
+                        default="error", required=False)
+
+    parser.add_argument('-q', '--qsf_path', type=str, help="Give path to the \
+                        .qsf file for this build. By default top entity's \
+                        syn folder is searched for <entity>.qsf",
+                        required=False)
 
     # !@@@@@@@@@@  Restrictions @@@@@@@@@@
     # !  1) Single line generic maps (i.e. generic map (NAME => NAME, ...)
@@ -202,25 +240,34 @@ if __name__ == "__main__":
         top_entity_path = os.path.join(os.getcwd())
 
     top_entity_path = str(top_entity_path).replace("\\", "/")
-    top_rtlenv_dir = f"{top_entity_path}/syn/rtlenv/"
+    top_rtlenv_dir = os.path.join(top_entity_path, "syn/rtlenv")
     PC.log.info(f"Top entity path is {top_entity_path}")
 
     top_entity = str(os.path.basename(top_entity_path))
-    top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path)
+    top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path,
+                       qsf_path=args.qsf_path)
     setloglevel(args.loglevel)
     get_component_mapping(top_comp)
-    for gen in top_comp.entity.generics:
-        print(gen)
+    get_paths_from_qsf(top_comp)
 
     print(top_comp.map_dict)
 
     if args.config_toml:
-        if ".toml" in args.config:
+        if args.config.endswith(".toml"):
             config_file = args.config
         else:
-            config_file = os.path.join(args.config, "config.toml")
+            raise ValueError(f"TOML file must have .toml extension")
     else:
-        config_file = os.path.join(os.getcwd(), "config.toml")
+        config_file = os.path.join(top_entity_path, "config.toml")
 
-    toml_data = toml.load(config_file)
-    print(toml_data)
+    config_data = toml.load(config_file)
+    print(config_data)
+
+    for inst, mapping in config_data.items():
+        if inst == "top":
+            entity = top_comp.entity
+        else:
+            filepath = top_comp.realpaths[inst]
+            entity = PC.get_entity_from_file(filepath, None)
+
+        print(entity.name)

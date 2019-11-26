@@ -1226,15 +1226,19 @@ def get_entity_from_file(path: str, name: Union[str, None]) -> Entity:
     Args:
         path : os.path type string for entity's source code
         name : name of the tb component whose entity needs to be
-                        extracted
+               extracted
 
     Returns:
         Entity object for the tb component
 
     """
     if not name:
-        entity = os.path.basename(path)
-        comppath = f"src/{entity}.vhd"
+        if path.endswith(".vhd"):
+            entity = os.path.basename(path).rstrip(".vhd")
+            comppath = path
+        else:
+            entity = os.path.basename(path)
+            comppath = f"src/{entity}.vhd"
     elif name != "tb_tcon":
         comppath = f"{name}/src/{name}.vhd"
         entity = name
