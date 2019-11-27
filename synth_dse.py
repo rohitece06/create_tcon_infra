@@ -259,7 +259,6 @@ if __name__ == "__main__":
     top_entity = str(os.path.basename(top_entity_path))
     top_comp = CompDep(inst=top_entity, src_abs_path=top_entity_path,
                        qpf_dir=args.qpf_dir)
-    setloglevel(args.loglevel)
     get_component_mapping(top_comp)
     get_paths_from_qsf(top_comp)
 
@@ -276,11 +275,24 @@ if __name__ == "__main__":
     config_data = toml.load(config_file)
     # print(config_data)
 
-    for inst, mapping in config_data.items():
+    for inst, gen_vals in config_data.items():
         if inst == "top":
             entity = top_comp.entity
         else:
             filepath = top_comp.realpaths[inst]
             entity = PC.get_entity_from_file(filepath, None)
 
-        # print(entity.name)
+        setloglevel(args.loglevel)
+        for gen_name, val_list in gen_vals.items():
+            # the generic value entry will be a dict iff this entry is a
+            # hierarchical component with its own generic and value entry
+            if type(val_list) != dict:
+                if val_list in TC.RSRVD_GEN_VALS and type(val_list) == str:
+                    val = [val_list]
+                elif type(val_list) == str:
+                    val = exec(val_list)
+                else:
+                    val = val_list if type(val_list) == list else [val_list]
+            PC.log.info(f"Using {inst}::{gen_name}={val}")
+        # DSE in top-level entity
+        setloglevel("error")

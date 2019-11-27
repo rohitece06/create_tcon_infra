@@ -184,3 +184,5 @@ KEYWORDS = ["variable", "signal", "constant", "natural", "boolean",
 
 # Template to create QSF assignments for top level generics
 QSF_GENERIC_ASSIN = "set_parameter -name {} {}"
+
+RSRVD_GEN_VALS = ["__all__", "__min__", "__max__"]

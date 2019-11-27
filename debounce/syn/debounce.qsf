@@ -1,12 +1,12 @@
 # -------------------------------------------------------------------------- #
 #
 # Copyright (C) 2017  Intel Corporation. All rights reserved.
-# Your use of Intel Corporation's design tools, logic functions 
-# and other software and tools, and its AMPP partner logic 
-# functions, and any output files from any of the foregoing 
-# (including device programming or simulation files), and any 
-# associated documentation or information are expressly subject 
-# to the terms and conditions of the Intel Program License 
+# Your use of Intel Corporation's design tools, logic functions
+# and other software and tools, and its AMPP partner logic
+# functions, and any output files from any of the foregoing
+# (including device programming or simulation files), and any
+# associated documentation or information are expressly subject
+# to the terms and conditions of the Intel Program License
 # Subscription Agreement, the Intel Quartus Prime License Agreement,
 # the Intel FPGA IP License Agreement, or other applicable license
 # agreement, including, without limitation, that your use is for
@@ -317,7 +317,7 @@ set_global_assignment -name QIP_FILE "C:/Git/rtac2/b2077_top/syn/../src/pll_sys/
 set_global_assignment -name QIP_FILE "C:/Git/rtac2/b2077_top/syn/../src/alt_ddio_in/alt_ddio_in.qip"
 set_global_assignment -name QIP_FILE "C:/Git/rtac2/b2077_top/syn/../src/alt_ddio_out/alt_ddio_out.qip"
 set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/sel3390_eth_led_ctrl_irb/src/sel3390_eth_led_ctrl_irb.vhd"
-set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/saif_pipeline_stage/src/saif_pipeline_stage.vhd"
+set_global_assignment -name VHDL_FILE "./syn/rtlenv/saif_pipeline_stage/src/saif_pipeline_stage.vhd"
 set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/endec_linear/src/endec_linear_matrices_pkg.vhd"
 set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/endec_linear/src/endec_linear.vhd"
 set_global_assignment -name VHDL_FILE "C:/Git/rtac2/b2077_top/syn/rtlenv/ecc_hamming/src/ecc_hamming.vhd"
