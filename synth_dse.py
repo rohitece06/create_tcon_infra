@@ -85,7 +85,6 @@ def get_component_mapping(comp: CompDep):
         map_line = 0
         paren = 0
         mapping = {}
-        map_dict = {}
         inst_name = None
         comp_name = None
         # Note that the lineno are 0-indexed
@@ -136,9 +135,13 @@ def get_component_mapping(comp: CompDep):
                         if gen_name not in mapping.keys():
                             PC.log.info(f"Adding {gen_name} map at {lineno}")
                             mapping[gen_name] = lineno
+                            gen_name = None
                         else:
-                            PC.log.error(f"A component instantiation can not "
-                                         f"have two generics of same name")
+                            raise ValueError(f"The instance {inst_name} can "
+                                             f"not have two generics of same "
+                                             f"name: {gen_name} <- "
+                                             f"{mapping.keys()}")
+
 
                     # Finish parsing map for this component
                     if (")" in l_no_cmnt and "(" not in l_no_cmnt
@@ -156,7 +159,8 @@ def get_component_mapping(comp: CompDep):
                                          f"restriction imposed on formats of "
                                          f"supported generic mapping")
 
-                    if "port " in l_no_cmnt and " map " in l_no_cmnt:
+                    if "port " in l_no_cmnt and (" map " in l_no_cmnt
+                                                 or "map(" in l_no_cmnt):
                         # map_dict = {}
                         mapping = {}
                         inst_name = None
@@ -259,7 +263,7 @@ if __name__ == "__main__":
     get_component_mapping(top_comp)
     get_paths_from_qsf(top_comp)
 
-    print(top_comp.map_dict)
+    # print(top_comp.map_dict)
 
     if args.config_toml:
         if args.config.endswith(".toml"):
@@ -270,7 +274,7 @@ if __name__ == "__main__":
         config_file = os.path.join(top_entity_path, "config.toml")
 
     config_data = toml.load(config_file)
-    print(config_data)
+    # print(config_data)
 
     for inst, mapping in config_data.items():
         if inst == "top":
@@ -279,4 +283,4 @@ if __name__ == "__main__":
             filepath = top_comp.realpaths[inst]
             entity = PC.get_entity_from_file(filepath, None)
 
-        print(entity.name)
+        # print(entity.name)
