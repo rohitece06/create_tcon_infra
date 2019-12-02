@@ -137,10 +137,10 @@ def get_component_mapping(comp: CompDep):
                             mapping[gen_name] = lineno
                             gen_name = None
                         else:
-                            raise ValueError(f"The instance {inst_name} can "
-                                             f"not have two generics of same "
-                                             f"name: {gen_name} <- "
-                                             f"{mapping.keys()}")
+                            msg = (f"The instance {inst_name} can not have "
+                                   f"two generics of same name: {gen_name} <- "
+                                   f"{mapping.keys()}")
+                            raise ValueError(msg)
 
 
                     # Finish parsing map for this component
@@ -293,6 +293,6 @@ if __name__ == "__main__":
                     val = exec(val_list)
                 else:
                     val = val_list if type(val_list) == list else [val_list]
-            PC.log.info(f"Using {inst}::{gen_name}={val}")
+                PC.log.info(f"Using {inst}::{gen_name}={val}")
         # DSE in top-level entity
         setloglevel("error")
