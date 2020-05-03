@@ -14,3 +14,4 @@ try.py
 *__pycache__*
 .history
 debounce/RTLenv.lock
+*.hdl_checker*
