@@ -6,7 +6,7 @@ from collections import OrderedDict
 from inspect import currentframe
 from datetime import datetime
 import templates_and_constants as TC
-from typing import Dict, Tuple, List, Any, OrderedDict, NoReturn, Optional
+from typing import Union, Dict, Tuple, List, Any, OrderedDict, Optional
 from datetime import date
 
 # Setup logging
@@ -25,7 +25,7 @@ def get_filestring(filename: str, parser: Any=None) -> str:
         with open(filename, "r") as f:
             for line in f.readlines():
                 lines_without_comments += (line.strip("\n")).split("--")[0]
-    except:
+    except OSError:
         if parser:
             parser.print_help()
             exit()
@@ -39,13 +39,13 @@ def get_filestring(filename: str, parser: Any=None) -> str:
     return filestring
 
 
-def assign_buses(fname: str) -> OrderedDict:
+def assign_buses(fname: str) -> Union[OrderedDict, None]:
     bus_cfg = OrderedDict()
     try:
         cfgfile = open(fname, "r")
     except OSError:
         log.error("open({}) failed".format(fname))
-        return None
+        return
 
     prev_bus = None
     port_list = []
@@ -80,6 +80,8 @@ def assign_buses(fname: str) -> OrderedDict:
     # Assign tb file name required for simulating each bus interface whenever
     # applicable. Assign a TCON request ID
     tcon_req_id = -1
+    tb_entity = None
+    tb_dep = None
     for bus, entry in bus_cfg.items():
         for tb_dep, tb_file in TC.DEFAULT_TCON_TBS.items():
             if bus and bus.upper().startswith(tb_dep):
@@ -103,7 +105,7 @@ def assign_buses(fname: str) -> OrderedDict:
     return bus_cfg
 
 
-def get_instance_name(bus: str, ports: List) -> str:
+def get_instance_name(bus: str, ports: List) -> Union[str, None]:
     """Identify a possible instance prefix name for the TCON tb component. For
     example, if a SAIF slave port has out_rtr port, a tb_tcon_saif component
     will be instantiated with a name "out_saif_master".
@@ -268,6 +270,7 @@ class ParserType:
         """
         found = ""
         # If we are looking for entire entity, component, or pkg declaration
+        no_space_start_end = ""
         if self.decl_type in TC.VHDL_BLOCK["type"]:
             start = f"{self.decl_type} {self.decl_name} {self.decl_start}"
             search_string = f'{start}(.+?) {self.decl_end}'
@@ -318,6 +321,7 @@ class ParserType:
             try:
                 arch_type = re.search(start_phrase, glob).group(1).strip()
             except AttributeError:
+                arch_type = ""
                 log.error("Couldn't find name of the architecture")
 
             start_phrase = (f"architecture {arch_type} of {self.decl_name} "
@@ -327,8 +331,8 @@ class ParserType:
             try:
                 arch_string = re.search(search_string, glob).group(1)
             except AttributeError:
-                log.error(
-                    f"No *{self.decl_type}* type declaration block found")
+                arch_string = ""
+                log.error(f"No {self.decl_type} type declaration block found")
 
             # Split architecture glob into declration and definitition globs
             ####################
@@ -430,7 +434,7 @@ class Port_Generic:
         else:
             return "", "", "", "", ""
 
-    def print(self) -> NoReturn:
+    def print(self):
         print(f"'Name': {self.name},\t'Direction': {self.direc},\t"
               f"'Datatype': {self.datatype},\t"
               f"'Range': {self.range},\t'Default': {self.default}")
@@ -540,14 +544,14 @@ class Entity:
                 entry.name = entry.name + (max_len - len(entry.name) + 1) * " "
         return entries
 
-    def print_generics(self) -> NoReturn:
+    def print_generics(self):
         if self.generics:
             for generic in self.generics:
                 generic.print()
         else:
             log.warn(f"No generics exists for entity {self.name}\n")
 
-    def print_ports(self) -> NoReturn:
+    def print_ports(self):
         if self.ports:
             for port in self.ports:
                 port.print()
@@ -623,7 +627,8 @@ class Entity:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
 
 
-def find_matching_ports(match_pattern: List[str], port_list: List) -> str:
+def find_matching_ports(match_pattern: List[str],
+                        port_list: List) -> Union[str, None]:
     """Find list of port names matching (case-insensitive) with
         pre-existing template.
 
@@ -676,7 +681,7 @@ class TB:
         # Entity object for tcon master entity from tb_tcon component diretory
         # in syn\rtlenv
         self.tcon_master = get_entity_from_file(self.tb_comp_path, "tb_tcon")
-        self.uut = get_entity_from_file(uutpath, None)
+        self.uut = get_entity_from_file(uutpath, "")
         self.uut.inst_name = "uut"
         # List of Entity objects for tb components
         # used by this testbench
@@ -688,7 +693,7 @@ class TB:
         return f"{str(self.__class__)} : {str(self.__dict__)}"
 
     def map_global_clk_rst(self, entity: Entity, clk_rst: str,
-                           override_inst_name: str="") -> NoReturn:
+                           override_inst_name: str=""):
         """Connect clock and reset signal of the entity to global clock coming
         out of the tb_tcon_clocker (clks[0]) and global reset (tb_reset)
 
@@ -761,7 +766,7 @@ class TB:
                                          obj.direc, last)
         return string
 
-    def check_bus_in_uut_buses(self, bus_type: str) -> str:
+    def check_bus_in_uut_buses(self, bus_type: str) -> Union[str, None]:
         """Check whether a bus type exists in bus list of the UUT
 
         Args:
@@ -818,24 +823,24 @@ class TB:
 
         return deplist
 
-    def __get_entity_from_tb_dep(self, entity_name: str) -> Entity:
+    def __get_entity_from_tb_dep(self, ent_name: str) -> Union[Entity, None]:
         """Get the entity object from tb_dependency list
 
         Arguments:
-            entity_name -- Name of the entity object to be retrieved
+            ent_name -- Name of the entity object to be retrieved
 
         Returns:
             Entity object - Entity object corresponding to the "entity"
             parameter
 
         """
-        log.info(f"Finding entity {entity_name} in TB dependencies")
+        log.info(f"Finding entity {ent_name} in TB dependencies")
         for entity in self.tb_deps:
-            if entity.name.lower() == entity_name.lower():
-                log.info(f"Found entity {entity_name}!!!")
+            if entity.name.lower() == ent_name.lower():
+                log.info(f"Found entity {ent_name}!!!")
                 return entity
             else:
-                log.warn(f"Could not find entity {entity_name}!!!")
+                log.warn(f"Could not find entity {ent_name}!!!")
 
     def __create_tb_entity(self) -> str:
         """Create basic TB entity .
@@ -869,7 +874,7 @@ class TB:
 
         return TC.TB_ENTITY.format(self.uut.name, generic_entry, self.uut.name)
 
-    def __connect_tcon_master(self) -> NoReturn:
+    def __connect_tcon_master(self):
         """Create signal definitions and map tcon master entity to signals
 
         Args:
@@ -922,7 +927,7 @@ class TB:
         assignment = sig_assignment(TC.TB_ARCH_FILL, "tcon_clk", "clks(0)")
         self.arch_def.append(assignment)
 
-    def __connect_uut(self) -> NoReturn:
+    def __connect_uut(self):
         """Connect UUT's generics and ports to TB's generic and dedicated
            signals
 
@@ -990,7 +995,7 @@ class TB:
         self.map_global_clk_rst(self.uut, "clk")
         self.map_global_clk_rst(self.uut, "rst")
 
-    def __connect_clocker(self) -> NoReturn:
+    def __connect_clocker(self):
         """Connect clocker entity if any
         """
         bus = self.check_bus_in_uut_buses("CLK")
@@ -1080,7 +1085,7 @@ class TB:
                         return port_map_name
             log.setLevel(logging.ERROR)
 
-    def __connect_tb_component(self, entity: Entity) -> NoReturn:
+    def __connect_tb_component(self, entity: Entity):
         """Create component mappings for just the ports
 
         Arguments:
@@ -1159,7 +1164,7 @@ class TB:
         self.map_global_clk_rst(entity, "rst", entity.tb_bus_name.lower())
         self.arch_decl.append("\n")
 
-    def __connect_tb_deps(self) -> NoReturn:
+    def __connect_tb_deps(self):
         """Create mapping for TB dependencies for this UUT
 
         Arguments:
@@ -1183,7 +1188,7 @@ class TB:
         else:
             log.info(f"Connected {connected} TB components")
 
-    def generate_mapping(self) -> NoReturn:
+    def generate_mapping(self):
         """This function generates mapping for each tb dependency
         """
         self.__connect_tcon_master()
@@ -1191,7 +1196,7 @@ class TB:
         self.__connect_uut()
         self.__connect_tb_deps()
 
-    def generate_tb_file(self) -> NoReturn:
+    def generate_tb_file(self):
         year = date.today().year
         uut = self.uut.name
         tb_header = TC.TB_HEADER.format(year, uut, uut)
